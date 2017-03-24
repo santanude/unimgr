@@ -7,6 +7,7 @@
  */
 package org.opendaylight.unimgr.mef.nrp.common;
 
+import com.google.common.base.Optional;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
@@ -27,14 +28,18 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.context.TopologyKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.binding.KeyedInstanceIdentifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * @author bartosz.michalik@amartus.com
  */
 public class NrpDao  {
+    private static final Logger log = LoggerFactory.getLogger(NrpDao.class);
     private final ReadWriteTransaction tx;
 
     public NrpDao(ReadWriteTransaction tx) {
@@ -64,8 +69,20 @@ public class NrpDao  {
         tx.merge(LogicalDatastoreType.OPERATIONAL, nodeIdent, nep);
     }
 
-    public void removeNep(String nodeId, String nepId) {
-
+    public void removeNep(String nodeId, String nepId, boolean removeSips) {
+        InstanceIdentifier<OwnedNodeEdgePoint> nepIdent = node(nodeId).child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(new UniversalId(nepId)));
+        if(removeSips) {
+            try {
+                Optional<OwnedNodeEdgePoint> opt = tx.read(LogicalDatastoreType.OPERATIONAL, nepIdent).checkedGet();
+                if(opt.isPresent()) {
+                    List<UniversalId> sips = opt.get().getMappedServiceInterfacePoint();
+                    opt.get().getMappedServiceInterfacePoint();
+                    removeSips(sips == null ? Stream.empty() : sips.stream());
+                }
+            } catch (ReadFailedException e) {
+                log.error("Cannot read {} with id {}",OwnedNodeEdgePoint.class, nodeId);
+            }
+        }
     }
 
     public void addSip(ServiceInterfacePoint sip) {
@@ -96,5 +113,30 @@ public class NrpDao  {
 
     protected InstanceIdentifier<Node> node(String nodeId) {
         return topo(TapiConstants.PRESTO_SYSTEM_TOPO).child(Node.class, new NodeKey(new UniversalId(nodeId)));
+    }
+
+    protected void removeSips(Stream<UniversalId>  uuids) {
+        if(uuids == null) return ;
+        uuids.forEach(sip -> {
+            log.debug("removing ServiceInterfacePoint with id {}", sip);
+            tx.delete(LogicalDatastoreType.OPERATIONAL, ctx().child(ServiceInterfacePoint.class, new ServiceInterfacePointKey(sip)));
+        });
+    }
+
+    public void removeNode(String nodeId, boolean removeSips) {
+        if(removeSips) {
+            try {
+                Optional<Node> opt = tx.read(LogicalDatastoreType.OPERATIONAL, node(nodeId)).checkedGet();
+                if(opt.isPresent()) {
+                    removeSips(opt.get().getOwnedNodeEdgePoint().stream().flatMap(nep -> nep.getMappedServiceInterfacePoint() == null ?
+                            Stream.empty() : nep.getMappedServiceInterfacePoint().stream()
+                    ));
+                }
+            } catch (ReadFailedException e) {
+                log.error("Cannot read node with id {}", nodeId);
+            }
+        }
+
+        tx.delete(LogicalDatastoreType.OPERATIONAL, node(nodeId));
     }
 }
