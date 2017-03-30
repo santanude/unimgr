@@ -115,6 +115,10 @@ public class NrpDao  {
         return topo(TapiConstants.PRESTO_SYSTEM_TOPO).child(Node.class, new NodeKey(new UniversalId(nodeId)));
     }
 
+    protected InstanceIdentifier<Node> abstractNode() {
+        return topo(TapiConstants.PRESTO_EXT_TOPO).child(Node.class, new NodeKey(new UniversalId(TapiConstants.PRESTO_ABSTRACT_NODE)));
+    }
+
     protected void removeSips(Stream<UniversalId>  uuids) {
         if(uuids == null) return ;
         uuids.forEach(sip -> {
@@ -138,5 +142,10 @@ public class NrpDao  {
         }
 
         tx.delete(LogicalDatastoreType.OPERATIONAL, node(nodeId));
+    }
+
+    public void updateAbstractNep(OwnedNodeEdgePoint nep){
+        InstanceIdentifier<OwnedNodeEdgePoint> nodeIdent = abstractNode().child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(nep.getUuid()));
+        tx.merge(LogicalDatastoreType.OPERATIONAL, nodeIdent, nep);
     }
 }

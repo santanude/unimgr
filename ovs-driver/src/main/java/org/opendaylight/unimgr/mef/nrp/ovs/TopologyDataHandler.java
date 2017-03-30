@@ -224,6 +224,9 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
             return false;
         }
 
+        if( ovsdbTerminationPoint.getOfport() == null )
+            return false;
+
         String ofPortNumber = ovsdbTerminationPoint.getOfport().toString();
         try {
             org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node node = topologyTransaction.readNode(terminationPoint.getTpId().getValue());
