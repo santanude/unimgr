@@ -16,4 +16,5 @@ public interface TapiConstants {
     String PRESTO_CTX = "mef:presto-nrp-context";
     String PRESTO_SYSTEM_TOPO = "mef:presto-nrp-topology-system";
     String PRESTO_EXT_TOPO = "mef:presto-nrp-topology";
+    String PRESTO_ABSTRACT_NODE = "mef:presto-nrp-abstract-node";
 }

@@ -31,6 +31,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <argument index="0" ref="dataBroker" />
     </bean>
 
+    <bean class="org.opendaylight.unimgr.mef.nrp.impl.AbstractNodeHandler" init-method="init" destroy-method="close">
+        <argument ref="dataBroker"/>
+    </bean>
+
     <bean id="tapiConnectivityService" class="org.opendaylight.unimgr.mef.nrp.impl.TapiConnectivityServiceImpl" init-method="init">
         <!-- constructor args -->
     </bean>
