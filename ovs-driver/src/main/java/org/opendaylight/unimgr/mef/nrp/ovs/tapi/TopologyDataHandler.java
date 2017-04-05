@@ -5,17 +5,15 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.ovs;
+package org.opendaylight.unimgr.mef.nrp.ovs.tapi;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import org.opendaylight.controller.md.sal.binding.api.*;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TopologyTransaction;
-import org.opendaylight.unimgr.utils.CapabilitiesService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.LifecycleState;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.TerminationDirection;
@@ -28,7 +26,6 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.Own
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.OwnedNodeEdgePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.OwnedNodeEdgePointKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.ovsdb.rev150105.InterfaceTypeInternal;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.ovsdb.rev150105.OvsdbBridgeAugmentation;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.ovsdb.rev150105.OvsdbTerminationPointAugmentation;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
@@ -44,16 +41,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
+import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static org.opendaylight.unimgr.utils.CapabilitiesService.Capability.Mode.AND;
-import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.NodeCapability.*;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -65,9 +55,9 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     private static final InstanceIdentifier<Topology> OVSDB_TOPO_IID = InstanceIdentifier
             .create(NetworkTopology.class)
             .child(Topology.class, new TopologyKey(new TopologyId(new Uri("ovsdb:1"))));
-    private CapabilitiesService capabilitiesService;
     private ListenerRegistration<TopologyDataHandler> registration;
     private TopologyTransaction topologyTransaction;
+    private DataObjectModificationQualifier dataObjectModificationQualifier;
 
     private final DataBroker dataBroker;
 
@@ -95,8 +85,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
             }
         });
 
-        capabilitiesService = new CapabilitiesService(dataBroker);
-
+        dataObjectModificationQualifier = new DataObjectModificationQualifier(dataBroker);
         registerOvsdbTreeListener();
     }
 
@@ -114,12 +103,12 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
             @Override
             public void onSuccess(@Nullable Void result) {
-                LOG.info("Node {} created", OVS_NODE);
+                LOG.info("Node {} deleted", OVS_NODE);
             }
 
             @Override
             public void onFailure(Throwable t) {
-                LOG.error("No node created due to the error", t);
+                LOG.error("No node deleted due to the error", t);
             }
         });
 
@@ -127,6 +116,76 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
             LOG.info("closing netconf tree listener");
             registration.close();
         }
+    }
+
+    @Override
+    public void onDataTreeChanged(@Nonnull Collection<DataTreeModification<Node>> collection) {
+        final Map<TerminationPoint,String> toAddMap = new HashMap<>();
+        final Map<TerminationPoint,String> toDeleteMap = new HashMap<>();
+        final Map<TerminationPoint,String> toUpdateMap = new HashMap<>();
+
+        List<DataObjectModification> nodes = collection.stream()
+                .map(DataTreeModification::getRootNode)
+                .collect(Collectors.toList());
+
+        dataObjectModificationQualifier.checkNodes(nodes,toAddMap,toUpdateMap,toDeleteMap);
+
+        executeDbAction(addAction,toAddMap);
+        executeDbAction(updateAction,toUpdateMap);
+        executeDbAction(deleteAction,toDeleteMap);
+    }
+
+    BiConsumer<Map<TerminationPoint,String>,NrpDao> updateAction = (map,dao) -> {
+        map.entrySet()
+                .forEach(entry -> {
+                    String nepId = OVS_NODE + DELIMETER + getFullPortName(entry.getValue(), entry.getKey().getTpId().getValue());
+                    OwnedNodeEdgePoint nep;
+                    if(dao.hasSip(nepId)){
+                        nep = createNep(nepId);
+                        dao.updateNep(OVS_NODE,nep);
+                    } else {
+                        addEndpoint(dao,nepId);
+                    }
+                });
+    };
+
+    BiConsumer<Map<TerminationPoint,String>,NrpDao> deleteAction = (map,dao) -> {
+        map.entrySet()
+                .forEach(entry -> {
+                    String nepId = OVS_NODE + DELIMETER + getFullPortName(entry.getValue(), entry.getKey().getTpId().getValue());
+                    dao.removeNep(OVS_NODE,nepId,true);
+                });
+    };
+
+    BiConsumer<Map<TerminationPoint,String>,NrpDao> addAction = (map,dao) -> {
+        List<OwnedNodeEdgePoint> newNeps = getNewNeps(map);
+        newNeps.forEach(nep -> addEndpoint(dao,nep.getKey().getUuid().getValue()));
+    };
+
+    private void executeDbAction(BiConsumer<Map<TerminationPoint,String>,NrpDao> action,Map<TerminationPoint,String> map){
+        if(map.isEmpty())
+            return ;
+        final ReadWriteTransaction topoTx = dataBroker.newReadWriteTransaction();
+        NrpDao dao = new NrpDao(topoTx);
+
+        action.accept(map,dao);
+
+        Futures.addCallback(topoTx.submit(), new FutureCallback<Void>() {
+
+            @Override
+            public void onSuccess(@Nullable Void result) {
+                LOG.info("Ovs TAPI node action executed successfully");
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                LOG.warn("Ovs TAPI node action execution failed due to an error", t);
+            }
+        });
+    }
+
+    private String getFullPortName(String switchName, String portName){
+        return switchName + DELIMETER + portName;
     }
 
     private void addEndpoint(NrpDao dao, String nepName) {
@@ -137,7 +196,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     private OwnedNodeEdgePoint nep(String nepName, UniversalId sipUuid) {
-        UniversalId uuid = new UniversalId(OVS_NODE + DELIMETER + nepName);
+        UniversalId uuid = new UniversalId(nepName);
         return new OwnedNodeEdgePointBuilder()
                 .setUuid(uuid)
                 .setKey(new OwnedNodeEdgePointKey(uuid))
@@ -146,7 +205,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     private ServiceInterfacePoint createSip(String nep) {
-        UniversalId uuid = new UniversalId( OVS_NODE + DELIMETER + "sip" + DELIMETER + nep);
+        UniversalId uuid = new UniversalId( "sip" + DELIMETER + nep);
         return new ServiceInterfacePointBuilder()
                 .setUuid(uuid)
                 .setKey(new ServiceInterfacePointKey(uuid))
@@ -155,67 +214,25 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                 .build();
     }
 
-    Function<DataObjectModification<Node>, Node> addedNode = mod -> mod.getModificationType() == DataObjectModification.ModificationType.WRITE ?
-            mod.getDataAfter() : null;
-
-    @Override
-    public void onDataTreeChanged(@Nonnull Collection<DataTreeModification<Node>> collection) {
-        List<Node> addedNodes = collection.stream().map(DataTreeModification::getRootNode)
-                .map(addedNode::apply)
-                .filter(n -> {
-                    if (n == null) return false;
-                    return capabilitiesService.node(n).isSupporting(AND, OVSDB);
-                }).collect(Collectors.toList());
-
-        try {
-            onAddedNodes(addedNodes);
-        } catch(Exception e) {
-            //TODO improve error handling
-            LOG.error("error while processing new Cisco nodes", e);
-        }
-    }
-
-    private void onAddedNodes(@Nonnull Collection<Node> added) throws ReadFailedException {
-        if(added.isEmpty()) return;
-
-        final ReadWriteTransaction topoTx = dataBroker.newReadWriteTransaction();
-        NrpDao dao = new NrpDao(topoTx);
-        toTp(added).forEach(nep -> addEndpoint(dao,nep.getKey().getUuid().getValue()));
-
-        Futures.addCallback(topoTx.submit(), new FutureCallback<Void>() {
-
-            @Override
-            public void onSuccess(@Nullable Void result) {
-                LOG.info("TAPI node upadate successful");
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                LOG.warn("TAPI node upadate failed due to an error", t);
-            }
-        });
-    }
-
-    private List<OwnedNodeEdgePoint> toTp(Collection<Node> nodes) {
+    private OwnedNodeEdgePoint createNep(String nepId){
         OwnedNodeEdgePointBuilder tpBuilder = new OwnedNodeEdgePointBuilder();
+        UniversalId tpId = new UniversalId(OVS_NODE + DELIMETER + nepId);
+        return tpBuilder
+                .setUuid(tpId)
+                .setKey(new OwnedNodeEdgePointKey(tpId))
+                .build();
+    }
 
-        return nodes.stream()
-                .flatMap(node -> {
-                    List<OwnedNodeEdgePoint> tps;
-                    tps = node.getTerminationPoint().stream()
-                        .filter(this::isNep)
-                        .map(tp -> {
-                            String bridgeName = node.getAugmentation(OvsdbBridgeAugmentation.class).getBridgeName().getValue();
-                            UniversalId tpId = new UniversalId(bridgeName + DELIMETER + tp.getTpId().getValue());
-                            return tpBuilder
-                                .setUuid(tpId)
-                                .setKey(new OwnedNodeEdgePointKey(tpId))
-                                .build();
-                        })
-                        .collect(Collectors.toList());
-                    return tps.stream();
-                })
-                .collect(Collectors.toList());
+    private List<OwnedNodeEdgePoint> getNewNeps(Map<TerminationPoint,String> toAddMap){
+        List<OwnedNodeEdgePoint> neps = new LinkedList<>();
+
+        toAddMap.entrySet().stream()
+                .filter(entry -> isNep(entry.getKey()))
+                .forEach(entry -> {
+                    OwnedNodeEdgePoint nep = createNep(getFullPortName(entry.getValue(),entry.getKey().getTpId().getValue()));
+                    neps.add(nep);
+                });
+        return neps;
     }
 
     private boolean isNep(TerminationPoint terminationPoint){

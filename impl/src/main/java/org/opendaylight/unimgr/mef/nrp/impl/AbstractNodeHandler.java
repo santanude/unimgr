@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -61,18 +62,25 @@ public class AbstractNodeHandler implements DataTreeChangeListener<Topology> {
 
     @Override
     public void onDataTreeChanged(@Nonnull Collection<DataTreeModification<Topology>> collection) {
-        List<OwnedNodeEdgePoint> neps = collection.stream()
-                .map(DataTreeModification::getRootNode)
-                .flatMap(topo -> topo.getModifiedChildren().stream())
-                .flatMap(node -> node.getModifiedChildren().stream())
-                .map(nep -> (OwnedNodeEdgePoint) nep.getDataAfter())
-                .collect(Collectors.toList());
+        List<OwnedNodeEdgePoint> toDeleteNeps = new LinkedList<>();
+        List<OwnedNodeEdgePoint> toUpdateNeps =
+                collection.stream()
+                        .map(DataTreeModification::getRootNode)
+                        .flatMap(topo -> topo.getModifiedChildren().stream())
+                        .flatMap(node -> node.getModifiedChildren().stream())
+                        .filter(nep -> checkIfDeleted(toDeleteNeps,nep))
+                        .filter(this::checkIfUpdated)
+                        .map(nep -> (OwnedNodeEdgePoint) nep.getDataAfter())
+                        .collect(Collectors.toList());
 
         final ReadWriteTransaction topoTx = dataBroker.newReadWriteTransaction();
         NrpDao dao = new NrpDao(topoTx);
 
-        neps.stream()
+        toUpdateNeps.stream()
                 .forEach(dao::updateAbstractNep);
+
+        toDeleteNeps.stream()
+                .forEach(dao::deleteAbstractNep);
 
         Futures.addCallback(topoTx.submit(), new FutureCallback<Void>() {
 
@@ -86,5 +94,27 @@ public class AbstractNodeHandler implements DataTreeChangeListener<Topology> {
                 LOG.warn("Abstract TAPI node upadate failed due to an error", t);
             }
         });
+    }
+
+    private boolean checkIfDeleted(List<OwnedNodeEdgePoint> dataObjectModificationNeps, DataObjectModification dataObjectModificationNep){
+        if(dataObjectModificationNep.getDataBefore()!=null && dataObjectModificationNep.getDataAfter()==null){
+            dataObjectModificationNeps.add((OwnedNodeEdgePoint) dataObjectModificationNep.getDataBefore());
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkIfUpdated(DataObjectModification dataObjectModificationNep){
+        OwnedNodeEdgePoint before = (OwnedNodeEdgePoint) dataObjectModificationNep.getDataBefore();
+        OwnedNodeEdgePoint after = (OwnedNodeEdgePoint) dataObjectModificationNep.getDataAfter();
+        //added
+        if(before==null){
+            return true;
+        }
+        //updated
+        if (!before.equals(after)){
+            return true;
+        }
+        return false;
     }
 }
