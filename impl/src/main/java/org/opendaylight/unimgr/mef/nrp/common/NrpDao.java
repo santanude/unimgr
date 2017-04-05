@@ -13,8 +13,8 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.Context;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.context.attrs.ServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.context.attrs.ServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.context.attrs.ServiceInterfacePointKey;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.Context1;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.NodeEdgePoint;
@@ -71,17 +71,18 @@ public class NrpDao  {
 
     public void removeNep(String nodeId, String nepId, boolean removeSips) {
         InstanceIdentifier<OwnedNodeEdgePoint> nepIdent = node(nodeId).child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(new UniversalId(nepId)));
-        if(removeSips) {
-            try {
-                Optional<OwnedNodeEdgePoint> opt = tx.read(LogicalDatastoreType.OPERATIONAL, nepIdent).checkedGet();
-                if(opt.isPresent()) {
+        try {
+            Optional<OwnedNodeEdgePoint> opt = tx.read(LogicalDatastoreType.OPERATIONAL, nepIdent).checkedGet();
+            if(opt.isPresent()) {
+                if(removeSips){
                     List<UniversalId> sips = opt.get().getMappedServiceInterfacePoint();
                     opt.get().getMappedServiceInterfacePoint();
                     removeSips(sips == null ? Stream.empty() : sips.stream());
                 }
-            } catch (ReadFailedException e) {
-                log.error("Cannot read {} with id {}",OwnedNodeEdgePoint.class, nodeId);
+                tx.delete(LogicalDatastoreType.OPERATIONAL,nepIdent);
             }
+        } catch (ReadFailedException e) {
+            log.error("Cannot read {} with id {}",OwnedNodeEdgePoint.class, nodeId);
         }
     }
 
@@ -89,16 +90,24 @@ public class NrpDao  {
         tx.put(LogicalDatastoreType.OPERATIONAL,
         ctx().child(ServiceInterfacePoint.class, new ServiceInterfacePointKey(sip.getUuid())),
                 sip);
-
     }
 
-    public boolean hasNep(String nepId, String nodeId) throws ReadFailedException {
+    public boolean hasSip(String nepID) {
+        UniversalId universalId = new UniversalId("sip:" + nepID);
+        try {
+            return tx.read(LogicalDatastoreType.OPERATIONAL,
+                    ctx().child(ServiceInterfacePoint.class, new ServiceInterfacePointKey(universalId))).checkedGet().isPresent();
+        } catch (ReadFailedException e) {
+            log.error("Cannot read sip with id {}", universalId.getValue());
+        }
+        return false;
+    }
+
+    public boolean hasNep(String nodeId, String nepId) throws ReadFailedException {
         KeyedInstanceIdentifier<OwnedNodeEdgePoint, OwnedNodeEdgePointKey> nepIdent = node(nodeId)
                 .child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(new UniversalId(nepId)));
         return tx.read(LogicalDatastoreType.OPERATIONAL, nepIdent).checkedGet().isPresent();
     }
-
-
 
     protected InstanceIdentifier<Context> ctx() {
         return InstanceIdentifier.create(Context.class);
@@ -147,5 +156,10 @@ public class NrpDao  {
     public void updateAbstractNep(OwnedNodeEdgePoint nep){
         InstanceIdentifier<OwnedNodeEdgePoint> nodeIdent = abstractNode().child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(nep.getUuid()));
         tx.merge(LogicalDatastoreType.OPERATIONAL, nodeIdent, nep);
+    }
+
+    public void deleteAbstractNep(OwnedNodeEdgePoint nep){
+        InstanceIdentifier<OwnedNodeEdgePoint> nodeIdent = abstractNode().child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(nep.getUuid()));
+        tx.delete(LogicalDatastoreType.OPERATIONAL, nodeIdent);
     }
 }
