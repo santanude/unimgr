@@ -61,8 +61,8 @@ public class NrpDao  {
 
     /**
      * Update nep or add if it does not exist
-     * @param nodeId
-     * @param nep
+     * @param nodeId node id
+     * @param nep nep to update
      */
     public void updateNep(String nodeId, OwnedNodeEdgePoint nep) {
         InstanceIdentifier<OwnedNodeEdgePoint> nodeIdent = node(nodeId).child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(nep.getUuid()));

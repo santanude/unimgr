@@ -36,8 +36,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     </bean>
 
     <bean id="tapiConnectivityService" class="org.opendaylight.unimgr.mef.nrp.impl.TapiConnectivityServiceImpl" init-method="init">
-        <!-- constructor args -->
+        <property name="driverRepo" ref="activationDriver" />
+        <property name="decomposer" ref="basicDecomposer" />
     </bean>
+
+    <bean id="basicDecomposer" class="org.opendaylight.unimgr.mef.nrp.impl.BasicDecomposer" />
 
     <odl:rpc-implementation ref="tapiConnectivityService" interface="org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.TapiConnectivityService" />
 

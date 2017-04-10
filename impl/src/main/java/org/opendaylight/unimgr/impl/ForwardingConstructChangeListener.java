@@ -30,13 +30,13 @@ public class ForwardingConstructChangeListener implements DataTreeChangeListener
 
     private final ForwardingConstructActivatorService routeActivator;
 
-    private final ActivationDriverRepoService activationRepoService;
+//    private final ActivationDriverRepoService activationRepoService;
 
     private final DataBroker dataBroker;
 
     public ForwardingConstructChangeListener(DataBroker dataBroker, ActivationDriverRepoService activationRepoService) {
         this.dataBroker  = dataBroker;
-        this.activationRepoService = activationRepoService;
+//        this.activationRepoService = activationRepoService;
         routeActivator = new ForwardingConstructActivatorService(activationRepoService);
 
         final InstanceIdentifier<ForwardingConstruct> fwPath = getFcPath();
@@ -54,10 +54,10 @@ public class ForwardingConstructChangeListener implements DataTreeChangeListener
     @Override
     public void onDataTreeChanged(Collection<DataTreeModification<ForwardingConstruct>> collection) {
         //TODO add lock for concurrency support
-        if (activationRepoService == null) {
-            LOG.warn("ActivationDriverRepoService is not ready yet - ignoring request");
-            return;
-        }
+//        if (activationRepoService == null) {
+//            LOG.warn("ActivationDriverRepoService is not ready yet - ignoring request");
+//            return;
+//        }
         for (final DataTreeModification<ForwardingConstruct> change : collection) {
             final DataObjectModification<ForwardingConstruct> root = change.getRootNode();
 

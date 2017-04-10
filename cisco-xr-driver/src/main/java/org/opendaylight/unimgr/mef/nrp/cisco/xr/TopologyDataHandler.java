@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.Futures;
 import org.opendaylight.controller.md.sal.binding.api.*;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.DriverConstants;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.utils.CapabilitiesService;
@@ -64,7 +65,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                     .create(NetworkTopology.class)
                     .child(Topology.class,
                             new TopologyKey(new TopologyId(TopologyNetconf.QNAME.getLocalName())));
-    private static final String XR_NODE = "xr-node";
+
 
     LoadingCache<NodeKey, KeyedInstanceIdentifier<Node, NodeKey>> mountIds = CacheBuilder.newBuilder()
             .maximumSize(20)
@@ -95,12 +96,12 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
 
         NrpDao dao = new NrpDao(tx);
-        dao.createSystemNode(XR_NODE, null);
+        dao.createSystemNode(DriverConstants.XR_NODE, null);
 
         Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
             @Override
             public void onSuccess(@Nullable Void result) {
-                log.info("Node {} created", XR_NODE);
+                log.info("Node {} created", DriverConstants.XR_NODE);
             }
 
             @Override
@@ -158,7 +159,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
         final ReadWriteTransaction topoTx = dataBroker.newReadWriteTransaction();
         NrpDao dao = new NrpDao(topoTx);
-        toTp(added).forEach(nep -> dao.updateNep(XR_NODE, nep));
+        toTp(added).forEach(nep -> dao.updateNep(DriverConstants.XR_NODE, nep));
 
         Futures.addCallback(topoTx.submit(), new FutureCallback<Void>() {
 

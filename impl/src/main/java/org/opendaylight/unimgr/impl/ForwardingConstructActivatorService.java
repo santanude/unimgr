@@ -109,11 +109,11 @@ public class ForwardingConstructActivatorService {
         lock.readLock().lock();
         try {
             final ActivationDriverBuilder.BuilderContext ctx = new ActivationDriverBuilder.BuilderContext();
-            ActivationDriver activator = activationRepoService.getDriver(portA, portZ, ctx);
+//            ActivationDriver activator = activationRepoService.getDriver(portA, portZ, ctx);
 
-            activator.initialize(portA, portZ, fwdC);
+//            activator.initialize(portA, portZ, fwdC);
             ActivationTransaction tx = new ActivationTransaction();
-            tx.addDriver(activator);
+//            tx.addDriver(activator);
             return Optional.of(tx);
         } catch (ActivationDriverNotFoundException e) {
             LOG.warn("No unique activation driver found for {} <-> {}", portA, portZ);
@@ -141,8 +141,8 @@ public class ForwardingConstructActivatorService {
             Optional<ActivationDriver> zendActivator = findDriver(portZ, ctx);
 
             if (aendActivator.isPresent() && zendActivator.isPresent()) {
-                aendActivator.get().initialize(portA, portZ, fwdC);
-                zendActivator.get().initialize(portZ, portA, fwdC);
+//                aendActivator.get().initialize(portA, portZ, fwdC);
+//                zendActivator.get().initialize(portZ, portA, fwdC);
 
                 final ActivationTransaction tx = new ActivationTransaction();
                 tx.addDriver(aendActivator.get());
@@ -169,7 +169,8 @@ public class ForwardingConstructActivatorService {
             return Optional.empty();
         }
         try {
-            return Optional.ofNullable(activationRepoService.getDriver(port, fwdC));
+//            return Optional.ofNullable(activationRepoService.getDriver(port, fwdC));
+            return Optional.empty();
         } catch (ActivationDriverNotFoundException e) {
             LOG.warn("No activation driver found for {}", port);
             return Optional.empty();
