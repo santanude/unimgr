@@ -74,12 +74,11 @@ public class NrpDao  {
         try {
             Optional<OwnedNodeEdgePoint> opt = tx.read(LogicalDatastoreType.OPERATIONAL, nepIdent).checkedGet();
             if(opt.isPresent()) {
+                tx.delete(LogicalDatastoreType.OPERATIONAL,nepIdent);
                 if(removeSips){
                     List<UniversalId> sips = opt.get().getMappedServiceInterfacePoint();
-                    opt.get().getMappedServiceInterfacePoint();
-                    removeSips(sips == null ? Stream.empty() : sips.stream());
+                    removeSips(sips == null ? null : sips.stream());
                 }
-                tx.delete(LogicalDatastoreType.OPERATIONAL,nepIdent);
             }
         } catch (ReadFailedException e) {
             log.error("Cannot read {} with id {}",OwnedNodeEdgePoint.class, nodeId);
@@ -111,7 +110,6 @@ public class NrpDao  {
 
     protected InstanceIdentifier<Context> ctx() {
         return InstanceIdentifier.create(Context.class);
-
     }
 
     protected InstanceIdentifier<Topology> topo(String topoId) {
@@ -128,7 +126,7 @@ public class NrpDao  {
         return topo(TapiConstants.PRESTO_EXT_TOPO).child(Node.class, new NodeKey(new UniversalId(TapiConstants.PRESTO_ABSTRACT_NODE)));
     }
 
-    protected void removeSips(Stream<UniversalId>  uuids) {
+    public void removeSips(Stream<UniversalId>  uuids) {
         if(uuids == null) return ;
         uuids.forEach(sip -> {
             log.debug("removing ServiceInterfacePoint with id {}", sip);

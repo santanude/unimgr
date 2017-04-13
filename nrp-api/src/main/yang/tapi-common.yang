@@ -116,7 +116,6 @@ module tapi-common {
             list service-interface-point {
                 key 'uuid';
                 config false;
-                min-elements 2;
                 uses service-interface-point;
                 description "none";
             }
