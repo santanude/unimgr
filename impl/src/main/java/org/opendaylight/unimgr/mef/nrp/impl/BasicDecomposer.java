@@ -12,6 +12,8 @@ import org.opendaylight.unimgr.mef.nrp.api.Constraints;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.api.RequestDecomposer;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -20,8 +22,16 @@ import java.util.List;
  * @author bartosz.michalik@amartus.com
  */
 public class BasicDecomposer implements RequestDecomposer {
+    private static final Logger log = LoggerFactory.getLogger(BasicDecomposer.class);
+
+    public BasicDecomposer() {
+        log.trace("basic decomposer initialized");
+    }
+
     @Override
     public List<Subrequrest> decompose(List<EndPoint> endpoints, Constraints constraint) {
         return null;
     }
+
+
 }
