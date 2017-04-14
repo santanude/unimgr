@@ -15,12 +15,12 @@ import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
-import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.*;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.OwnedNodeEdgePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.OwnedNodeEdgePointKey;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.NodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.Context;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.ContextBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.LayerProtocolName;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.NodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.NodeKey;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.context.TopologyBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.context.TopologyKey;
@@ -31,8 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.opendaylight.unimgr.mef.nrp.api.TapiConstants.*;
 
@@ -60,6 +58,7 @@ public class NrpInitializer {
             Context ctx = new ContextBuilder()
                     .setUuid(new UniversalId(PRESTO_CTX))
                     .addAugmentation(org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.Context1.class, context())
+                    .addAugmentation(org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.Context1.class, connCtx())
                     .build();
             tx.put(LogicalDatastoreType.OPERATIONAL, ctxId, ctx);
             try {
@@ -75,6 +74,11 @@ public class NrpInitializer {
     private org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.Context1 context() {
         return new org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.Context1Builder()
                 .setTopology(Arrays.asList(systemTopo(), extTopo()))
+                .build();
+    }
+
+    private org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.Context1 connCtx() {
+        return new org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.Context1Builder()
                 .build();
     }
 

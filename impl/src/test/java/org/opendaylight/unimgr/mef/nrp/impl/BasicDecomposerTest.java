@@ -10,51 +10,29 @@ package org.opendaylight.unimgr.mef.nrp.impl;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
-import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.decomposer.BasicDecomposer;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.ForwardingDirection;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.LayerProtocolName;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.OperationalState;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.context.attrs.ServiceInterfacePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.ConnectivityServiceEndPoint;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.create.connectivity.service.input.EndPointBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.link.StateBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.OwnedNodeEdgePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.Link;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.LinkBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.LinkKey;
 import org.opendaylight.yangtools.yang.common.OperationFailedException;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.opendaylight.unimgr.mef.nrp.api.TapiConstants.PRESTO_SYSTEM_TOPO;
+import static org.junit.Assert.*;
 
 /**
  * @author bartosz.michalik@amartus.com
  */
-public class BasicDecomposerTest extends AbstractConcurrentDataBrokerTest {
+public class BasicDecomposerTest extends AbstractTestWithTopo {
     private BasicDecomposer decomposer;
-    private DataBroker dataBroker;
 
     @Before
     public void setUp() throws Exception {
         dataBroker = getDataBroker();
-        decomposer = new BasicDecomposer(dataBroker);
         new NrpInitializer(dataBroker).init();
+        decomposer = new BasicDecomposer(dataBroker);
+
     }
 
     @Test
@@ -129,51 +107,5 @@ public class BasicDecomposerTest extends AbstractConcurrentDataBrokerTest {
         assertNull(decomposed);
     }
 
-    private EndPoint ep(String nepId) {
-        ConnectivityServiceEndPoint ep = new EndPointBuilder()
-                .setLocalId("ep_" + nepId)
-                .setServiceInterfacePoint(new UniversalId("sip_" + nepId))
-                .build();
 
-        return new EndPoint(ep, null);
-    }
-    private void l(ReadWriteTransaction tx, String nA, String nepA, String nB, String nepB, OperationalState state) {
-        UniversalId uuid = new UniversalId(nepA + "-" + nepB);
-        Link link = new LinkBuilder()
-                .setUuid(uuid)
-                .setKey(new LinkKey(uuid))
-                .setDirection(ForwardingDirection.Bidirectional)
-                .setLayerProtocolName(Collections.singletonList(LayerProtocolName.Eth))
-                .setNode(toIds(nA, nB).collect(Collectors.toList()))
-                .setNodeEdgePoint(toIds(nepA, nepB).collect(Collectors.toList()))
-                .setState(new StateBuilder().setOperationalState(state).build())
-                .build();
-
-        tx.put(LogicalDatastoreType.OPERATIONAL, NrpDao.topo(PRESTO_SYSTEM_TOPO).child(Link.class, new LinkKey(uuid)), link);
-    }
-
-    private Stream<UniversalId> toIds(String ... uuids) {
-        return toIds(Arrays.stream(uuids));
-    }
-
-    private Stream<UniversalId> toIds(Stream<String> uuids) {
-        return uuids.map(UniversalId::new);
-    }
-
-    private void n(ReadWriteTransaction tx, String node, String ... endpoints) {
-        NrpDao nrpDao = new NrpDao(tx);
-        Arrays.stream(endpoints).map(e -> new ServiceInterfacePointBuilder()
-                .setUuid(new UniversalId("sip_" + e))
-                .build())
-        .forEach(nrpDao::addSip);
-
-
-        nrpDao.createSystemNode(node, Arrays.stream(endpoints)
-                .map(e->
-                        new OwnedNodeEdgePointBuilder()
-                        .setUuid(new UniversalId(e))
-                        .setMappedServiceInterfacePoint(Collections.singletonList(new UniversalId("sip_"+e)))
-                        .build()
-            ).collect(Collectors.toList()));
-    }
 }

@@ -8,19 +8,26 @@
 
 package org.opendaylight.unimgr.mef.nrp.impl;
 
+import com.google.common.util.concurrent.CheckedFuture;
 import org.junit.Before;
 import org.junit.Test;
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.*;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
 import org.opendaylight.unimgr.utils.ActivationDriverMocks;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.PortRole;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.ConnectivityService;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.CreateConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.CreateConnectivityServiceInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.CreateConnectivityServiceOutput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.context.Connection;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.create.connectivity.service.input.EndPoint;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.create.connectivity.service.input.EndPointBuilder;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 
 
@@ -28,7 +35,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -52,6 +58,8 @@ public class TapiConnectivityServiceImplTest {
     private UniversalId uuid3 = new UniversalId("uuid3");
     private TapiConnectivityServiceImpl connectivityService;
     private RequestDecomposer decomposer;
+    private RequestValidator validator;
+    private ReadWriteTransaction tx;
 
     @Before
     public void setUp() {
@@ -65,10 +73,22 @@ public class TapiConnectivityServiceImplTest {
                 .build();
 
         decomposer = mock(RequestDecomposer.class);
+        validator = mock(RequestValidator.class);
+        when(validator.checkValid(any())).thenReturn(new RequestValidator.ValidationResult());
 
         connectivityService = new TapiConnectivityServiceImpl();
         connectivityService.setDriverRepo(repo);
         connectivityService.setDecomposer(decomposer);
+        connectivityService.setValidator(validator);
+
+        tx = mock(ReadWriteTransaction.class);
+        when(tx.submit()).thenReturn(mock(CheckedFuture.class));
+        DataBroker broker = mock(DataBroker.class);
+
+
+        when(broker.newWriteOnlyTransaction()).thenReturn(tx);
+        connectivityService.setBroker(broker);
+        connectivityService.init();
     }
 
 
@@ -123,6 +143,9 @@ public class TapiConnectivityServiceImplTest {
         verify(ad1).commit();
         verify(ad3).commit();
         verifyZeroInteractions(ad2);
+        //3x Connection (2 x system + 1 external) + ConnectivityService
+        verify(tx,times(4)).put(eq(LogicalDatastoreType.OPERATIONAL), any(InstanceIdentifier.class), any());
+
 
     }
 
