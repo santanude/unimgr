@@ -20,16 +20,14 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.OperationalState;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.Node;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.context.Topology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,8 +68,23 @@ public class DecompositionAction {
     }
 
     private EndPoint toEndPoint(Vertex v) {
-        return endpoints.stream().filter(e -> e.getEndpoint().getServiceInterfacePoint().equals(v.getSip())).findFirst()
+        EndPoint ep = endpoints.stream().filter(e -> e.getEndpoint().getServiceInterfacePoint().equals(v.getSip())).findFirst()
                 .orElse(new EndPoint(null, null));
+        ep.setSystemNepUuid(v.getUuid());
+        return ep;
+    }
+
+    private void connected(Graph<Vertex, DefaultEdge> graph, List<Vertex> vertices) {
+        for(int i = 0; i < vertices.size(); ++i) {
+            Vertex f = vertices.get(i);
+            //its OK if the vertex is added in internal loop nothing will happen
+            graph.addVertex(f);
+            for(int j = i + 1; j < vertices.size(); ++j) {
+                Vertex t = vertices.get(j);
+                graph.addVertex(t);
+                graph.addEdge(f,t);
+            }
+        }
     }
 
     protected Graph<Vertex, DefaultEdge> prepareData() {
@@ -82,19 +95,21 @@ public class DecompositionAction {
 
             Graph<Vertex, DefaultEdge> graph = new SimpleGraph<>(DefaultEdge.class);
             topo.getNode().stream().map(this::nodeToGraph).forEach(vs -> {
-                List<Vertex> vertexes = vs.collect(Collectors.toList());
-                for(int i = 0; i < vertexes.size(); ++i) {
-                    Vertex f = vertexes.get(i);
-                    sipToNep.put(f.getSip(), f);
-                    //its OK if the vertex is added in internal loop nothing will happen
-                    graph.addVertex(f);
-                    for(int j = i + 1; j < vertexes.size(); ++j) {
-                        Vertex t = vertexes.get(j);
-                        graph.addVertex(t);
-                        graph.addEdge(f,t);
-                    }
-                }
+                List<Vertex> vertices = vs.collect(Collectors.toList());
+                vertices.forEach(v -> sipToNep.put(v.getSip(), v));
+                connected(graph, vertices);
             });
+
+            if(topo.getLink() != null) {
+                topo.getLink().stream()
+                        .filter(l -> l.getState() != null && OperationalState.Enabled == l.getState().getOperationalState())
+                        .forEach(l -> {
+                    List<Vertex> vertices = l.getNodeEdgePoint().stream()
+                            .map(nep -> graph.vertexSet().stream().filter(v -> v.getUuid().equals(nep)).findFirst())
+                            .filter(Optional::isPresent).map(Optional::get).collect(Collectors.toList());
+                    connected(graph, vertices);
+                });
+            }
 
 
             return graph;
@@ -160,6 +175,11 @@ public class DecompositionAction {
         public int compareTo(Vertex o) {
             if(o == null) return -1;
             return uuid.getValue().compareTo(o.uuid.getValue());
+        }
+
+        @Override
+        public String toString() {
+            return "V{" + uuid.getValue() + '}';
         }
     }
 }

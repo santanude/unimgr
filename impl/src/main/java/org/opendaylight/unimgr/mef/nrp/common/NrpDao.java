@@ -113,21 +113,21 @@ public class NrpDao  {
         return topology.orNull();
     }
 
-    protected InstanceIdentifier<Context> ctx() {
+    public static InstanceIdentifier<Context> ctx() {
         return InstanceIdentifier.create(Context.class);
     }
 
-    protected InstanceIdentifier<Topology> topo(String topoId) {
+    public static InstanceIdentifier<Topology> topo(String topoId) {
         return ctx()
                 .augmentation(Context1.class)
                 .child(Topology.class, new TopologyKey(new UniversalId(topoId)));
     }
 
-    protected InstanceIdentifier<Node> node(String nodeId) {
+    public static InstanceIdentifier<Node> node(String nodeId) {
         return topo(TapiConstants.PRESTO_SYSTEM_TOPO).child(Node.class, new NodeKey(new UniversalId(nodeId)));
     }
 
-    protected InstanceIdentifier<Node> abstractNode() {
+    public static InstanceIdentifier<Node> abstractNode() {
         return topo(TapiConstants.PRESTO_EXT_TOPO).child(Node.class, new NodeKey(new UniversalId(TapiConstants.PRESTO_ABSTRACT_NODE)));
     }
 
