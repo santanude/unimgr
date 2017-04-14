@@ -10,7 +10,9 @@ package org.opendaylight.unimgr.mef.nrp.impl;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.*;
+import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
 import org.opendaylight.unimgr.utils.ActivationDriverMocks;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.PortRole;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
@@ -26,13 +28,14 @@ import org.opendaylight.yangtools.yang.common.RpcResult;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -79,17 +82,33 @@ public class TapiConnectivityServiceImplTest {
         RpcResult<CreateConnectivityServiceOutput> result = this.connectivityService.createConnectivityService(empty).get();
         //then
         assertFalse(result.isSuccessful());
+        verifyZeroInteractions(ad1);
+        verifyZeroInteractions(ad2);
+        verifyZeroInteractions(ad3);
     }
 
     @Test
-    public void sucessfullTwoDrivers() throws ExecutionException, InterruptedException {
+    public void noPathTest() throws Exception {
+        //having
+        CreateConnectivityServiceInput input = input(2);
+        configureDecomposerAnswer(eps -> null);
+
+        //when
+        RpcResult<CreateConnectivityServiceOutput> result = this.connectivityService.createConnectivityService(input).get();
+        //then
+        assertFalse(result.isSuccessful());
+        verifyZeroInteractions(ad1);
+        verifyZeroInteractions(ad2);
+        verifyZeroInteractions(ad3);
+    }
+
+    @Test
+    public void sucessfullTwoDrivers() throws ExecutionException, InterruptedException, ResourceActivatorException, TransactionCommitFailedException {
         //having
         CreateConnectivityServiceInput input = input(5);
 
-        when(decomposer.decompose(any(), any(Constraints.class)))
-        .thenAnswer(a -> {
-            List<org.opendaylight.unimgr.mef.nrp.api.EndPoint> eps = a.getArgumentAt(0, List.class);
 
+        configureDecomposerAnswer(eps -> {
             Subrequrest s1 = new Subrequrest(uuid1, Arrays.asList(eps.get(0), eps.get(1), eps.get(2)));
             Subrequrest s3 = new Subrequrest(uuid3, Arrays.asList(eps.get(3), eps.get(4)));
 
@@ -100,7 +119,47 @@ public class TapiConnectivityServiceImplTest {
         RpcResult<CreateConnectivityServiceOutput> result = this.connectivityService.createConnectivityService(input).get();
         //then
         assertTrue(result.isSuccessful());
+        verify(ad1).activate();
+        verify(ad3).activate();
+        verify(ad1).commit();
+        verify(ad3).commit();
+        verifyZeroInteractions(ad2);
 
+    }
+
+
+    @Test
+    public void failTwoDriversOneFailing() throws ExecutionException, InterruptedException, ResourceActivatorException, TransactionCommitFailedException {
+        //having
+        CreateConnectivityServiceInput input = input(4);
+
+        configureDecomposerAnswer(eps -> {
+            Subrequrest s1 = new Subrequrest(uuid1, Arrays.asList(eps.get(0), eps.get(1)));
+            Subrequrest s2 = new Subrequrest(uuid2, Arrays.asList(eps.get(2), eps.get(3)));
+
+            return Arrays.asList(s1, s2);
+        });
+
+        doThrow(new ResourceActivatorException()).when(ad2).activate();
+
+        //when
+        RpcResult<CreateConnectivityServiceOutput> result = this.connectivityService.createConnectivityService(input).get();
+        //then
+        assertFalse(result.isSuccessful());
+        verify(ad1).activate();
+        verify(ad2).activate();
+        verify(ad1).rollback();
+        verify(ad2).rollback();
+        verifyZeroInteractions(ad3);
+    }
+
+
+    private void configureDecomposerAnswer(Function<List<org.opendaylight.unimgr.mef.nrp.api.EndPoint>, List<Subrequrest>> resp) {
+        when(decomposer.decompose(any(), any(Constraints.class)))
+                .thenAnswer(a -> {
+                    List<org.opendaylight.unimgr.mef.nrp.api.EndPoint> eps = a.getArgumentAt(0, List.class);
+                    return resp.apply(eps);
+                });
     }
 
     private CreateConnectivityServiceInput input(int count) {

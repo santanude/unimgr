@@ -72,19 +72,6 @@ public class NrpInitializer {
         }
     }
 
-    private void testInsertNode(ReadWriteTransaction tx) {
-        NrpDao nrpDao = new NrpDao(tx);
-        nrpDao.createSystemNode("xrNode", IntStream.range(1,5).mapToObj(i -> {
-            UniversalId uuid = new UniversalId("nep" + i);
-            return new OwnedNodeEdgePointBuilder()
-                    .setKey(new OwnedNodeEdgePointKey(uuid))
-                    .setUuid(uuid)
-                    .setTerminationDirection(TerminationDirection.Bidirectional)
-                    .build();
-        }).collect(Collectors.toList()));
-
-    }
-
     private org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.Context1 context() {
         return new org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.Context1Builder()
                 .setTopology(Arrays.asList(systemTopo(), extTopo()))

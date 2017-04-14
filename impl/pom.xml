@@ -105,6 +105,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <scope>test</scope>
         </dependency>
 
+        <!-- dependecies of decomposer -->
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-core</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+
         <!-- Testing Dependencies -->
         <dependency>
             <groupId>junit</groupId>

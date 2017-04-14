@@ -12,7 +12,6 @@ package org.opendaylight.unimgr.mef.nrp.api;
  * @author bartosz.michalik@amartus.com
  */
 public interface TapiConstants {
-    String PRESTO_NETWORK_ID = "mef:presto-topology";
     String PRESTO_CTX = "mef:presto-nrp-context";
     String PRESTO_SYSTEM_TOPO = "mef:presto-nrp-topology-system";
     String PRESTO_EXT_TOPO = "mef:presto-nrp-topology";

@@ -40,7 +40,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <property name="decomposer" ref="basicDecomposer" />
     </bean>
 
-    <bean id="basicDecomposer" class="org.opendaylight.unimgr.mef.nrp.impl.BasicDecomposer" />
+    <bean id="basicDecomposer" class="org.opendaylight.unimgr.mef.nrp.impl.decomposer.BasicDecomposer">
+        <argument ref="dataBroker" />
+    </bean>
 
     <odl:rpc-implementation ref="tapiConnectivityService" interface="org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.TapiConnectivityService" />
 

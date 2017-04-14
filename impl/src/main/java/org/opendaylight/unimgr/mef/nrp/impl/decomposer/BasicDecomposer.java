@@ -6,8 +6,9 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.opendaylight.unimgr.mef.nrp.impl;
+package org.opendaylight.unimgr.mef.nrp.impl.decomposer;
 
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.unimgr.mef.nrp.api.Constraints;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.api.RequestDecomposer;
@@ -18,20 +19,29 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * Basic implementation of a decomposer
+ * Basic graph based request decomposer
  * @author bartosz.michalik@amartus.com
+ *
  */
 public class BasicDecomposer implements RequestDecomposer {
     private static final Logger log = LoggerFactory.getLogger(BasicDecomposer.class);
 
-    public BasicDecomposer() {
+    private final DataBroker broker;
+
+    public BasicDecomposer(DataBroker broker) {
+        this.broker = broker;
         log.trace("basic decomposer initialized");
     }
 
+    /**
+     * We currently support only one-to-one mapping between nep and sip
+     * @param endpoints
+     * @param constraint
+     * @return
+     */
     @Override
     public List<Subrequrest> decompose(List<EndPoint> endpoints, Constraints constraint) {
-        return null;
+        return new DecompositionAction(endpoints, broker).decompose();
     }
-
 
 }

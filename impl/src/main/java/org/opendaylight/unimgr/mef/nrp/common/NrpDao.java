@@ -108,6 +108,11 @@ public class NrpDao  {
         return tx.read(LogicalDatastoreType.OPERATIONAL, nepIdent).checkedGet().isPresent();
     }
 
+    public Topology getTopology(String uuid) throws ReadFailedException {
+        Optional<Topology> topology = tx.read(LogicalDatastoreType.OPERATIONAL, topo(uuid)).checkedGet();
+        return topology.orNull();
+    }
+
     protected InstanceIdentifier<Context> ctx() {
         return InstanceIdentifier.create(Context.class);
     }
@@ -160,4 +165,5 @@ public class NrpDao  {
         InstanceIdentifier<OwnedNodeEdgePoint> nodeIdent = abstractNode().child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(nep.getUuid()));
         tx.delete(LogicalDatastoreType.OPERATIONAL, nodeIdent);
     }
+
 }
