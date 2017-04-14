@@ -14,6 +14,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
+import org.opendaylight.unimgr.mef.nrp.impl.NrpInitializer;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.Context;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
@@ -74,7 +75,7 @@ public class TopologyDataHandlerTestUtils {
 
     private final DataBroker dataBroker;
 
-    public TopologyDataHandlerTestUtils(DataBroker dataBroker){
+    protected TopologyDataHandlerTestUtils(DataBroker dataBroker){
         this.dataBroker = dataBroker;
     }
     /**
@@ -83,24 +84,24 @@ public class TopologyDataHandlerTestUtils {
      *  2. tp2 - nep
      *  3. tp3 - not nep, becouse it is connected to other switch defined in {@link #createFlowTopology()}
      */
-    public void createTestBridge(){
+    protected void createTestBridge(){
         Node node = prepareTestNode(bridgeId);
         InstanceIdentifier instanceIdentifier = nodeInstanceIdentifier(node.getNodeId());
 
         write(node,instanceIdentifier);
     }
 
-    public void deleteTestBridge(){
+    protected void deleteTestBridge(){
         InstanceIdentifier instanceIdentifier = nodeInstanceIdentifier(new NodeId(bridgeId));
         delete(instanceIdentifier);
     }
 
-    public void deletePort(String port){
+    protected void deletePort(String port){
         InstanceIdentifier<TerminationPoint> tpIid = portInstanceIdentifier(bridgeId,port);
         delete(tpIid);
     }
 
-    public void addPort(String bridgeName, String portName, Long ofNumber){
+    protected void addPort(String bridgeName, String portName, Long ofNumber){
         String bridgeId = "ovsdb:bridge/"+bridgeName;
         //openflow init
         NodeConnector nodeConnector = createNodeConnector(ofBridgeName,ofNumber,portName);
@@ -127,7 +128,7 @@ public class TopologyDataHandlerTestUtils {
         return InstanceIdentifier
                 .builder(NetworkTopology.class)
                 .child(Topology.class,
-                        new TopologyKey(new TopologyId(new Uri("ovsdb:1"))))
+                        new TopologyKey(ovsdbTopologyId))
                 .child(org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node.class,
                         new NodeKey(nodeId))
                 .build();
@@ -139,7 +140,7 @@ public class TopologyDataHandlerTestUtils {
                 new TerminationPointKey(new TpId(portName)));
     }
 
-    public Node prepareTestNode(String nodeId){
+    protected Node prepareTestNode(String nodeId){
         List<TerminationPoint> tps = new LinkedList<>();
 
         tps.add(buildTerminationPoint(tp1Name,tp1OFport));
@@ -180,7 +181,7 @@ public class TopologyDataHandlerTestUtils {
      *  2. id:"openflow:1:2", name: "br1-eth2", portNumber: "2"
      *  3. id:"openflow:1:3", name: "br1-eth3", portNumber: "3"
      */
-    public void createOpenFlowNodes(){
+    protected void createOpenFlowNodes(){
         NodesBuilder nodesBuilder = new NodesBuilder();
         List<org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node> nodeList = new ArrayList<>();
         nodeList.add(createOpenFlowNode(ofBridgeName));
@@ -229,7 +230,7 @@ public class TopologyDataHandlerTestUtils {
      * Creates flow topology with link nodes (Links between ovs).
      * Links between openflow:1:3 and openflow:2:1 was defined here (bridge openflow:2 was defined only here for test purpose).
      */
-    public void createFlowTopology(){
+    protected void createFlowTopology(){
         TopologyBuilder topologyBuilder = new TopologyBuilder();
         topologyBuilder.setTopologyId(flowTopologyId);
         topologyBuilder.setLink(getLinkList());
@@ -274,7 +275,7 @@ public class TopologyDataHandlerTestUtils {
     /**
      * Ovsdb topology initializator.
      */
-    public void createOvsdbTopology(){
+    protected void createOvsdbTopology(){
         TopologyBuilder topologyBuilder = new TopologyBuilder();
         topologyBuilder.setTopologyId(ovsdbTopologyId);
         Topology topology = topologyBuilder.build();
@@ -321,15 +322,16 @@ public class TopologyDataHandlerTestUtils {
         });
     }
 
-    public void createPrestoSystemTopology(){
-        org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.context.TopologyBuilder topologyBuilder =
-                new org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.context.TopologyBuilder();
-        topologyBuilder.setUuid(new UniversalId(prestoNrpTopoId));
-        org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.context.Topology topology = topologyBuilder.build();
-        write(topology,getTopoIid());
+    protected void createPrestoSystemTopology(){
+        NrpInitializer nrpInitializer = new NrpInitializer(dataBroker);
+        try {
+            nrpInitializer.init();
+        } catch (Exception e) {
+            fail("Could not initialize NRP topology.");
+        }
     }
 
-    public org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.Node readOvsNode(){
+    protected org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.Node readOvsNode(){
         ReadWriteTransaction transaction = dataBroker.newReadWriteTransaction();
         try {
             Optional<org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.Node> optNode
@@ -343,7 +345,7 @@ public class TopologyDataHandlerTestUtils {
         return null;
     }
 
-    public List<org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.context.attrs.ServiceInterfacePoint> readSips(){
+    protected List<org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.context.attrs.ServiceInterfacePoint> readSips(){
         ReadWriteTransaction readWriteTransaction = dataBroker.newReadWriteTransaction();
         try {
             Optional<Context> opt = readWriteTransaction.read(LogicalDatastoreType.OPERATIONAL, InstanceIdentifier.create(Context.class)).checkedGet();

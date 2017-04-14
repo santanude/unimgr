@@ -62,7 +62,6 @@ public class NrpInitializer {
                     .addAugmentation(org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.Context1.class, context())
                     .build();
             tx.put(LogicalDatastoreType.OPERATIONAL, ctxId, ctx);
-            testInsertNode(tx);
             try {
                 tx.submit().checkedGet();
                 log.debug("Presto context model created");

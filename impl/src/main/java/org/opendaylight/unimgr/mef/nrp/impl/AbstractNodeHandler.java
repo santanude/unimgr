@@ -33,6 +33,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
+ * TopologyDataHandler listens to presto system topology and propagate significant changes to presto system topology.
+ *
  * @author marek.ryznar@amartus.com
  */
 public class AbstractNodeHandler implements DataTreeChangeListener<Topology> {
@@ -76,10 +78,10 @@ public class AbstractNodeHandler implements DataTreeChangeListener<Topology> {
         final ReadWriteTransaction topoTx = dataBroker.newReadWriteTransaction();
         NrpDao dao = new NrpDao(topoTx);
 
-        toUpdateNeps.stream()
+        toUpdateNeps
                 .forEach(dao::updateAbstractNep);
 
-        toDeleteNeps.stream()
+        toDeleteNeps
                 .forEach(dao::deleteAbstractNep);
 
         Futures.addCallback(topoTx.submit(), new FutureCallback<Void>() {

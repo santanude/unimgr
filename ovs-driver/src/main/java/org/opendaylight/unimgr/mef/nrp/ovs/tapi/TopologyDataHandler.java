@@ -46,6 +46,8 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**
+ * TopologyDataHandler listens to ovsdb topology and propagate significant changes to presto ext topology.
+ *
  * @author bartosz.michalik@amartus.com
  */
 public class TopologyDataHandler implements DataTreeChangeListener<Node> {

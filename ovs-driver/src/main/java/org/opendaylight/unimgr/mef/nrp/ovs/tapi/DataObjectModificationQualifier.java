@@ -19,6 +19,8 @@ import static org.opendaylight.unimgr.utils.CapabilitiesService.Capability.Mode.
 import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.NodeCapability.OVSDB;
 
 /**
+ * Class created to classify object according to its modification types.
+ *
  * @author marek.ryznar@amartus.com
  */
 public class DataObjectModificationQualifier {

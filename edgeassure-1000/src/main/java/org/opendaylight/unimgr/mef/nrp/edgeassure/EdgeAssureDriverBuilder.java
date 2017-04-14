@@ -12,10 +12,14 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder;
+import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.FixedServiceNaming;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceAttrs;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.forwarding.constructs.ForwardingConstruct;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,7 +37,7 @@ public class EdgeAssureDriverBuilder implements ActivationDriverBuilder {
     }
 
     @Override
-    public Optional<ActivationDriver> driverFor(FcPort port, BuilderContext context) {
+    public Optional<ActivationDriver> driverFor(BuilderContext context) {
         final ActivationDriver driver = new ActivationDriver() {
             public ForwardingConstruct ctx;
             public FcPort aEnd;
@@ -50,10 +54,10 @@ public class EdgeAssureDriverBuilder implements ActivationDriverBuilder {
             }
 
             @Override
-            public void initialize(FcPort from, FcPort to, ForwardingConstruct ctx) {
-                this.zEnd = to;
-                this.aEnd = from;
-                this.ctx = ctx;
+            public void initialize(List<EndPoint> endPoints, NrpCreateConnectivityServiceAttrs context) {
+                this.zEnd = null;
+                this.aEnd = null;
+                this.ctx = null;
             }
 
             @Override
@@ -86,10 +90,11 @@ public class EdgeAssureDriverBuilder implements ActivationDriverBuilder {
         };
 
         return Optional.of(driver);
+
     }
 
     @Override
-    public Optional<ActivationDriver> driverFor(FcPort aPort, FcPort zPort, BuilderContext context) {
-        return Optional.empty();
+    public UniversalId getNodeUuid() {
+        return null;
     }
 }
