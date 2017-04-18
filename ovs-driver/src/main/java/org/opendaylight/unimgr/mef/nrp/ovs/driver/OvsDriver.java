@@ -14,6 +14,7 @@ import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
 import org.opendaylight.unimgr.mef.nrp.ovs.activator.OvsActivator;
+import org.opendaylight.unimgr.mef.nrp.ovs.tapi.TopologyDataHandler;
 import org.opendaylight.unimgr.utils.CapabilitiesService;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceAttrs;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
@@ -32,21 +33,16 @@ import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.Node
 public class OvsDriver implements ActivationDriverBuilder {
 
     private OvsActivator activator;
-    private final DataBroker dataBroker;
-    private static final String GROUP_NAME = "local";
-    private static final long MTU_VALUE = 1522;
 
     public OvsDriver(DataBroker dataBroker){
-        this.dataBroker = dataBroker;
         activator = new OvsActivator(dataBroker);
     }
 
 
     private ActivationDriver getDriver() {
         return new ActivationDriver() {
-            private FcPort aEnd;
-            private FcPort zEnd;
-            private String uuid;
+            List<EndPoint> endPoints;
+            String serviceId;
 
             @Override
             public void commit() {
@@ -60,20 +56,18 @@ public class OvsDriver implements ActivationDriverBuilder {
 
             @Override
             public void initialize(List<EndPoint> endPoints, String serviceId, NrpCreateConnectivityServiceAttrs context) {
-
+                this.endPoints = endPoints;
+                this.serviceId = serviceId;
             }
-
 
             @Override
             public void activate() throws TransactionCommitFailedException, ResourceNotAvailableException {
-                String aEndNodeName = aEnd.getNode().getValue();
-                activator.activate(aEndNodeName, uuid, GROUP_NAME, aEnd, zEnd, MTU_VALUE);
+                activator.activate(endPoints,serviceId);
             }
 
             @Override
             public void deactivate() throws TransactionCommitFailedException, ResourceNotAvailableException {
-                String aEndNodeName = aEnd.getNode().getValue();
-                activator.deactivate(aEndNodeName, uuid, GROUP_NAME, aEnd, zEnd, MTU_VALUE);
+                activator.deactivate(endPoints);
             }
 
             @Override
@@ -90,6 +84,6 @@ public class OvsDriver implements ActivationDriverBuilder {
 
     @Override
     public UniversalId getNodeUuid() {
-        return null; //???rt
+        return new UniversalId(TopologyDataHandler.getOvsNode());
     }
 }

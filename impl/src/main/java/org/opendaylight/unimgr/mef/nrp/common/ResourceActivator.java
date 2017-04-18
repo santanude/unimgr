@@ -9,7 +9,11 @@
 package org.opendaylight.unimgr.mef.nrp.common;
 
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceAttrs;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
+
+import java.util.List;
 
 /**
  * Device facing SPI for activating or deactivating a fragment of an NRP
@@ -35,6 +39,7 @@ public interface ResourceActivator {
      */
     public void activate(String nodeName, String outerName, String innerName, FcPort flowPoint, FcPort neighbor,
             long mtu) throws TransactionCommitFailedException, ResourceActivatorException;
+
 
     /**
      * Deactivate a service fragment on the node identified by nodeName.

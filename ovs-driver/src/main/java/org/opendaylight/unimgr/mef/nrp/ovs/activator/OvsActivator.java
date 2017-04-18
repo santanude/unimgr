@@ -9,11 +9,13 @@ package org.opendaylight.unimgr.mef.nrp.ovs.activator;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TableTransaction;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TopologyTransaction;
 import org.opendaylight.unimgr.mef.nrp.ovs.util.OpenFlowUtils;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceAttrs;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
@@ -24,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * @author marek.ryznar@amartus.com
@@ -31,16 +34,27 @@ import java.util.List;
 public class OvsActivator implements ResourceActivator {
 
     private final DataBroker dataBroker;
+    private String serviceName;
     private static final Logger LOG = LoggerFactory.getLogger(OvsActivator.class);
 
     public OvsActivator(DataBroker dataBroker) {
         this.dataBroker = dataBroker;
     }
 
-    @Override
-    public void activate(String nodeName, String outerName, String innerName, FcPort flowPoint, FcPort neighbor, long mtu) throws TransactionCommitFailedException, ResourceNotAvailableException {
+    /**
+     * Set state for the driver for a (de)activation transaction.
+     * @param endPoints list of endpoint to interconnect
+     */
+    public void activate(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
+        LOG.info("OvsActivator.activate(endpoints)");
+        this.serviceName = serviceName;
+        for (EndPoint endPoint:endPoints)
+            activateEndpoint(endPoint);
+    }
+
+    private void activateEndpoint(EndPoint endPoint) throws ResourceNotAvailableException, TransactionCommitFailedException {
         // Transaction - Get Open vSwitch node and its flow table
-        String portName = flowPoint.getTp().getValue();
+        String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getValue());
         TopologyTransaction topologyTransaction = new TopologyTransaction(dataBroker);
         Node node = topologyTransaction.readNode(portName);
         Table table = OpenFlowUtils.getTable(node);
@@ -54,11 +68,12 @@ public class OvsActivator implements ResourceActivator {
             flowsToWrite.addAll(OpenFlowUtils.getBaseFlows(interswitchLinks));
             flowsToDelete.addAll(OpenFlowUtils.getExistingFlows(table));
         }
-        OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction, flowPoint);
+
+        OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction, endPoint);
         String openFlowPortName = ovsActivatorHelper.getOpenFlowPortName();
-        int externalVlanId = ovsActivatorHelper.getServiceVlanId();
+        int externalVlanId = ovsActivatorHelper.getCeVlanId();
         int internalVlanId = ovsActivatorHelper.getInternalVlanId();
-        flowsToWrite.addAll(OpenFlowUtils.getVlanFlows(openFlowPortName, externalVlanId, internalVlanId, interswitchLinks, outerName));
+        flowsToWrite.addAll(OpenFlowUtils.getVlanFlows(openFlowPortName, externalVlanId, internalVlanId, interswitchLinks, serviceName));
 
         // Transaction - Add flows related to service to table and remove unnecessary flows
         TableTransaction tableTransaction = new TableTransaction(dataBroker, node, table);
@@ -67,18 +82,33 @@ public class OvsActivator implements ResourceActivator {
     }
 
     @Override
+    public void activate(String nodeName, String outerName, String innerName, FcPort flowPoint, FcPort neighbor, long mtu) throws TransactionCommitFailedException, ResourceNotAvailableException {
+        //to erase
+    }
+
+    @Override
     public void deactivate(String nodeName, String outerName, String innerName, FcPort flowPoint, FcPort neighbor, long mtu) throws TransactionCommitFailedException, ResourceNotAvailableException {
+        //to erase
+    }
+
+    public void deactivate(List<EndPoint> endPoints) throws TransactionCommitFailedException, ResourceNotAvailableException {
+        for (EndPoint endPoint:endPoints)
+            deactivateEndpoint(endPoint);
+    }
+
+    private void deactivateEndpoint(EndPoint endPoint) throws ResourceNotAvailableException, TransactionCommitFailedException {
         // Transaction - Get Open vSwitch node and its flow table
-        String portName = flowPoint.getTp().getValue();
+        String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getValue());
         TopologyTransaction topologyTransaction = new TopologyTransaction(dataBroker);
         Node node = topologyTransaction.readNode(portName);
         Table table = OpenFlowUtils.getTable(node);
-
         // Get list of flows to be removed
-        List<Flow> flowsToDelete = OpenFlowUtils.getServiceFlows(table, outerName);
+        List<Flow> flowsToDelete = OpenFlowUtils.getServiceFlows(table, serviceName);
 
         // Transaction - Remove flows related to service from table
         TableTransaction tableTransaction = new TableTransaction(dataBroker, node, table);
         tableTransaction.deleteFlows(flowsToDelete, false);
     }
+
+
 }

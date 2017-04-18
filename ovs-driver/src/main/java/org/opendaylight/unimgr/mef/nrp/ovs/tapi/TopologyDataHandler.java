@@ -258,4 +258,8 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         }
         return false;
     }
+
+    public static String getOvsNode() {
+        return OVS_NODE;
+    }
 }
