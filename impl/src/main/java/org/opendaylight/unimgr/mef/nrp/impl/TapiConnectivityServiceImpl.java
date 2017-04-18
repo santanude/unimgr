@@ -16,14 +16,13 @@ import org.opendaylight.unimgr.mef.nrp.api.*;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.EndPoint2;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.ForwardingDirection;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.GlobalClass;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.LayerProtocolName;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.*;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.*;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.ConnectivityService;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connection.ConnectionEndPoint;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connection.ConnectionEndPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connection.RouteBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connection.end.point.LayerProtocolBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.context.*;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.context.Connection;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.service.*;
@@ -167,9 +166,9 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
             ActivationTransaction tx = new ActivationTransaction();
 
             decomposedRequest.stream().map(s -> {
-                Optional<ActivationDriver> driver = driverRepo.getDriver(s.getUuid());
+                Optional<ActivationDriver> driver = driverRepo.getDriver(s.getNodeUuid());
                 if(!driver.isPresent()) {
-                    throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", s.getUuid()));
+                    throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", s.getNodeUuid()));
                 }
                 driver.get().initialize(s.getEndpoints(), null);
                 log.debug("driver {} added to activation transaction", driver.get());
@@ -191,12 +190,12 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
             log.debug("Preparing connectivity related model for {}", uniqueStamp);
 
             List<Connection> systemConnections = decomposedRequest.stream().map(s -> new ConnectionBuilder()
-                    .setUuid(new UniversalId("conn:" + s.getUuid().getValue() + ":" + uniqueStamp))
+                    .setUuid(new UniversalId("conn:" + s.getNodeUuid().getValue() + ":" + uniqueStamp))
 //                        .setState()
                     .setDirection(ForwardingDirection.Bidirectional)
                     .setLayerProtocolName(LayerProtocolName.Eth)
-                    .setNode(s.getUuid())
-                    .setConnectionEndPoint(toConnectionPoints(s.getEndpoints()))
+                    .setNode(s.getNodeUuid())
+                    .setConnectionEndPoint(toConnectionPoints(s.getEndpoints(), uniqueStamp))
                     .build()).collect(Collectors.toList());
 
             Connection globalConnection = new ConnectionBuilder()
@@ -205,7 +204,7 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
                     .setDirection(ForwardingDirection.Bidirectional)
                     .setLayerProtocolName(LayerProtocolName.Eth)
                     .setNode(new UniversalId(TapiConstants.PRESTO_ABSTRACT_NODE))
-                    .setConnectionEndPoint(toConnectionPoints(endpoints))
+                    .setConnectionEndPoint(toConnectionPoints(endpoints, uniqueStamp))
                     .setRoute(Collections.singletonList(new RouteBuilder()
                             .setLocalId("route")
                             .setLowerConnection(systemConnections.stream().map(GlobalClass::getUuid).collect(Collectors.toList()))
@@ -220,7 +219,7 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
 //                    .setState()
                     .setConnConstraint(connConstraint)
                     .setConnection(Collections.singletonList(globalConnection.getUuid()))
-                    .setEndPoint(toConnectionServiceEndpoints(endpoints))
+                    .setEndPoint(toConnectionServiceEndpoints(endpoints, uniqueStamp))
                     .build();
 
             final WriteTransaction tx = broker.newWriteOnlyTransaction();
@@ -250,12 +249,30 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
             return new ServiceBuilder(cs).build();
         }
 
-        private List<org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.service.EndPoint> toConnectionServiceEndpoints(List<EndPoint> endpoints) {
-            return null;
+        private List<org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.service.EndPoint> toConnectionServiceEndpoints(List<EndPoint> endpoints, String uniqueStamp) {
+            return endpoints.stream().map(ep -> new EndPointBuilder()
+                            .setLocalId("sep:" +   ep.getSystemNepUuid()  + ":" + uniqueStamp)
+                    .setServiceInterfacePoint(ep.getEndpoint().getServiceInterfacePoint())
+                    .setDirection(PortDirection.Bidirectional)
+                    .setLayerProtocolName(LayerProtocolName.Eth)
+                    .setRole(PortRole.Symmetric)
+                    .build()
+            ).collect(Collectors.toList());
         }
 
-        private List<ConnectionEndPoint> toConnectionPoints(List<EndPoint> endpoints) {
-            return null;
+        private List<ConnectionEndPoint> toConnectionPoints(List<EndPoint> endpoints, String uniqueStamp) {
+            return endpoints.stream().map(ep -> new ConnectionEndPointBuilder()
+                    .setUuid(new UniversalId("cep:" +   ep.getSystemNepUuid()  + ":" + uniqueStamp))
+//                    .setState()
+                    .setConnectionPortDirection(PortDirection.Bidirectional)
+                    .setConnectionPortRole(PortRole.Symmetric)
+                    .setServerNodeEdgePoint(ep.getSystemNepUuid())
+                    .setLayerProtocol(Collections.singletonList(new LayerProtocolBuilder().setLayerProtocolName(LayerProtocolName.Eth).build()))
+                    .setTerminationDirection(TerminationDirection.Bidirectional)
+                    .build()
+            ).collect(Collectors.toList());
+
+
         }
     }
 

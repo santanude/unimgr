@@ -16,16 +16,16 @@ import java.util.List;
  * @author bartosz.michalik@amartus.com
  */
 public class Subrequrest {
-    final UniversalId uuid;
+    final UniversalId nodeUuid;
     final List<EndPoint> endpoints;
 
-    public Subrequrest(UniversalId uuid, List<EndPoint> endpoints) {
-        this.uuid = uuid;
+    public Subrequrest(UniversalId nodeUuid, List<EndPoint> endpoints) {
+        this.nodeUuid = nodeUuid;
         this.endpoints = endpoints;
     }
 
-    public UniversalId getUuid() {
-        return uuid;
+    public UniversalId getNodeUuid() {
+        return nodeUuid;
     }
 
     public List<EndPoint> getEndpoints() {

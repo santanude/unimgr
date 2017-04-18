@@ -10,16 +10,12 @@ package org.opendaylight.unimgr.mef.nrp.impl;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverRepoService;
 import org.opendaylight.unimgr.mef.nrp.api.RequestValidator;
-import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.impl.decomposer.BasicDecomposer;
 import org.opendaylight.unimgr.utils.ActivationDriverMocks;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.PortRole;
@@ -28,24 +24,18 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.Cont
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.CreateConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.CreateConnectivityServiceInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.CreateConnectivityServiceOutput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.context.Connection;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.create.connectivity.service.input.EndPoint;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.create.connectivity.service.input.EndPointBuilder;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -108,8 +98,15 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
         ReadOnlyTransaction tx2 = dataBroker.newReadOnlyTransaction();
         Context1 connCtx = tx2.read(LogicalDatastoreType.OPERATIONAL, TapiConnectivityServiceImpl.connectivityCtx).checkedGet().get();
         assertEquals(2, connCtx.getConnection().size());
-        assertEquals(1, connCtx.getConnectivityService().size());
+        connCtx.getConnection().forEach(this::verifyConnection);
 
+        assertEquals(1, connCtx.getConnectivityService().size());
+        assertFalse(connCtx.getConnectivityService().get(0).getEndPoint().isEmpty());
+
+    }
+
+    private void verifyConnection(Connection connection) {
+        assertFalse(connection.getConnectionEndPoint().isEmpty());
     }
 
     private List<EndPoint> eps(String ... uuids) {
