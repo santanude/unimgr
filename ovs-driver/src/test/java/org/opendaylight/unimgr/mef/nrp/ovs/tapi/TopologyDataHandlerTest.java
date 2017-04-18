@@ -11,10 +11,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.unimgr.mef.nrp.ovs.DataStoreTestUtils;
+import org.opendaylight.unimgr.mef.nrp.ovs.FlowTopologyTestUtils;
+import org.opendaylight.unimgr.mef.nrp.ovs.OvsdbTopologyTestUtils;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Link;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPoint;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -35,15 +43,18 @@ public class TopologyDataHandlerTest extends AbstractDataBrokerTest{
     private static final String expectedNep1 = "br1:br1-eth1";
     private static final String expectedNep2 = "br1:br1-eth2";
 
+    private static String tp1Name = "br1-eth1";
+
     @Before
     public void setUp(){
         //given
         dataBroker = getDataBroker();
         helper = new TopologyDataHandlerTestUtils(dataBroker);
 
-        helper.createOvsdbTopology();
+        //helper.createOvsdbTopology();
+        OvsdbTopologyTestUtils.createOvsdbTopology(dataBroker);
         helper.createOpenFlowNodes();
-        helper.createFlowTopology();
+        FlowTopologyTestUtils.createFlowTopology(dataBroker,getLinkList());
         helper.createPrestoSystemTopology();
 
         topologyDataHandler = new TopologyDataHandler(dataBroker);
@@ -53,6 +64,7 @@ public class TopologyDataHandlerTest extends AbstractDataBrokerTest{
     @Test
     public void testBridgeAddition(){
         //when
+        //helper.createTestBridge();
         helper.createTestBridge();
 
         //then
@@ -99,14 +111,14 @@ public class TopologyDataHandlerTest extends AbstractDataBrokerTest{
     @Test
     public void testPortRemoval(){
         //given
-        String portNameToRemove = "br1-eth2";
-        String fullPortNameToRemove = "br1:"+portNameToRemove;
+        String fullPortNameToRemove = bridgeName+tp1Name;
+        //helper.createTestBridge();
         helper.createTestBridge();
         Node ovsNode = helper.readOvsNode();
         assertEquals(2,ovsNode.getOwnedNodeEdgePoint().size());
 
         //when
-        helper.deletePort(portNameToRemove);
+        helper.deletePort(tp1Name);
 
         //then
         ovsNode = helper.readOvsNode();
@@ -117,8 +129,7 @@ public class TopologyDataHandlerTest extends AbstractDataBrokerTest{
 
     private BiFunction<Node, String, Boolean> checkNep = (node,nepName) ->
             node.getOwnedNodeEdgePoint().stream()
-                    .anyMatch(ownedNep ->
-                        ownedNep.getMappedServiceInterfacePoint().contains(new UniversalId(sip_prefix + ovs_nep_prefix + nepName))
+                    .anyMatch(ownedNep -> ownedNep.getMappedServiceInterfacePoint().contains(new UniversalId(sip_prefix + ovs_nep_prefix + nepName))
                                 && ownedNep.getUuid().getValue().equals(ovs_nep_prefix + nepName)
                     );
 
@@ -135,5 +146,23 @@ public class TopologyDataHandlerTest extends AbstractDataBrokerTest{
         Arrays.stream(neps)
                 .forEach(nep -> assertTrue(checkSip.apply(sips,nep)));
     }
+
+    private List<Link> getLinkList(){
+        List<Link> linkList = new ArrayList<>();
+
+        //For testing purposes only - can't be find anywhere else in DataStore
+        String of1NodeName = "1";
+        String of2NodeName = "2";
+        Long of2PortNumber = 1L;
+        Long of1PortNumber = 3L;
+
+        //openflow:1:3 -> <- openflow:2:1
+        linkList.add(FlowTopologyTestUtils.createLink(of1NodeName,of1PortNumber,of2NodeName,of2PortNumber));
+        linkList.add(FlowTopologyTestUtils.createLink(of2NodeName,of2PortNumber,of1NodeName,of1PortNumber));
+
+        return linkList;
+    }
+
+
 
 }

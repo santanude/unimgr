@@ -32,21 +32,15 @@ import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.Node
 public class OvsDriver implements ActivationDriverBuilder {
 
     private OvsActivator activator;
-    private final DataBroker dataBroker;
-    private static final String GROUP_NAME = "local";
-    private static final long MTU_VALUE = 1522;
 
     public OvsDriver(DataBroker dataBroker){
-        this.dataBroker = dataBroker;
         activator = new OvsActivator(dataBroker);
     }
 
 
     private ActivationDriver getDriver() {
         return new ActivationDriver() {
-            private FcPort aEnd;
-            private FcPort zEnd;
-            private String uuid;
+            List<EndPoint> endPoints;
 
             @Override
             public void commit() {
@@ -60,20 +54,17 @@ public class OvsDriver implements ActivationDriverBuilder {
 
             @Override
             public void initialize(List<EndPoint> endPoints, NrpCreateConnectivityServiceAttrs context) {
-
+                this.endPoints = endPoints;
             }
-
 
             @Override
             public void activate() throws TransactionCommitFailedException, ResourceNotAvailableException {
-                String aEndNodeName = aEnd.getNode().getValue();
-                activator.activate(aEndNodeName, uuid, GROUP_NAME, aEnd, zEnd, MTU_VALUE);
+                activator.activate(endPoints);
             }
 
             @Override
             public void deactivate() throws TransactionCommitFailedException, ResourceNotAvailableException {
-                String aEndNodeName = aEnd.getNode().getValue();
-                activator.deactivate(aEndNodeName, uuid, GROUP_NAME, aEnd, zEnd, MTU_VALUE);
+                activator.deactivate(endPoints);
             }
 
             @Override
@@ -90,6 +81,6 @@ public class OvsDriver implements ActivationDriverBuilder {
 
     @Override
     public UniversalId getNodeUuid() {
-        return null; //???rt
+        return new UniversalId("ovs-node");
     }
 }
