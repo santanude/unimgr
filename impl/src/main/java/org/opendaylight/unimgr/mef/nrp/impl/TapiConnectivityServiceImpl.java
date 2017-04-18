@@ -267,7 +267,9 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
                     .setConnectionPortDirection(PortDirection.Bidirectional)
                     .setConnectionPortRole(PortRole.Symmetric)
                     .setServerNodeEdgePoint(ep.getSystemNepUuid())
-                    .setLayerProtocol(Collections.singletonList(new LayerProtocolBuilder().setLayerProtocolName(LayerProtocolName.Eth).build()))
+                    .setLayerProtocol(Collections.singletonList(new LayerProtocolBuilder()
+                            .setLocalId(LayerProtocolName.Eth.getName())
+                            .setLayerProtocolName(LayerProtocolName.Eth).build()))
                     .setTerminationDirection(TerminationDirection.Bidirectional)
                     .build()
             ).collect(Collectors.toList());
