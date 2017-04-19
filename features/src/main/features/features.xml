@@ -50,6 +50,7 @@
     <feature version='${netconf.version}'>odl-netconf-connector-ssh</feature>
     <!-- FIXME deliver as a separate bundle/feature -->
     <!-- <bundle>mvn:org.opendaylight.unimgr/edgeassure-1000/{{VERSION}}</bundle> -->
+    <bundle>mvn:org.jgrapht/jgrapht-core/1.0.1</bundle>
     <bundle>mvn:org.opendaylight.unimgr/unimgr-impl/{{VERSION}}</bundle>
     <configfile finalname="${configfile.directory}/unimgr.xml">mvn:org.opendaylight.unimgr/unimgr-impl/{{VERSION}}/xml/config</configfile>
   </feature>
