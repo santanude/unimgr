@@ -71,7 +71,7 @@ public class CapabilitiesService {
                         .getAvailableCapabilities()
                         .getAvailableCapability()
                         .stream()
-                        .anyMatch(capability -> capability.getCapability().equals(netconf_capability));
+                        .anyMatch(capability -> capability.equals(netconf_capability));
             }
         }
 

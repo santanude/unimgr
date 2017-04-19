@@ -17,8 +17,6 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.netconf.node.connection.status.AvailableCapabilities;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.netconf.node.connection.status.available.capabilities.AvailableCapability;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.netconf.node.connection.status.available.capabilities.AvailableCapabilityBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
@@ -83,11 +81,11 @@ public class NodeTestUtils {
     public static Optional<Node> mockNetconfNode(boolean withNetconfCapabilities) {
         Optional<Node> mockedNodeOptional = mockNode();
 
-        List<AvailableCapability> netconfCapabilityList = new ArrayList<>();
+        List<String> netconfCapabilityList = new ArrayList<>();
         if(withNetconfCapabilities) {
-            netconfCapabilityList = Arrays.asList(createAvailableCapability(NetconfConstants.CAPABILITY_IOX_L2VPN),
-                    createAvailableCapability(NetconfConstants.CAPABILITY_IOX_IFMGR),
-                            createAvailableCapability(NetconfConstants.CAPABILITY_IOX_ASR9K_POLICYMGR));
+            netconfCapabilityList = Arrays.asList(NetconfConstants.CAPABILITY_IOX_L2VPN,
+                    NetconfConstants.CAPABILITY_IOX_IFMGR,
+                    NetconfConstants.CAPABILITY_IOX_ASR9K_POLICYMGR);
         }
 
         AvailableCapabilities availableCapabilities = Mockito.mock(AvailableCapabilities.class);
@@ -100,11 +98,5 @@ public class NodeTestUtils {
         when(mockedNode.getAugmentation(NetconfNode.class)).thenReturn(netconfNode);
 
         return mockedNodeOptional;
-    }
-
-    private static AvailableCapability createAvailableCapability(String name){
-        AvailableCapabilityBuilder availableCapabilityBuilder = new AvailableCapabilityBuilder();
-        availableCapabilityBuilder.setCapability(name);
-        return availableCapabilityBuilder.build();
     }
 }

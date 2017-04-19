@@ -11,7 +11,7 @@ package org.opendaylight.unimgr.mef.nrp.impl;
 import org.junit.Before;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
@@ -38,7 +38,7 @@ import static org.opendaylight.unimgr.mef.nrp.api.TapiConstants.PRESTO_SYSTEM_TO
 /**
  * @author bartosz.michalik@amartus.com
  */
-public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerTest {
+public abstract class AbstractTestWithTopo extends AbstractDataBrokerTest {
 
 
     protected DataBroker dataBroker;

@@ -11,7 +11,6 @@
   <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.ovsdb/southbound-features/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
-  <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.netconf/features-netconf/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.netconf/features-netconf-connector/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.genius/genius-features/{{VERSION}}/xml/features</repository>
@@ -52,24 +51,12 @@
     <!-- <bundle>mvn:org.opendaylight.unimgr/edgeassure-1000/{{VERSION}}</bundle> -->
     <bundle>mvn:org.jgrapht/jgrapht-core/1.0.1</bundle>
     <bundle>mvn:org.opendaylight.unimgr/unimgr-impl/{{VERSION}}</bundle>
-    <bundle>mvn:org.jgrapht:jgrapht-core:1.0.1</bundle>
     <configfile finalname="${configfile.directory}/unimgr.xml">mvn:org.opendaylight.unimgr/unimgr-impl/{{VERSION}}/xml/config</configfile>
-  </feature>
-
-  <feature name='odl-unimgr-netvirt' version='${project.version}'
-    description='OpenDaylight :: UniMgr :: NetVirt'>
-    <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-    <feature version='${project.version}'>odl-unimgr</feature>
-    <feature version='${genius.version}'>odl-genius-api</feature>
-    <feature version='${vpnservice.version}'>odl-netvirt-impl</feature>
-    <feature version="${restconf.version}">odl-restconf</feature>
-    <bundle>mvn:org.opendaylight.unimgr/unimgr-netvirt/{{VERSION}}</bundle>
-    <bundle>mvn:org.opendaylight.unimgr/unimgr-legato-api/{{VERSION}}</bundle>
   </feature>
 
     <feature name='odl-unimgr-dlux' version='${project.version}'
         description='OpenDaylight :: UniMgr :: dlux'>
-        <feature version='${project.version}'>odl-unimgr-netvirt</feature>
+
         <feature version='${dlux.version}'>odl-dlux-core</feature>
         <bundle>mvn:org.opendaylight.unimgr/cpeui-bundle/{{VERSION}}</bundle>
     </feature>
@@ -92,7 +79,7 @@
     <feature version="${project.version}">odl-unimgr-rest</feature>
     <feature version="${project.version}">odl-unimgr-console</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-    <feature version="${dluxapps.version}">odl-dluxapps-applications</feature>
+    <feature version="${dlux.version}">odl-dlux-all</feature>
   </feature>
 
   <feature name="odl-unimgr-cisco-xe-driver" version="${project.version}" description='OpenDaylight :: UniMgr :: Cisco XE Driver'>
