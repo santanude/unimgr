@@ -54,7 +54,7 @@ public class EdgeAssureDriverBuilder implements ActivationDriverBuilder {
             }
 
             @Override
-            public void initialize(List<EndPoint> endPoints, NrpCreateConnectivityServiceAttrs context) {
+            public void initialize(List<EndPoint> endPoints, String serviceId, NrpCreateConnectivityServiceAttrs context) {
                 this.zEnd = null;
                 this.aEnd = null;
                 this.ctx = null;

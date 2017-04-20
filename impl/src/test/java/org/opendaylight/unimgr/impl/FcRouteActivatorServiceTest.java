@@ -265,7 +265,7 @@ public class FcRouteActivatorServiceTest {
         }
 
         @Override
-        public void initialize(List<EndPoint> endPoints, NrpCreateConnectivityServiceAttrs context) {
+        public void initialize(List<EndPoint> endPoints, String serviceId, NrpCreateConnectivityServiceAttrs context) {
             //FIXME
             if(this.eps == null)
                 this.eps = endPoints;

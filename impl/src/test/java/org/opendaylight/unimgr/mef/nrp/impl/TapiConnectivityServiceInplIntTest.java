@@ -48,6 +48,7 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
     private String uuid1 = "uuid1";
     private String uuid2 = "uuid2";
     private TapiConnectivityServiceImpl connectivityService;
+    private ConnectivityServiceIdResourcePool mockPool;
 
     @Before
     public void setUp() throws Exception {
@@ -63,17 +64,21 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
         RequestValidator validator = mock(RequestValidator.class);
         when(validator.checkValid(any())).thenReturn(new RequestValidator.ValidationResult());
 
+        mockPool = mock(ConnectivityServiceIdResourcePool.class);
+
         connectivityService = new TapiConnectivityServiceImpl();
         connectivityService.setDriverRepo(repo);
         connectivityService.setDecomposer(decomposer);
         connectivityService.setValidator(validator);
         connectivityService.setBroker(getDataBroker());
+        connectivityService.setServiceIdPool(mockPool);
         connectivityService.init();
     }
 
     @Test
     public void testSingleDriver() throws Exception {
         //having
+        final String servId = "service-id";
         CreateConnectivityServiceInput input = new CreateConnectivityServiceInputBuilder()
                 .setEndPoint(eps(uuid1 + ":1", uuid1 + ":2"))
                 .build();
@@ -81,7 +86,7 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
         n(tx, uuid1, uuid1 + ":1", uuid1 + ":2", uuid1 + ":3");
 
-
+        when(mockPool.getServiceId()).thenReturn(servId);
 
         tx.submit().checkedGet();
 
@@ -102,6 +107,7 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
 
         assertEquals(1, connCtx.getConnectivityService().size());
         assertFalse(connCtx.getConnectivityService().get(0).getEndPoint().isEmpty());
+        assertEquals("cs:"+servId, connCtx.getConnectivityService().get(0).getUuid().getValue());
 
     }
 

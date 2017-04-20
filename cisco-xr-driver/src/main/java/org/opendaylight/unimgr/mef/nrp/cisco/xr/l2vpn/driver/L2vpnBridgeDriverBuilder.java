@@ -61,7 +61,7 @@ public class L2vpnBridgeDriverBuilder implements ActivationDriverBuilder {
             }
 
             @Override
-            public void initialize(List<EndPoint> endPoints, NrpCreateConnectivityServiceAttrs context) {
+            public void initialize(List<EndPoint> endPoints, String serviceId, NrpCreateConnectivityServiceAttrs context) {
                 //FIXME implement new API
                 this.zEnd = null;
                 this.aEnd = null;

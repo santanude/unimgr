@@ -59,7 +59,7 @@ public class OvsDriver implements ActivationDriverBuilder {
             }
 
             @Override
-            public void initialize(List<EndPoint> endPoints, NrpCreateConnectivityServiceAttrs context) {
+            public void initialize(List<EndPoint> endPoints, String serviceId, NrpCreateConnectivityServiceAttrs context) {
 
             }
 

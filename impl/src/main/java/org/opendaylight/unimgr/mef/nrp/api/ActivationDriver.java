@@ -40,9 +40,10 @@ public interface ActivationDriver {
     /**
      * Set state for the driver for a (de)activation transaction.
      * @param endPoints list of endpoint to interconnect
+     * @param serviceId connectivity service id
      * @param context context
      */
-    void initialize(List<EndPoint> endPoints, NrpCreateConnectivityServiceAttrs context);
+    void initialize(List<EndPoint> endPoints, String serviceId, NrpCreateConnectivityServiceAttrs context);
 
     /**
      * Performs the activation action.

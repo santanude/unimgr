@@ -53,6 +53,7 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
     private RequestDecomposer decomposer;
     private RequestValidator validator;
     private DataBroker broker;
+    private ConnectivityServiceIdResourcePool serviceIdPool;
 
     private ExecutorService executor = new ThreadPoolExecutor(4, 16,
             30, TimeUnit.MINUTES,
@@ -60,11 +61,13 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
 
     final static  InstanceIdentifier<Context1> connectivityCtx = NrpDao.ctx().augmentation(Context1.class);
 
+
     public void init() {
         Objects.requireNonNull(driverRepo);
         Objects.requireNonNull(decomposer);
         Objects.requireNonNull(validator);
         Objects.requireNonNull(broker);
+        Objects.requireNonNull(serviceIdPool);
         log.info("TapiConnectivityService initialized");
     }
 
@@ -133,13 +136,15 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
                     return new EndPoint(ep, nrpAttributes);
                 }).collect(Collectors.toList());
 
-                ActivationTransaction tx = prepareTransaction();
+                String uniqueStamp = serviceIdPool.getServiceId();
+
+                ActivationTransaction tx = prepareTransaction(toCsId(uniqueStamp));
                 if(tx != null) {
                     ActivationTransaction.Result txResult = tx.activate();
                     if(txResult.isSuccessful()) {
                         log.info("ConnectivityService construct activated successfully, request = {} ", input);
 
-                        ConnectivityService service = createConnectivityModel();
+                        ConnectivityService service = createConnectivityModel(uniqueStamp);
                         CreateConnectivityServiceOutput result = new CreateConnectivityServiceOutputBuilder()
                                 .setService(new ServiceBuilder(service).build()).build();
                         return RpcResultBuilder.success(result).build();
@@ -159,7 +164,7 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
             }
         }
 
-        private ActivationTransaction prepareTransaction() {
+        private ActivationTransaction prepareTransaction(String serviceId) {
             log.debug("decompose request");
             decomposedRequest = decomposer.decompose(endpoints, null);
 
@@ -170,7 +175,7 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
                 if(!driver.isPresent()) {
                     throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", s.getNodeUuid()));
                 }
-                driver.get().initialize(s.getEndpoints(), null);
+                driver.get().initialize(s.getEndpoints(), serviceId, null);
                 log.debug("driver {} added to activation transaction", driver.get());
                 return driver.get();
             }).forEach(tx::addDriver);
@@ -180,13 +185,16 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
 
         private RequestValidator.ValidationResult validateInput() {
             return validator.checkValid(input);
-
         }
 
-        private ConnectivityService createConnectivityModel() {
+        private String toCsId(String uniqueStamp) {
+            return "cs:" + uniqueStamp;
+        }
+
+        private ConnectivityService createConnectivityModel(String uniqueStamp) {
             assert decomposedRequest != null : "this method can be only run after request was successfuly decomposed";
             //sort of unique ;)
-            String uniqueStamp =  Long.toString(System.currentTimeMillis(), 16);
+
             log.debug("Preparing connectivity related model for {}", uniqueStamp);
 
             List<Connection> systemConnections = decomposedRequest.stream().map(s -> new ConnectionBuilder()
@@ -215,7 +223,7 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
             ConnConstraint connConstraint = input.getConnConstraint() == null ? null : new ConnConstraintBuilder(input.getConnConstraint()).build();
 
             org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.context.ConnectivityService cs = new org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.context.ConnectivityServiceBuilder()
-                    .setUuid(new UniversalId("cs:" + uniqueStamp))
+                    .setUuid(new UniversalId(toCsId(uniqueStamp)))
 //                    .setState()
                     .setConnConstraint(connConstraint)
                     .setConnection(Collections.singletonList(globalConnection.getUuid()))
@@ -296,5 +304,9 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
 
     public void setExecutor(ExecutorService executor) {
         this.executor = executor;
+    }
+
+    public void setServiceIdPool(ConnectivityServiceIdResourcePool serviceIdPool) {
+        this.serviceIdPool = serviceIdPool;
     }
 }

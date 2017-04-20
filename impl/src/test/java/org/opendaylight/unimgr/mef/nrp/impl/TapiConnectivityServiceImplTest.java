@@ -88,6 +88,7 @@ public class TapiConnectivityServiceImplTest {
 
         when(broker.newWriteOnlyTransaction()).thenReturn(tx);
         connectivityService.setBroker(broker);
+        connectivityService.setServiceIdPool(new ConnectivityServiceIdResourcePool());
         connectivityService.init();
     }
 

@@ -42,6 +42,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <property name="decomposer" ref="basicDecomposer" />
         <property name="broker" ref="dataBroker" />
         <property name="validator" ref="requestValidator" />
+        <property name="serviceIdPool" >
+            <bean class="org.opendaylight.unimgr.mef.nrp.impl.ConnectivityServiceIdResourcePool"/>
+        </property>
     </bean>
 
     <bean id="basicDecomposer" class="org.opendaylight.unimgr.mef.nrp.impl.decomposer.BasicDecomposer">
