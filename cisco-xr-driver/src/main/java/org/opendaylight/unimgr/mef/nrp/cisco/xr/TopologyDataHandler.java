@@ -24,7 +24,12 @@ import org.opendaylight.unimgr.utils.CapabilitiesService;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationKey;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.LayerProtocolName;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.TerminationDirection;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.context.attrs.ServiceInterfacePoint;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.context.attrs.ServiceInterfacePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.service._interface.point.LayerProtocolBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.OwnedNodeEdgePoint;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.OwnedNodeEdgePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.OwnedNodeEdgePointKey;
@@ -44,8 +49,10 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -93,6 +100,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     public void init() {
+        log.debug("initializing topology handler for {}", DriverConstants.XR_NODE);
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
 
         NrpDao dao = new NrpDao(tx);
@@ -102,17 +110,27 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
             @Override
             public void onSuccess(@Nullable Void result) {
                 log.info("Node {} created", DriverConstants.XR_NODE);
+                capabilitiesService = new CapabilitiesService(dataBroker);
+                registerNetconfTreeListener();
+
             }
 
             @Override
             public void onFailure(Throwable t) {
                 log.error("No node created due to the error", t);
+                try {
+                    TimeUnit.SECONDS.sleep(3);
+                } catch (InterruptedException _e) {
+
+                }
+                log.info("retrying initialization of Topology handler for {}", DriverConstants.XR_NODE);
+                init();
             }
         });
 
-        capabilitiesService = new CapabilitiesService(dataBroker);
 
-        registerNetconfTreeListener();
+
+
     }
 
     public void close() {
@@ -159,7 +177,19 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
         final ReadWriteTransaction topoTx = dataBroker.newReadWriteTransaction();
         NrpDao dao = new NrpDao(topoTx);
-        toTp(added).forEach(nep -> dao.updateNep(DriverConstants.XR_NODE, nep));
+        toTp(added).forEach(nep -> {
+
+            ServiceInterfacePoint sip = new ServiceInterfacePointBuilder()
+                    .setUuid(new UniversalId("sip:" + nep.getUuid().getValue()))
+//                    .setState(St)
+                    .setDirection(TerminationDirection.Bidirectional)
+                    .setLayerProtocol(Collections.singletonList(new LayerProtocolBuilder().setLocalId("eth").setLayerProtocolName(LayerProtocolName.Eth).build()))
+                    .build();
+            dao.addSip(sip);
+            nep = new OwnedNodeEdgePointBuilder(nep).setMappedServiceInterfacePoint(Collections.singletonList(sip.getUuid())).build();
+            log.trace("Adding nep {} to {} node", nep.getUuid(), DriverConstants.XR_NODE);
+            dao.updateNep(DriverConstants.XR_NODE, nep);
+        });
 
         Futures.addCallback(topoTx.submit(), new FutureCallback<Void>() {
 
@@ -211,6 +241,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                                             .setKey(new OwnedNodeEdgePointKey(tpId))
                                             .build();
                                 }).collect(Collectors.toList());
+
                     }
 
                     return tps.stream();
