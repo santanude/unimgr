@@ -11,7 +11,6 @@ package org.opendaylight.unimgr.mef.nrp.api;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceEndPointAttrs;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.ConnectivityServiceEndPoint;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.NodeEdgePoint;
 
 /**
  * @see ConnectivityServiceEndPoint
@@ -57,7 +56,8 @@ public class EndPoint {
         return systemNepUuid;
     }
 
-    public void setSystemNepUuid(UniversalId systemNepUuid) {
+    public EndPoint setSystemNepUuid(UniversalId systemNepUuid) {
         this.systemNepUuid = systemNepUuid;
+        return this;
     }
 }

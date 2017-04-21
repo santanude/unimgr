@@ -37,7 +37,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
 
     <bean id="requestValidator" class="org.opendaylight.unimgr.mef.nrp.impl.DefaultValidator" />
 
-    <bean id="tapiConnectivityService" class="org.opendaylight.unimgr.mef.nrp.impl.TapiConnectivityServiceImpl" init-method="init">
+    <bean id="tapiConnectivityService" class="org.opendaylight.unimgr.mef.nrp.impl.connectivityservice.TapiConnectivityServiceImpl" init-method="init">
         <property name="driverRepo" ref="activationDriverRepo" />
         <property name="decomposer" ref="basicDecomposer" />
         <property name="broker" ref="dataBroker" />

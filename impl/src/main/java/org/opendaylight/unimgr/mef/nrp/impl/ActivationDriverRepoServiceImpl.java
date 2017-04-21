@@ -61,11 +61,6 @@ public class ActivationDriverRepoServiceImpl implements ActivationDriverRepoServ
         return drivers.get(0);
     }
 
-
-    public ActivationDriver getDriver(FcPort port, ActivationDriverBuilder.BuilderContext context) {
-        return getDriver(x -> x.driverFor(null));
-    }
-
     public void bind(ActivationDriverBuilder builder) {
         LOG.debug("builder {} bound", builder);
     }
