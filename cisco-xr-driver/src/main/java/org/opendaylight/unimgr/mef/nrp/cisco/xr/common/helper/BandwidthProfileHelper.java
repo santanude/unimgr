@@ -8,6 +8,7 @@
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
 import org.opendaylight.unimgr.utils.MdsalUtils;
 import org.opendaylight.unimgr.utils.NullAwareDatastoreGetter;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
@@ -26,7 +27,6 @@ import org.opendaylight.yang.gen.v1.urn.mef.nrp.bandwidth.profile.rev160630.GNRP
 import org.opendaylight.yang.gen.v1.urn.mef.nrp.specs.rev160630.AdapterSpec1;
 import org.opendaylight.yang.gen.v1.urn.mef.nrp.specs.rev160630.TerminationSpec1;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.TerminationPoint1;
-import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_layerprotocol.LpSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,9 +61,9 @@ public class BandwidthProfileHelper {
         }
     }
 
-    private static List<BandwidthProfileComposition> retrieveBandwidthProfiles(DataBroker dataBroker, FcPort port) {
+    private static List<BandwidthProfileComposition> retrieveBandwidthProfiles(DataBroker dataBroker, XrPort port) {
         List<BandwidthProfileComposition> bwCompositionList = new ArrayList<>();
-        List<NullAwareDatastoreGetter<LpSpec>> lpSpecNadgs = new NullAwareDatastoreGetter<>(MdsalUtils.readTerminationPoint(dataBroker, CONFIGURATION, port))
+        List<NullAwareDatastoreGetter<LpSpec>> lpSpecNadgs = new NullAwareDatastoreGetter<>(MdsalUtils.readTerminationPoint(dataBroker, CONFIGURATION, port.getTopology(), port.getNode(), port.getTp()))
                 .collect(x -> x::getAugmentation, TerminationPoint1.class)
                 .collect(x -> x::getLtpAttrs)
                 .collectMany(x -> x::getLpList)
@@ -99,7 +99,7 @@ public class BandwidthProfileHelper {
 
     private List<PolicyMap> policyMaps;
 
-    public BandwidthProfileHelper(DataBroker dataBroker, FcPort port) {
+    public BandwidthProfileHelper(DataBroker dataBroker, XrPort port) {
         bandwidthProfiles = BandwidthProfileHelper.retrieveBandwidthProfiles(dataBroker, port);
         policyMaps = new ArrayList<>();
     }

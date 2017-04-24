@@ -16,6 +16,7 @@ import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnActivatorTestUtils;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
@@ -58,7 +59,7 @@ public class LoopbackUtilsTest extends AbstractDataBrokerTest {
     @Test
     public void testLoopbackAddress(){
         //given
-        FcPort port = L2vpnActivatorTestUtils.port(topoName, nodeName, portNumber);
+        XrPort port = L2vpnActivatorTestUtils.port(topoName, nodeName, portNumber);
         createAndPersistNode(true);
 
         //when
@@ -71,7 +72,7 @@ public class LoopbackUtilsTest extends AbstractDataBrokerTest {
     @Test
     public void testAbsenceOfLoopbackAddress(){
         //given
-        FcPort port = L2vpnActivatorTestUtils.port(topoName, nodeName, portNumber);
+        XrPort port = L2vpnActivatorTestUtils.port(topoName, nodeName, portNumber);
         createAndPersistNode(false);
 
         //when

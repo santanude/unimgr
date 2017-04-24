@@ -229,7 +229,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         List<OwnedNodeEdgePoint> neps = new LinkedList<>();
 
         toAddMap.entrySet().stream()
-                .filter(entry -> isNep(entry.getKey()))
+                //.filter(entry -> isNep(entry.getKey()))
                 .forEach(entry -> {
                     OwnedNodeEdgePoint nep = createNep(getFullPortName(entry.getValue(),entry.getKey().getTpId().getValue()));
                     neps.add(nep);

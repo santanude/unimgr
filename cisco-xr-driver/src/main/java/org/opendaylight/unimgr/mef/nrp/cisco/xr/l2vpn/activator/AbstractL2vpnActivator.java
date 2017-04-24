@@ -13,10 +13,13 @@ import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
+import org.opendaylight.unimgr.utils.SipHandler;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
@@ -32,10 +35,16 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.P2pXconnectKey;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.Pseudowires;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TpId;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Abstarct activator of VPLS-based L2 VPN on IOS-XR devices. It is responsible for handling activation and deactivation
@@ -46,6 +55,8 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractL2vpnActivator.class);
+    private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
+    private static final long mtu = 1500;
 
     protected DataBroker dataBroker;
 
@@ -56,23 +67,41 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         this.mountService = mountService;
     }
 
-    @Override
-    public void activate(String nodeName, String outerName, String innerName, FcPort port, FcPort neighbor, long mtu) throws TransactionCommitFailedException {
+    public void activate(List<EndPoint> endPoints, String serviceId) throws TransactionCommitFailedException {
+        String innerName = getInnerName(serviceId);
+        String outerName = getOuterName(serviceId);
+        XrPort port = toXrPort(endPoints.get(0));
+        XrPort neighbor = toXrPort(endPoints.get(1));;
+
+        //for now QoS is ignored
         java.util.Optional<PolicyManager> qosConfig = activateQos(innerName, port);
         InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu);
         Pseudowires pseudowires = activatePseudowire(neighbor);
         XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
 
-        doActivate(nodeName, outerName, innerName, interfaceConfigurations, l2vpn, qosConfig);
+        doActivate(port.getNode().getValue(), outerName, innerName, interfaceConfigurations, l2vpn, qosConfig);
+    }
+
+    public void deactivate(List<EndPoint> endPoints, String serviceId) throws TransactionCommitFailedException {
+        String innerName = getInnerName(serviceId);
+        String outerName = getOuterName(serviceId);
+        XrPort port = toXrPort(endPoints.get(0));
+
+        InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
+        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port);
+
+        doDeactivate(port.getNode().getValue(), outerName, innerName, xconnectId, interfaceConfigurationId);
+    }
+
+    @Override
+    public void activate(String nodeName, String outerName, String innerName, FcPort port, FcPort neighbor, long mtu) throws TransactionCommitFailedException {
+
     }
 
     @Override
     public void deactivate(String nodeName, String outerName, String innerName, FcPort port, FcPort neighbor, long mtu) throws TransactionCommitFailedException {
-        InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
-        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port);
 
-        doDeactivate(nodeName, outerName, innerName, xconnectId, interfaceConfigurationId);
     }
 
     protected void doActivate(String nodeName,
@@ -112,13 +141,13 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         transaction.submit().checkedGet();
     }
 
-    protected abstract java.util.Optional<PolicyManager> activateQos(String name, FcPort port);
+    protected abstract java.util.Optional<PolicyManager> activateQos(String name, XrPort port);
 
-    protected abstract InterfaceConfigurations activateInterface(FcPort portA, FcPort portZ, long mtu);
+    protected abstract InterfaceConfigurations activateInterface(XrPort portA, XrPort portZ, long mtu);
 
-    protected abstract Pseudowires activatePseudowire(FcPort neighbor);
+    protected abstract Pseudowires activatePseudowire(XrPort neighbor);
 
-    protected abstract XconnectGroups activateXConnect(String outerName, String innerName, FcPort portA, FcPort portZ, Pseudowires pseudowires);
+    protected abstract XconnectGroups activateXConnect(String outerName, String innerName, XrPort portA, XrPort portZ, Pseudowires pseudowires);
 
     protected abstract L2vpn activateL2Vpn(XconnectGroups xconnectGroups);
 
@@ -131,9 +160,20 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
                 .build();
     }
 
-    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(FcPort port) {
+    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(XrPort port) {
         return InstanceIdentifier.builder(InterfaceConfigurations.class)
                 .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), InterfaceHelper.getInterfaceName(port)))
                 .build();
+    }
+
+    protected abstract String getInnerName(String serviceId);
+    protected abstract String getOuterName(String serviceId);
+
+    private XrPort toXrPort(EndPoint endPoint){
+        UniversalId sip = endPoint.getEndpoint().getServiceInterfacePoint();
+        TopologyId topologyId = new TopologyId(NETCONF_TOPOLODY_NAME);
+        NodeId nodeId = new NodeId(SipHandler.getDeviceName(sip));
+        TpId tpId = new TpId(SipHandler.getPortName(sip));
+        return new XrPort(topologyId,nodeId,tpId);
     }
 }

@@ -19,6 +19,7 @@ import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.MountPointHelper;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
@@ -26,6 +27,13 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.XconnectGroup;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.P2pXconnect;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.attachment.circuits.AttachmentCircuit;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm_connectivity.rev170227.PositiveInteger;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm_connectivity.rev170227.cg.eth.frame.flow.cpa.aspec.CeVlanIdList;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm_connectivity.rev170227.vlan.id.listing.VlanIdList;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceEndPointAttrs;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.nrp.create.connectivity.service.end.point.attrs.NrpCgEthFrameFlowCpaAspec;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.ConnectivityServiceEndPoint;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -33,10 +41,13 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author marek.ryznar@amartus.com
@@ -49,14 +60,13 @@ public class L2vpnBridgeActivatorTest extends AbstractDataBrokerTest{
     private L2vpnBridgeActivator l2vpnBridgeActivator;
     private MountPointService mountService;
     private Optional<DataBroker> optBroker;
-    private String nodeName;
     private String outerName;
     private String innerName;
     private String portNo1;
     private String portNo2;
-    private FcPort port;
-    private FcPort neighbor;
-    private Long mtu ;
+    private String deviceName = "localhost";
+    private List<EndPoint> endPoints;
+    private String serviceId = "serviceId";
 
     @Before
     public void setUp(){
@@ -66,14 +76,11 @@ public class L2vpnBridgeActivatorTest extends AbstractDataBrokerTest{
         mountService = L2vpnActivatorTestUtils.getMockedMountPointService(optBroker);
         l2vpnBridgeActivator = new L2vpnBridgeActivator(broker,mountService);
 
-        nodeName = "NodeNameExample";
-        outerName = "OuterNameExample";
-        innerName = "InnerNameExample";
+        outerName = "local";
+        innerName = "local";
         portNo1 = "80";
         portNo2 = "8080";
-        port = L2vpnActivatorTestUtils.port("a", "localhost", portNo1);
-        neighbor = L2vpnActivatorTestUtils.port("z", "localhost", portNo2);
-        mtu = 1500L;
+        endPoints = L2vpnActivatorTestUtils.mockEndpoints(deviceName,deviceName,portNo1,portNo2);
     }
 
     @Test
@@ -106,7 +113,7 @@ public class L2vpnBridgeActivatorTest extends AbstractDataBrokerTest{
 
     private void deactivate(){
         try {
-            l2vpnBridgeActivator.deactivate(nodeName,outerName,innerName,port,neighbor,mtu);
+            l2vpnBridgeActivator.deactivate(endPoints,serviceId);
         } catch (TransactionCommitFailedException e) {
             fail("Error during deactivation : " + e.getMessage());
         }
@@ -115,7 +122,7 @@ public class L2vpnBridgeActivatorTest extends AbstractDataBrokerTest{
     private void activate(){
         log.debug("activate L2VPN");
         try {
-            l2vpnBridgeActivator.activate(nodeName, outerName, innerName, port, neighbor, mtu);
+            l2vpnBridgeActivator.activate(endPoints,serviceId);
         } catch (TransactionCommitFailedException e) {
             fail("Error during activation : " + e.getMessage());
         }

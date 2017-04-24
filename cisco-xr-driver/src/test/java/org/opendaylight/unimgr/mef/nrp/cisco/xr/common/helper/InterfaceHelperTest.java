@@ -10,6 +10,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper;
 import java.util.Optional;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.MtuUtils;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
@@ -38,7 +39,7 @@ public class InterfaceHelperTest {
         TpId tp = Mockito.mock(TpId.class);
         Mockito.when(tp.getValue()).thenReturn(interfaceName);
 
-        FcPort port = Mockito.mock(FcPort.class);
+        XrPort port = Mockito.mock(XrPort.class);
         Mockito.when(port.getTp()).thenReturn(tp);
 
         InterfaceName expected = new InterfaceName(interfaceName);
@@ -58,7 +59,7 @@ public class InterfaceHelperTest {
         TpId tp = Mockito.mock(TpId.class);
         Mockito.when(tp.getValue()).thenReturn(interfaceName);
 
-        FcPort port = Mockito.mock(FcPort.class);
+        XrPort port = Mockito.mock(XrPort.class);
         Mockito.when(port.getTp()).thenReturn(tp);
 
         InterfaceName expected = new InterfaceName("GigabitEthernet0/0/1");

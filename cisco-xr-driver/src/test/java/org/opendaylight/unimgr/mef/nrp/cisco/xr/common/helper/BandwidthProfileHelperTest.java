@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
 import org.opendaylight.unimgr.utils.MdsalUtils;
 import org.opendaylight.yang.gen.v1.urn.mef.nrp.specs.rev160630.AdapterSpec1;
 import org.opendaylight.yang.gen.v1.urn.mef.nrp.specs.rev160630.TerminationSpec1;
@@ -54,7 +55,7 @@ public class BandwidthProfileHelperTest {
     @Test
     public void testRetrieveBandwidthProfiles() {
         //given
-        FcPort fcPort = mock(FcPort.class);
+        XrPort fcPort = mock(XrPort.class);
 
         IngressBwpFlow expectedIngressDefaultBwp = mock(IngressBwpFlow.class);
         EgressBwpFlow expectedEgressDefaultBwp = mock(EgressBwpFlow.class);
@@ -100,7 +101,7 @@ public class BandwidthProfileHelperTest {
     @Test
     public void testRetrieveBandwidthProfilesNoQos() {
         //given
-        FcPort fcPort = mock(FcPort.class);
+        XrPort fcPort = mock(XrPort.class);
 
         DataBroker dataBroker = mockDatastore(fcPort,
                 Optional.empty(),
@@ -130,7 +131,7 @@ public class BandwidthProfileHelperTest {
     @Test
     public void testRetrieveBandwidthProfilesEmpty() {
         //given
-        FcPort fcPort = mock(FcPort.class);
+        XrPort fcPort = mock(XrPort.class);
 
         DataBroker dataBroker = mockDatastoreEmpty(fcPort);
 
@@ -142,7 +143,7 @@ public class BandwidthProfileHelperTest {
         assertEquals(0, actual.size());
     }
 
-    private DataBroker mockDatastore(FcPort fcPort,
+    private DataBroker mockDatastore(XrPort xrPort,
                                      Optional<IngressBwpFlow> ingressDefaultBwp,
                                      Optional<EgressBwpFlow> egressDefaultBwp,
                                      Optional<IngressBwpFlow> ingressEvcBwp,
@@ -207,16 +208,16 @@ public class BandwidthProfileHelperTest {
         }
 
         PowerMockito.mockStatic(MdsalUtils.class);
-        when(MdsalUtils.readTerminationPoint(eq(dataBroker), eq(CONFIGURATION), eq(fcPort))).thenReturn(com.google.common.base.Optional.of(tp));
+        when(MdsalUtils.readTerminationPoint(eq(dataBroker), eq(CONFIGURATION), eq(xrPort.getTopology()), eq(xrPort.getNode()), eq(xrPort.getTp()) )).thenReturn(com.google.common.base.Optional.of(tp));
 
         return dataBroker;
     }
 
-    private DataBroker mockDatastoreEmpty(FcPort fcPort) {
+    private DataBroker mockDatastoreEmpty(XrPort xrPort) {
         DataBroker dataBroker = mock(DataBroker.class);
 
         PowerMockito.mockStatic(MdsalUtils.class);
-        when(MdsalUtils.readTerminationPoint(eq(dataBroker), eq(CONFIGURATION), eq(fcPort))).thenReturn(com.google.common.base.Optional.absent());
+        when(MdsalUtils.readTerminationPoint(eq(dataBroker), eq(CONFIGURATION), eq(xrPort.getTopology()), eq(xrPort.getNode()), eq(xrPort.getTp()))).thenReturn(com.google.common.base.Optional.absent());
 
         return dataBroker;
     }

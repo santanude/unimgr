@@ -106,6 +106,15 @@ public class OvsActivatorTest extends AbstractDataBrokerTest{
                         fail(e.getMessage());
                     }
                 });
+
+        //when
+        try {
+            ovsActivator.deactivate(endPoints);
+        } catch (TransactionCommitFailedException e) {
+            fail(e.getMessage());
+        } catch (ResourceNotAvailableException e) {
+            fail(e.getMessage());
+        }
     }
 
     private void checkTable(Table table, List<String> interswitchPorts){

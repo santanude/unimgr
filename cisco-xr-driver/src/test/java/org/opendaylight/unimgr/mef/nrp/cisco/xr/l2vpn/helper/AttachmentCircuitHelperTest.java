@@ -11,6 +11,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.AttachmentCircuits;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.attachment.circuits.AttachmentCircuit;
@@ -38,7 +39,7 @@ public class AttachmentCircuitHelperTest {
         //given
         InterfaceName interfaceName = new InterfaceName("GigabitEthernet0/0/1");
 
-        FcPort port = Mockito.mock(FcPort.class);
+        XrPort port = Mockito.mock(XrPort.class);
         PowerMockito.mockStatic(InterfaceHelper.class);
         PowerMockito.when(InterfaceHelper.getInterfaceName(port)).thenReturn(interfaceName);
 

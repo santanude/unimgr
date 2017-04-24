@@ -10,6 +10,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.AttachmentCircuitHelper;
@@ -23,7 +24,6 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.XconnectGroup;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.AttachmentCircuits;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.Pseudowires;
-import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 
 import java.util.Optional;
 
@@ -38,12 +38,14 @@ import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthPr
  */
 public class L2vpnBridgeActivator extends AbstractL2vpnActivator {
 
+    private static final String GROUP_NAME = "local";
+
     public L2vpnBridgeActivator(DataBroker dataBroker, MountPointService mountService) {
         super(dataBroker, mountService);
     }
 
     @Override
-    protected Optional<PolicyManager> activateQos(String name, FcPort port) {
+    protected Optional<PolicyManager> activateQos(String name, XrPort port) {
         return new BandwidthProfileHelper(dataBroker, port)
                 .addPolicyMap(name, INGRESS, UNI)
                 .addPolicyMap(name, EGRESS, UNI)
@@ -51,7 +53,7 @@ public class L2vpnBridgeActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    protected InterfaceConfigurations activateInterface(FcPort port, FcPort neighbor, long mtu) {
+    protected InterfaceConfigurations activateInterface(XrPort port, XrPort neighbor, long mtu) {
         return new InterfaceHelper()
             .addInterface(port, Optional.empty(), true)
             .addInterface(neighbor, Optional.empty(), true)
@@ -59,12 +61,12 @@ public class L2vpnBridgeActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    protected Pseudowires activatePseudowire(FcPort neighbor) {
+    protected Pseudowires activatePseudowire(XrPort neighbor) {
         return new PseudowireHelper().build();
     }
 
     @Override
-    protected XconnectGroups activateXConnect(String outerName, String innerName, FcPort portA, FcPort portZ, Pseudowires pseudowires) {
+    protected XconnectGroups activateXConnect(String outerName, String innerName, XrPort portA, XrPort portZ, Pseudowires pseudowires) {
         AttachmentCircuits attachmentCircuits = new AttachmentCircuitHelper()
             .addPort(portA)
             .addPort(portZ)
@@ -80,5 +82,15 @@ public class L2vpnBridgeActivator extends AbstractL2vpnActivator {
     @Override
     protected L2vpn activateL2Vpn(XconnectGroups xconnectGroups) {
         return L2vpnHelper.build(xconnectGroups);
+    }
+
+    @Override
+    protected String getInnerName(String serviceId) {
+        return GROUP_NAME;
+    }
+
+    @Override
+    protected String getOuterName(String serviceId) {
+        return GROUP_NAME;
     }
 }

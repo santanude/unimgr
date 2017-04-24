@@ -20,6 +20,7 @@ import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.MountPointHelper;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
@@ -36,6 +37,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.fail;
@@ -50,14 +52,12 @@ public class L2vpnXconnectActivatorTest extends AbstractDataBrokerTest {
     private L2vpnXconnectActivator l2vpnXconnectActivator;
     private MountPointService mountService;
     private Optional<DataBroker> optBroker;
-    private String nodeName;
-    private String outerName;
-    private String innerName;
-    private String portNo;
-    private FcPort port;
-    private FcPort neighbor;
     private Long mtu;
-
+    private String deviceName = "localhost";
+    private String portNo1="80";
+    private String portNo2="8080";
+    private String serviceId = "serviceId";
+    private List<EndPoint> endPoints;
 
     @Before
     public void setUp(){
@@ -68,20 +68,15 @@ public class L2vpnXconnectActivatorTest extends AbstractDataBrokerTest {
         mountService = L2vpnActivatorTestUtils.getMockedMountPointService(optBroker);
         l2vpnXconnectActivator = new L2vpnXconnectActivator(broker,mountService);
 
-        nodeName = "NodeNameExample";
-        outerName = "OuterNameExample";
-        innerName = "InnerNameExample";
-        portNo = "80";
-        port = L2vpnActivatorTestUtils.port("a", "localhost", portNo);
-        neighbor = L2vpnActivatorTestUtils.port("z", "localhost", "8080");
         mtu = Long.valueOf(1500);
+        endPoints = L2vpnActivatorTestUtils.mockEndpoints(deviceName,deviceName,portNo1,portNo2);
     }
 
     @Test
     public void testActivateAndDeactivate(){
         //when
         try {
-            l2vpnXconnectActivator.activate(nodeName, outerName, innerName, port, neighbor, mtu);
+            l2vpnXconnectActivator.activate(endPoints,serviceId);
         } catch (TransactionCommitFailedException e) {
             fail("Error during activation : " + e.getMessage());
         }
@@ -106,13 +101,13 @@ public class L2vpnXconnectActivatorTest extends AbstractDataBrokerTest {
         deactivate();
 
         //then
-        L2vpnActivatorTestUtils.checkDeactivated(optBroker,portNo);
+        L2vpnActivatorTestUtils.checkDeactivated(optBroker,portNo1);
     }
 
     private void deactivate(){
         //when
         try {
-            l2vpnXconnectActivator.deactivate(nodeName,outerName,innerName,port,neighbor,mtu);
+            l2vpnXconnectActivator.deactivate(endPoints,serviceId);
         } catch (TransactionCommitFailedException e) {
             fail("Error during deactivation : " + e.getMessage());
         }
@@ -124,13 +119,13 @@ public class L2vpnXconnectActivatorTest extends AbstractDataBrokerTest {
             L2vpnActivatorTestUtils.checkL2vpn(l2vpn);
 
             XconnectGroup xconnectGroup = l2vpn.getDatabase().getXconnectGroups().getXconnectGroup().get(0);
-            L2vpnActivatorTestUtils.checkXConnectGroup(xconnectGroup,outerName);
+            L2vpnActivatorTestUtils.checkXConnectGroup(xconnectGroup,"EUR16-"+serviceId);
 
             P2pXconnect p2pXconnect = xconnectGroup.getP2pXconnects().getP2pXconnect().get(0);
-            L2vpnActivatorTestUtils.checkP2pXconnect(p2pXconnect,innerName);
+            L2vpnActivatorTestUtils.checkP2pXconnect(p2pXconnect,"EUR16-p2p-"+serviceId);
 
             AttachmentCircuit attachmentCircuit = p2pXconnect.getAttachmentCircuits().getAttachmentCircuit().get(0);
-            L2vpnActivatorTestUtils.checkAttachmentCircuit(attachmentCircuit,portNo);
+            L2vpnActivatorTestUtils.checkAttachmentCircuit(attachmentCircuit,portNo1);
 
             Pseudowire pseudowire = p2pXconnect.getPseudowires().getPseudowire().get(0);
             L2vpnActivatorTestUtils.checkPseudowire(pseudowire);
@@ -151,7 +146,7 @@ public class L2vpnXconnectActivatorTest extends AbstractDataBrokerTest {
             L2vpnActivatorTestUtils.checkInterfaceConfigurations(interfaceConfigurations);
 
             InterfaceConfiguration interfaceConfiguration = interfaceConfigurations.getInterfaceConfiguration().get(0);
-            L2vpnActivatorTestUtils.checkInterfaceConfiguration(interfaceConfiguration,portNo,true);
+            L2vpnActivatorTestUtils.checkInterfaceConfiguration(interfaceConfiguration,portNo1,true);
 
             Mtu mtu1 = interfaceConfiguration.getMtus().getMtu().get(0);
             L2vpnActivatorTestUtils.checkMtu(mtu1,mtu);

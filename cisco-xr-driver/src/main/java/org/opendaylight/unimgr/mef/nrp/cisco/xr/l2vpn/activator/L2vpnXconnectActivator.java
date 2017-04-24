@@ -9,6 +9,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.LoopbackUtils;
@@ -17,6 +18,7 @@ import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.AttachmentCircuitHe
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.PseudowireHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.XConnectHelper;
+import org.opendaylight.unimgr.mef.nrp.common.FixedServiceNaming;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.Mtus;
@@ -26,7 +28,6 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.AttachmentCircuits;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.Pseudowires;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
-import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 
 import java.util.Optional;
 
@@ -42,12 +43,15 @@ import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthPr
  */
 public class L2vpnXconnectActivator extends AbstractL2vpnActivator {
 
+    private final FixedServiceNaming namingProvider;
+
     public L2vpnXconnectActivator(DataBroker dataBroker, MountPointService mountService) {
         super(dataBroker, mountService);
+        namingProvider = new FixedServiceNaming();
     }
 
     @Override
-    protected Optional<PolicyManager> activateQos(String name, FcPort port) {
+    protected Optional<PolicyManager> activateQos(String name, XrPort port) {
         return new BandwidthProfileHelper(dataBroker, port)
                 .addPolicyMap(name, INGRESS, UNI)
                 .addPolicyMap(name, EGRESS, UNI)
@@ -55,7 +59,7 @@ public class L2vpnXconnectActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    public InterfaceConfigurations activateInterface(FcPort port, FcPort neighbor, long mtu) {
+    public InterfaceConfigurations activateInterface(XrPort port, XrPort neighbor, long mtu) {
         Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString("GigabitEthernet"));
 
         return new InterfaceHelper()
@@ -64,14 +68,14 @@ public class L2vpnXconnectActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    public Pseudowires activatePseudowire(FcPort neighbor) {
+    public Pseudowires activatePseudowire(XrPort neighbor) {
         return new PseudowireHelper()
              .addPseudowire(LoopbackUtils.getIpv4Address(neighbor, dataBroker))
              .build();
     }
 
     @Override
-    public XconnectGroups activateXConnect(String outerName, String innerName, FcPort port, FcPort neighbor, Pseudowires pseudowires) {
+    public XconnectGroups activateXConnect(String outerName, String innerName, XrPort port, XrPort neighbor, Pseudowires pseudowires) {
         AttachmentCircuits attachmentCircuits = new AttachmentCircuitHelper()
              .addPort(port)
              .build();
@@ -86,5 +90,26 @@ public class L2vpnXconnectActivator extends AbstractL2vpnActivator {
     @Override
     public L2vpn activateL2Vpn(XconnectGroups xconnectGroups) {
         return L2vpnHelper.build(xconnectGroups);
+    }
+
+    @Override
+    protected String getInnerName(String serviceId) {
+        return namingProvider.getInnerName(replaceForbidenCharacters(serviceId));
+    }
+
+    @Override
+    protected String getOuterName(String serviceId) {
+        return namingProvider.getOuterName(replaceForbidenCharacters(serviceId));
+    }
+
+    /**
+     * ASR 9000 can't accept colon in xconnect group name, so it have to be replaced with underscore.
+     * If any other restriction will be found, this is a good place to change serviceId name.
+     *
+     * @param serviceId old service id
+     * @return new service id
+     */
+    private String replaceForbidenCharacters(String serviceId){
+        return serviceId.replace(":","_");
     }
 }
