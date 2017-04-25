@@ -27,6 +27,7 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.Own
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.Link;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.LinkBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.LinkKey;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.Node;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -80,20 +81,25 @@ public abstract class AbstractTestWithTopo extends AbstractDataBrokerTest {
         return uuids.map(UniversalId::new);
     }
 
-    protected void n(ReadWriteTransaction tx, String node, String ... endpoints) {
+    protected Node n(ReadWriteTransaction tx, boolean addSips, String node, String ... endpoints) {
         NrpDao nrpDao = new NrpDao(tx);
-        Arrays.stream(endpoints).map(e -> new ServiceInterfacePointBuilder()
+        if(addSips) Arrays.stream(endpoints).map(e -> new ServiceInterfacePointBuilder()
                 .setUuid(new UniversalId("sip:" + e))
                 .build())
                 .forEach(nrpDao::addSip);
 
 
-        nrpDao.createSystemNode(node, Arrays.stream(endpoints)
-                .map(e->
-                        new OwnedNodeEdgePointBuilder()
-                                .setUuid(new UniversalId(e))
-                                .setMappedServiceInterfacePoint(Collections.singletonList(new UniversalId("sip:"+e)))
-                                .build()
-                ).collect(Collectors.toList()));
+        return nrpDao.createSystemNode(node, Arrays.stream(endpoints)
+                .map(e-> {
+                    OwnedNodeEdgePointBuilder builder = new OwnedNodeEdgePointBuilder().setUuid(new UniversalId(e));
+                    if(addSips) {
+                        builder.setMappedServiceInterfacePoint(Collections.singletonList(new UniversalId("sip:"+e)));
+                    }
+                    return builder.build();
+                }).collect(Collectors.toList()));
+    }
+
+    protected Node n(ReadWriteTransaction tx, String node, String ... endpoints) {
+        return n(tx,true, node, endpoints);
     }
 }

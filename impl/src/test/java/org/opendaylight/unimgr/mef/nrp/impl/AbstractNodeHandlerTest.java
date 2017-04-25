@@ -15,6 +15,7 @@ import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.Context;
@@ -31,7 +32,9 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -41,14 +44,13 @@ import static org.junit.Assert.*;
 /**
  * @author marek.ryznar@amartus.com
  */
-public class AbstractNodeHandlerTest extends AbstractDataBrokerTest {
+public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
 
     private static final InstanceIdentifier NRP_ABSTRACT_NODE_IID = InstanceIdentifier
             .create(Context.class)
             .augmentation(Context1.class)
             .child(Topology.class, new TopologyKey(new UniversalId(TapiConstants.PRESTO_EXT_TOPO)))
             .child(Node.class,new NodeKey(new UniversalId(TapiConstants.PRESTO_ABSTRACT_NODE)));
-    private DataBroker dataBroker;
     private AbstractNodeHandler abstractNodeHandler;
     private NrpDao nrpDao;
     private static final String testSystemNodeName = "testSystemNode";
@@ -102,15 +104,67 @@ public class AbstractNodeHandlerTest extends AbstractDataBrokerTest {
         //given
         performNrpDaoAction(addNode,null);
 
-        //when
+        //when changing not sip related attribute
         OwnedNodeEdgePoint toUpdateNep = createNep(testNepName+"1",TerminationDirection.UndefinedOrUnknown);
         performNrpDaoAction(update, toUpdateNep);
 
-        //then
+
         Node node = getAbstractNode();
         //There could be more neps if our node was added insted of updated
         assertEquals(init_neps_count,node.getOwnedNodeEdgePoint().size());
         assertTrue(node.getOwnedNodeEdgePoint().contains(toUpdateNep));
+    }
+
+    @Test
+    public void testNepUpdatedWithSipAddition() throws ExecutionException, InterruptedException, TransactionCommitFailedException {
+        //given
+        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
+        Node n1 = n(tx, false, "n1", "n1:1", "n1:2");
+        tx.submit().get();
+
+        Node node = getAbstractNode();
+        int neps = node.getOwnedNodeEdgePoint() == null ? 0 : node.getOwnedNodeEdgePoint().size();
+        assertEquals(0,neps);
+
+        //when
+        tx = dataBroker.newReadWriteTransaction();
+        OwnedNodeEdgePoint n11 = new OwnedNodeEdgePointBuilder(n1.getOwnedNodeEdgePoint().get(0))
+                .setMappedServiceInterfacePoint(Collections.singletonList(new UniversalId("sip:n1:1")))
+                .build();
+        new NrpDao(tx).updateNep("n1", n11);
+        tx.submit().checkedGet();
+
+        //then
+        node = getAbstractNode();
+        //There could be more neps if our node was added instead of updated
+        assertEquals(1,node.getOwnedNodeEdgePoint().size());
+
+    }
+
+    @Test
+    public void testNepUpdatedWithSipRemoval() throws ExecutionException, InterruptedException, TransactionCommitFailedException {
+        //given we have sips
+        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
+        Node n1 = n(tx, true, "n1", "n1:1", "n1:2");
+        tx.submit().get();
+
+        //assert
+        Node node = getAbstractNode();
+        assertEquals(2,node.getOwnedNodeEdgePoint().size());
+
+        //when
+        tx = dataBroker.newReadWriteTransaction();
+        OwnedNodeEdgePoint n11 = new OwnedNodeEdgePointBuilder(n1.getOwnedNodeEdgePoint().get(0))
+                .setMappedServiceInterfacePoint(Collections.emptyList())
+                .build();
+        new NrpDao(tx).updateNep("n1", n11);
+        tx.submit().checkedGet();
+
+        //then
+        node = getAbstractNode();
+        //a nep was removed
+        assertEquals(1,node.getOwnedNodeEdgePoint().size());
+
     }
 
     @Test
@@ -161,13 +215,19 @@ public class AbstractNodeHandlerTest extends AbstractDataBrokerTest {
     }
 
     private OwnedNodeEdgePoint createNep(String nepName, TerminationDirection td){
+        return createNep(nepName, true, td);
+    }
+
+    private OwnedNodeEdgePoint createNep(String nepName, boolean associateSip, TerminationDirection td){
         UniversalId uuid = new UniversalId(nepName);
-        return new OwnedNodeEdgePointBuilder()
+        OwnedNodeEdgePointBuilder builder = new OwnedNodeEdgePointBuilder()
                 .setKey(new OwnedNodeEdgePointKey(uuid))
                 .setUuid(uuid)
-                .setTerminationDirection(td)
-                .setMappedServiceInterfacePoint(Arrays.asList(new UniversalId(sipPrefix+nepName)))
-                .build();
+                .setTerminationDirection(td);
+
+        if(associateSip) builder.setMappedServiceInterfacePoint(Arrays.asList(new UniversalId(sipPrefix + nepName)));
+
+        return builder.build();
     }
 
     private Node getAbstractNode(){

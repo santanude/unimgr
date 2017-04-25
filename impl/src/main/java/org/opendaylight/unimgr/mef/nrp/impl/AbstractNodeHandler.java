@@ -20,6 +20,7 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.node.Own
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.context.Topology;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.context.TopologyKey;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,16 +65,24 @@ public class AbstractNodeHandler implements DataTreeChangeListener<Topology> {
 
     @Override
     public void onDataTreeChanged(@Nonnull Collection<DataTreeModification<Topology>> collection) {
-        List<OwnedNodeEdgePoint> toDeleteNeps = new LinkedList<>();
+
         List<OwnedNodeEdgePoint> toUpdateNeps =
                 collection.stream()
                         .map(DataTreeModification::getRootNode)
                         .flatMap(topo -> topo.getModifiedChildren().stream())
                         .flatMap(node -> node.getModifiedChildren().stream())
-                        .filter(nep -> checkIfDeleted(toDeleteNeps,nep))
                         .filter(this::checkIfUpdated)
                         .map(nep -> (OwnedNodeEdgePoint) nep.getDataAfter())
                         .collect(Collectors.toList());
+
+
+        List<OwnedNodeEdgePoint> toDeleteNeps = collection.stream()
+                .map(DataTreeModification::getRootNode)
+                .flatMap(topo -> topo.getModifiedChildren().stream())
+                .flatMap(node -> node.getModifiedChildren().stream())
+                .filter(this::checkIfDeleted)
+                .map(nep -> (OwnedNodeEdgePoint) nep.getDataBefore())
+                .collect(Collectors.toList());
 
         final ReadWriteTransaction topoTx = dataBroker.newReadWriteTransaction();
         NrpDao dao = new NrpDao(topoTx);
@@ -98,25 +107,34 @@ public class AbstractNodeHandler implements DataTreeChangeListener<Topology> {
         });
     }
 
-    private boolean checkIfDeleted(List<OwnedNodeEdgePoint> dataObjectModificationNeps, DataObjectModification dataObjectModificationNep){
-        if(dataObjectModificationNep.getDataBefore()!=null && dataObjectModificationNep.getDataAfter()==null){
-            dataObjectModificationNeps.add((OwnedNodeEdgePoint) dataObjectModificationNep.getDataBefore());
-            return false;
+    private boolean checkIfDeleted(DataObjectModification dataObjectModificationNep) {
+        OwnedNodeEdgePoint b = (OwnedNodeEdgePoint) dataObjectModificationNep.getDataBefore();
+        OwnedNodeEdgePoint a = (OwnedNodeEdgePoint) dataObjectModificationNep.getDataAfter();
+
+        if(b != null) {
+            if(a == null) return true;
+            if(hasSip(b)) {
+              return ! hasSip(a);
+            }
         }
-        return true;
+
+        return false;
     }
 
     private boolean checkIfUpdated(DataObjectModification dataObjectModificationNep){
         OwnedNodeEdgePoint before = (OwnedNodeEdgePoint) dataObjectModificationNep.getDataBefore();
         OwnedNodeEdgePoint after = (OwnedNodeEdgePoint) dataObjectModificationNep.getDataAfter();
+        if(after == null) return false;
         //added
-        if(before==null){
-            return true;
+        if(before == null) {
+            return hasSip(after);
         }
         //updated
-        if (!before.equals(after)){
-            return true;
-        }
-        return false;
+        return hasSip(after);
+
+    }
+
+    private boolean hasSip(OwnedNodeEdgePoint nep) {
+        return nep.getMappedServiceInterfacePoint() != null && !nep.getMappedServiceInterfacePoint().isEmpty();
     }
 }

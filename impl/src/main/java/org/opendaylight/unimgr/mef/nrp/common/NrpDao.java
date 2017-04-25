@@ -61,7 +61,7 @@ public class NrpDao  {
 
     private Function<NodeEdgePoint, OwnedNodeEdgePoint> toNep = nep -> new OwnedNodeEdgePointBuilder(nep).build();
 
-    public void createSystemNode(String nodeId, List<OwnedNodeEdgePoint> neps) {
+    public Node createSystemNode(String nodeId, List<OwnedNodeEdgePoint> neps) {
         verifyTx();
         UniversalId uuid = new UniversalId(nodeId);
         Node node = new NodeBuilder()
@@ -70,6 +70,7 @@ public class NrpDao  {
                 .setOwnedNodeEdgePoint(neps)
                 .build();
         tx.put(LogicalDatastoreType.OPERATIONAL, node(nodeId), node);
+        return node;
     }
 
     private void verifyTx() {
@@ -82,8 +83,12 @@ public class NrpDao  {
      * @param nep nep to update
      */
     public void updateNep(String nodeId, OwnedNodeEdgePoint nep) {
+        updateNep(new UniversalId(nodeId), nep);
+    }
+
+    public void updateNep(UniversalId nodeId, OwnedNodeEdgePoint nep) {
         InstanceIdentifier<OwnedNodeEdgePoint> nodeIdent = node(nodeId).child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(nep.getUuid()));
-        tx.merge(LogicalDatastoreType.OPERATIONAL, nodeIdent, nep);
+        tx.put(LogicalDatastoreType.OPERATIONAL, nodeIdent, nep);
     }
 
     public void removeNep(String nodeId, String nepId, boolean removeSips) {
@@ -110,8 +115,13 @@ public class NrpDao  {
                 sip);
     }
 
-    public boolean hasSip(String nepID) {
-        UniversalId universalId = new UniversalId("sip:" + nepID);
+    public OwnedNodeEdgePoint readNep(String nodeId, String nepId) throws ReadFailedException {
+        KeyedInstanceIdentifier<OwnedNodeEdgePoint, OwnedNodeEdgePointKey> nepKey = node(nodeId).child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(new UniversalId(nepId)));
+        return rtx.read(LogicalDatastoreType.OPERATIONAL, nepKey).checkedGet().orNull();
+    }
+
+    public boolean hasSip(String nepId) {
+        UniversalId universalId = new UniversalId("sip:" + nepId);
         try {
             return rtx.read(LogicalDatastoreType.OPERATIONAL,
                     ctx().child(ServiceInterfacePoint.class, new ServiceInterfacePointKey(universalId))).checkedGet().isPresent();
@@ -122,9 +132,7 @@ public class NrpDao  {
     }
 
     public boolean hasNep(String nodeId, String nepId) throws ReadFailedException {
-        KeyedInstanceIdentifier<OwnedNodeEdgePoint, OwnedNodeEdgePointKey> nepIdent = node(nodeId)
-                .child(OwnedNodeEdgePoint.class, new OwnedNodeEdgePointKey(new UniversalId(nepId)));
-        return rtx.read(LogicalDatastoreType.OPERATIONAL, nepIdent).checkedGet().isPresent();
+        return readNep(nodeId, nepId) != null;
     }
 
     public Topology getTopology(String uuid) throws ReadFailedException {
@@ -143,7 +151,11 @@ public class NrpDao  {
     }
 
     public static InstanceIdentifier<Node> node(String nodeId) {
-        return topo(TapiConstants.PRESTO_SYSTEM_TOPO).child(Node.class, new NodeKey(new UniversalId(nodeId)));
+        return node(new UniversalId(nodeId));
+    }
+
+    public static InstanceIdentifier<Node> node(UniversalId nodeId) {
+        return topo(TapiConstants.PRESTO_SYSTEM_TOPO).child(Node.class, new NodeKey(nodeId));
     }
 
     public static InstanceIdentifier<Node> abstractNode() {
@@ -198,6 +210,11 @@ public class NrpDao  {
             log.warn("reading connectivity service failed", e);
             return null;
         }
+    }
+
+    public ServiceInterfacePoint getSip(String sipId) throws ReadFailedException {
+        KeyedInstanceIdentifier<ServiceInterfacePoint, ServiceInterfacePointKey> key = ctx().child(ServiceInterfacePoint.class, new ServiceInterfacePointKey(new UniversalId(sipId)));
+        return rtx.read(LogicalDatastoreType.OPERATIONAL, key).checkedGet().orNull();
     }
 
     public ConnectivityService getConnectivityService(String id) {
