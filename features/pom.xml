@@ -168,6 +168,11 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>unimgr-template-driver</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>cpeui-bundle</artifactId>
       <version>${project.version}</version>
     </dependency>
