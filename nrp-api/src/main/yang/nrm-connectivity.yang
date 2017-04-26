@@ -122,7 +122,7 @@ module nrm-connectivity {
                     type physical-layer;
                     description "MEF 7.3: This attribute is a list of physical layers, one for each physical link implementing the UNI or ENNI. Different physical links can use different physical layers. The Physical Layer for each physical link implementing the UNI or ENNI MUST is one of the PHYs listed in IEEE Std 802.3 – 2012 but excluding 1000BASE-PX-D and 1000BASE-PX-U.
                         G.8052: This attribute identifies the PHY type of the ETY trail termination. See clause 30.3.2.1.2 of [IEEE 802.3].
-                        IEEE 802.3: A read-only value that identifies the PHY type. The enumeration of the type is such that the value matches the clause number of this International Standard that specifies the particular PHY. The value of this attribute maps to the value of aMAUType. The enumeration “none” can only occur in a standard implementation where an MII exists and there is nothing connected. However, the attribute aMIIDetect should be used to determine whether an MII exists or not.";
+                        IEEE 802.3: A read-only value that identifies the PHY type. The enumeration of the type is such that the value matches the clause number of this International Standard that specifies the particular PHY. The value of this attribute maps to the value of aMAUType. The enumeration 'none' can only occur in a standard implementation where an MII exists and there is nothing connected. However, the attribute aMIIDetect should be used to determine whether an MII exists or not.";
                 }
                 list sync-mode-list {
                     key 'link-id';
