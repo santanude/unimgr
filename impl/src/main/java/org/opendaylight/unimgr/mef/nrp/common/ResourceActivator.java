@@ -10,8 +10,6 @@ package org.opendaylight.unimgr.mef.nrp.common;
 
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceAttrs;
-import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 
 import java.util.List;
 
@@ -25,11 +23,11 @@ public interface ResourceActivator {
      * @param endPoints list of endpoint to connect
      * @param serviceName generated service id
      */
-    void activate(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException;
+    void activate(List<EndPoint> endPoints, String serviceName) throws  ResourceActivatorException, TransactionCommitFailedException;
 
     /**
      * @param endPoints list of endpoint between which connection have to be deactivated
      * @param serviceName generated service id
      */
-    void deactivate(List<EndPoint> endPoints, String serviceName) throws TransactionCommitFailedException, ResourceNotAvailableException;
+    void deactivate(List<EndPoint> endPoints, String serviceName) throws TransactionCommitFailedException, ResourceActivatorException;
 }

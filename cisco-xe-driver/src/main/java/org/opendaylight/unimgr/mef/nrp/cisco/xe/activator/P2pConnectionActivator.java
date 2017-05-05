@@ -52,89 +52,60 @@ public class P2pConnectionActivator implements ResourceActivator {
         this.dataBroker = dataBroker;
     }
 
-//    @Override
-//    public void activate(String nodeName, String outerName, String innerName, FcPort portA, FcPort portZ, long mtu) throws TransactionCommitFailedException, ResourceActivatorException {
-//        LOG.info("Activate\nPort A: " + portA + "\nPort Z: " + portZ);
-//
-//        checkPreconditions(portA, portZ);
-//
-//        Node1 node1A = getNode1augmentation(getNode(portA));
-//        Node1 node1Z = getNode1augmentation(getNode(portZ));
-//
-//        CiscoExecutor restExecutorA = createCiscoExecutor(node1A);
-//    	CiscoExecutor restExecutorZ = createCiscoExecutor(node1Z);
-//
-//        RunningConfig configA = new RunningConfig(getRunningConfig(restExecutorA));
-//        RunningConfig configZ = new RunningConfig(getRunningConfig(restExecutorZ));
-//
-//        int vcId = getVcId(configA, configZ);
-//
-//        LOG.info("Activating A side");
-//        activateSide(portA, vcId, restExecutorA, configZ);
-//
-//        LOG.info("Activating Z side");
-//        activateSide(portZ, vcId, restExecutorZ, configA);
-//
-//        LOG.info("Activation finished");
-//    }
-//
-//    @Override
-//    public void deactivate(String nodeName, String outerName, String innerName, FcPort portA, FcPort portZ, long mtu)
-//    		throws TransactionCommitFailedException, ResourceActivatorException {
-//    	LOG.info("Deactivate\nPort A: " + portA + "\nPort Z: " + portZ);
-//
-//        checkPreconditions(portA, portZ);
-//
-//        LOG.info("Deactivating A side");
-//        deactivateSide(portA);
-//
-//        LOG.info("Deactivating Z side");
-//        deactivateSide(portZ);
-//
-//        LOG.info("Deactivation finished");
-//    }
     @Override
-    public void activate(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
+    public void activate(List<EndPoint> endPoints, String serviceName) throws ResourceActivatorException, TransactionCommitFailedException {
         ServicePort portA = ServicePort.toServicePort(endPoints.get(0), XE_TOPOLOGY_ID);
         ServicePort portZ = ServicePort.toServicePort(endPoints.get(1), XE_TOPOLOGY_ID);
         LOG.info("Activate\nPort A: " + portA + "\nPort Z: " + portZ);
 
-//        checkPreconditions(portA, portZ);
-//
-//        Node1 node1A = getNode1augmentation(getNode(portA));
-//        Node1 node1Z = getNode1augmentation(getNode(portZ));
-//
-//        CiscoExecutor restExecutorA = createCiscoExecutor(node1A);
-//    	CiscoExecutor restExecutorZ = createCiscoExecutor(node1Z);
-//
-//        RunningConfig configA = new RunningConfig(getRunningConfig(restExecutorA));
-//        RunningConfig configZ = new RunningConfig(getRunningConfig(restExecutorZ));
-//
-//        int vcId = getVcId(configA, configZ);
-//
-//        LOG.info("Activating A side");
-//        activateSide(portA, vcId, restExecutorA, configZ);
-//
-//        LOG.info("Activating Z side");
-//        activateSide(portZ, vcId, restExecutorZ, configA);
-//
-//        LOG.info("Activation finished");
+        checkPreconditions(portA, portZ);
+
+        Node1 node1A = getNode1augmentation(getNode(portA));
+        Node1 node1Z = getNode1augmentation(getNode(portZ));
+
+        CiscoExecutor restExecutorA = createCiscoExecutor(node1A);
+    	CiscoExecutor restExecutorZ = createCiscoExecutor(node1Z);
+
+        RunningConfig configA = new RunningConfig(getRunningConfig(restExecutorA));
+        RunningConfig configZ = new RunningConfig(getRunningConfig(restExecutorZ));
+
+        int vcId = getVcId(configA, configZ);
+
+        LOG.info("Activating A side");
+        activateSide(portA, vcId, restExecutorA, configZ);
+
+        LOG.info("Activating Z side");
+        activateSide(portZ, vcId, restExecutorZ, configA);
+
+        LOG.info("Activation finished");
     }
 
     @Override
-    public void deactivate(List<EndPoint> endPoints, String serviceName) throws TransactionCommitFailedException, ResourceNotAvailableException {
-        //TODO: implement
+    public void deactivate(List<EndPoint> endPoints, String serviceName) throws TransactionCommitFailedException, ResourceActivatorException {
+        ServicePort portA = ServicePort.toServicePort(endPoints.get(0), XE_TOPOLOGY_ID);
+        ServicePort portZ = ServicePort.toServicePort(endPoints.get(1), XE_TOPOLOGY_ID);
+        LOG.info("Deactivate\nPort A: " + portA + "\nPort Z: " + portZ);
+
+        checkPreconditions(portA, portZ);
+
+        LOG.info("Deactivating A side");
+        deactivateSide(portA);
+
+        LOG.info("Deactivating Z side");
+        deactivateSide(portZ);
+
+        LOG.info("Deactivation finished");
     }
 
     private void checkPreconditions(ServicePort portA, ServicePort portZ) throws ResourceActivatorException {
-//    	checkPreconditionsForPort(portA);
-//    	checkPreconditionsForPort(portZ);
+    	checkPreconditionsForPort(portA);
+    	checkPreconditionsForPort(portZ);
     }
 
-    private void checkPreconditionsForPort(FcPort port) throws ResourceActivatorException{
-    	if(port.getAugmentation(FcPort1.class) == null) {
-    		throw new ResourceActivatorException("VLan parameter has to be specified for port: " + port);
-    	}
+    private void checkPreconditionsForPort(ServicePort port) throws ResourceActivatorException{
+        if(port.getVlanId()==null){
+            throw new ResourceActivatorException("VLan parameter has to be specified for port: " + port);
+        }
     }
 
     private int getVcId(RunningConfig configA, RunningConfig configZ){
@@ -144,19 +115,19 @@ public class P2pConnectionActivator implements ResourceActivator {
         return vcId;
     }
 
-    private void activateSide(FcPort port, int vcId, CiscoExecutor ciscoExecutor, RunningConfig oppositeSideRunningConfig) throws ResourceActivatorException{
+    private void activateSide(ServicePort port, int vcId, CiscoExecutor ciscoExecutor, RunningConfig oppositeSideRunningConfig) throws ResourceActivatorException{
         String commands = generateCliCommands(port, oppositeSideRunningConfig, vcId);
         setRunningConfig(ciscoExecutor, commands);
     }
 
-    private void deactivateSide(FcPort port) throws ResourceActivatorException{
+    private void deactivateSide(ServicePort port) throws ResourceActivatorException{
     	Node1 node1 = getNode1augmentation(getNode(port));
         CiscoExecutor restExecutor = createCiscoExecutor(node1);
         String commands = generateCliNoCommands(port);
         setRunningConfig(restExecutor, commands);
     }
 
-    private Node getNode(FcPort port) throws ResourceNotAvailableException {
+    private Node getNode(ServicePort port) throws ResourceNotAvailableException {
 
         InstanceIdentifier<Node> nodeIid = InstanceIdentifier.builder(NetworkTopology.class)
                 .child(Topology.class, new TopologyKey(port.getTopology()))
@@ -210,13 +181,13 @@ public class P2pConnectionActivator implements ResourceActivator {
     	}
     }
 
-    private String generateCliCommands(FcPort port, RunningConfig oppsiteSideConfig, int vcId) throws ResourceActivatorException{
-    	CTagVlanId cTagVlanId = port.getAugmentation(FcPort1.class).getCTagVlanId();
+    private String generateCliCommands(ServicePort port, RunningConfig oppsiteSideConfig, int vcId) throws ResourceActivatorException{
+    	short cTagVlanId = port.getVlanId().shortValue();
     	try {
 			String commands = CliGeneratorUtil.generateServiceCommands(
 			         port.getTp().getValue(),
-			         cTagVlanId.getValue().shortValue(),
-			         cTagVlanId.getValue().shortValue(),
+			         cTagVlanId,
+			         cTagVlanId,
 			         oppsiteSideConfig.getIpAddressLoopback0(),
 			         vcId);
 			LOG.info("Generated commands:\n" + commands);
@@ -229,11 +200,10 @@ public class P2pConnectionActivator implements ResourceActivator {
 		}
     }
 
-    private String generateCliNoCommands(FcPort port) {
-    	CTagVlanId cTagVlanId = port.getAugmentation(FcPort1.class).getCTagVlanId();
+    private String generateCliNoCommands(ServicePort port) {
     	String commands = CliGeneratorUtil.generateNoServiceCommands(
                 port.getTp().getValue(),
-                cTagVlanId.getValue().shortValue());
+                port.getVlanId().shortValue());
     	LOG.debug("Generated commands:\nPort: " + port + "\nCommands: \n" + commands);
     	return commands;
     }

@@ -9,6 +9,7 @@ package org.opendaylight.unimgr.mef.nrp.common;
 
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.utils.SipHandler;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.nrp.create.connectivity.service.end.point.attrs.NrpCgEthFrameFlowCpaAspec;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
@@ -26,6 +27,8 @@ public class ServicePort {
     private NodeId nodeId;
     //defines port
     private TpId tpId;
+    //defines cTag VLAN ID
+    private Long vlanId=null;
 
     public ServicePort(TopologyId topoId, NodeId nodeId, TpId tpId){
         this.topoId = topoId;
@@ -57,11 +60,40 @@ public class ServicePort {
         this.tpId = tpId;
     }
 
+    public Long getVlanId() {
+        return vlanId;
+    }
+
+    public void setVlanId(Long vlanId) {
+        this.vlanId = vlanId;
+    }
+
     public static ServicePort toServicePort(EndPoint endPoint, String topologyName){
         UniversalId sip = endPoint.getEndpoint().getServiceInterfacePoint();
         TopologyId topologyId = new TopologyId(topologyName);
         NodeId nodeId = new NodeId(SipHandler.getDeviceName(sip));
         TpId tpId = new TpId(SipHandler.getPortName(sip));
-        return new ServicePort(topologyId,nodeId,tpId);
+        ServicePort servicePort = new ServicePort(topologyId,nodeId,tpId);
+        if(hasVlan(endPoint)){
+            servicePort.setVlanId(Long.valueOf(getVlan(endPoint)));
+        }
+        return servicePort;
+    }
+
+    public static boolean hasVlan(EndPoint endPoint){
+        if( (endPoint.getAttrs() != null) && (endPoint.getAttrs().getNrpCgEthFrameFlowCpaAspec()!=null) ){
+            NrpCgEthFrameFlowCpaAspec attr = endPoint.getAttrs().getNrpCgEthFrameFlowCpaAspec();
+            if( (attr.getCeVlanIdList()!=null) && !(attr.getCeVlanIdList().getVlanIdList().isEmpty()) ){
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    private static int getVlan(EndPoint endPoint){
+        return endPoint.getAttrs().getNrpCgEthFrameFlowCpaAspec().getCeVlanIdList().getVlanIdList().get(0).getVlanId().getValue().intValue();
     }
 }
