@@ -17,7 +17,7 @@ import com.google.common.util.concurrent.Futures;
 import org.opendaylight.controller.md.sal.binding.api.*;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.DriverConstants;
+import org.opendaylight.unimgr.utils.DriverConstants;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.utils.CapabilitiesService;

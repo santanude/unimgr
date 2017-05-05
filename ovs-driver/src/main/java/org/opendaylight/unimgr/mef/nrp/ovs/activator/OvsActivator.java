@@ -45,6 +45,7 @@ public class OvsActivator implements ResourceActivator {
      * Set state for the driver for a (de)activation transaction.
      * @param endPoints list of endpoint to interconnect
      */
+    @Override
     public void activate(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
         LOG.info("OvsActivator.activate(endpoints)");
         this.serviceName = serviceName;
@@ -82,16 +83,7 @@ public class OvsActivator implements ResourceActivator {
     }
 
     @Override
-    public void activate(String nodeName, String outerName, String innerName, FcPort flowPoint, FcPort neighbor, long mtu) throws TransactionCommitFailedException, ResourceNotAvailableException {
-        //to erase
-    }
-
-    @Override
-    public void deactivate(String nodeName, String outerName, String innerName, FcPort flowPoint, FcPort neighbor, long mtu) throws TransactionCommitFailedException, ResourceNotAvailableException {
-        //to erase
-    }
-
-    public void deactivate(List<EndPoint> endPoints) throws TransactionCommitFailedException, ResourceNotAvailableException {
+    public void deactivate(List<EndPoint> endPoints, String serviceName) throws TransactionCommitFailedException, ResourceNotAvailableException {
         for (EndPoint endPoint:endPoints)
             deactivateEndpoint(endPoint);
     }

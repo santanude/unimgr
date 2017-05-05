@@ -6,15 +6,13 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFaile
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.DriverConstants;
+import org.opendaylight.unimgr.utils.DriverConstants;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnBridgeActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnXconnectActivator;
 import org.opendaylight.unimgr.utils.SipHandler;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceAttrs;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
-import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.forwarding.constructs.ForwardingConstruct;
-import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 
 import java.util.List;
 import java.util.Optional;

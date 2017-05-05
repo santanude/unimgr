@@ -22,41 +22,14 @@ import java.util.List;
 public interface ResourceActivator {
 
     /**
-     * Activate a service fragment on the node identified by nodeName.
-     *
-     * @param nodeName
-     *            the name of node in network topology
-     * @param outerName
-     *            name of outer activation construct
-     * @param innerName
-     *            name of inner activation construct
-     * @param flowPoint
-     *            the fc-port to be activated
-     * @param neighbor
-     *            the neighbor fc-port
-     * @param mtu
-     *            the desired MTU for this forwarding construct
+     * @param endPoints list of endpoint to connect
+     * @param serviceName generated service id
      */
-    public void activate(String nodeName, String outerName, String innerName, FcPort flowPoint, FcPort neighbor,
-            long mtu) throws TransactionCommitFailedException, ResourceActivatorException;
-
+    void activate(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException;
 
     /**
-     * Deactivate a service fragment on the node identified by nodeName.
-     *
-     * @param nodeName
-     *            the name of node in network topology
-     * @param outerName
-     *            name of outer deactivation construct
-     * @param innerName
-     *            name of inner deactivation construct
-     * @param flowPoint
-     *            the fc-port to be deactivated
-     * @param neighbor
-     *            the neighbor fc-port
-     * @param mtu
-     *            the desired MTU for this forwarding construct
+     * @param endPoints list of endpoint between which connection have to be deactivated
+     * @param serviceName generated service id
      */
-    public void deactivate(String nodeName, String outerName, String innerName, FcPort flowPoint, FcPort neighbor,
-            long mtu) throws TransactionCommitFailedException, ResourceActivatorException;
+    void deactivate(List<EndPoint> endPoints, String serviceName) throws TransactionCommitFailedException, ResourceNotAvailableException;
 }

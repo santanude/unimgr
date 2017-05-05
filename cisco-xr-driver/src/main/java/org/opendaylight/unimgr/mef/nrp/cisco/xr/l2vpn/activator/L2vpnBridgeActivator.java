@@ -10,7 +10,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
+import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.AttachmentCircuitHelper;
@@ -45,7 +45,7 @@ public class L2vpnBridgeActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    protected Optional<PolicyManager> activateQos(String name, XrPort port) {
+    protected Optional<PolicyManager> activateQos(String name, ServicePort port) {
         return new BandwidthProfileHelper(dataBroker, port)
                 .addPolicyMap(name, INGRESS, UNI)
                 .addPolicyMap(name, EGRESS, UNI)
@@ -53,7 +53,7 @@ public class L2vpnBridgeActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    protected InterfaceConfigurations activateInterface(XrPort port, XrPort neighbor, long mtu) {
+    protected InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor, long mtu) {
         return new InterfaceHelper()
             .addInterface(port, Optional.empty(), true)
             .addInterface(neighbor, Optional.empty(), true)
@@ -61,12 +61,12 @@ public class L2vpnBridgeActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    protected Pseudowires activatePseudowire(XrPort neighbor) {
+    protected Pseudowires activatePseudowire(ServicePort neighbor) {
         return new PseudowireHelper().build();
     }
 
     @Override
-    protected XconnectGroups activateXConnect(String outerName, String innerName, XrPort portA, XrPort portZ, Pseudowires pseudowires) {
+    protected XconnectGroups activateXConnect(String outerName, String innerName, ServicePort portA, ServicePort portZ, Pseudowires pseudowires) {
         AttachmentCircuits attachmentCircuits = new AttachmentCircuitHelper()
             .addPort(portA)
             .addPort(portZ)

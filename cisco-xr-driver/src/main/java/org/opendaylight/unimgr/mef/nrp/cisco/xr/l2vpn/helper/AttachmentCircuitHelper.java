@@ -8,7 +8,7 @@
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper;
 
 
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
+import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.AttachmentCircuits;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.AttachmentCircuitsBuilder;
@@ -31,7 +31,7 @@ public class AttachmentCircuitHelper {
         attachmentCircuits = new LinkedList<>();
     }
 
-    public AttachmentCircuitHelper addPort(XrPort port) {
+    public AttachmentCircuitHelper addPort(ServicePort port) {
         attachmentCircuits.add(
             new AttachmentCircuitBuilder()
                 .setName(InterfaceHelper.getInterfaceName(port))

@@ -11,6 +11,7 @@ import com.google.common.base.Optional;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.rest.CiscoExecutor;
 import org.opendaylight.unimgr.mef.nrp.cisco.rest.CiscoRestRunner;
 import org.opendaylight.unimgr.mef.nrp.cisco.xe.util.CliGeneratorUtil;
@@ -19,6 +20,7 @@ import org.opendaylight.unimgr.mef.nrp.cisco.xe.util.RunningConfig;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
+import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.unimgr.utils.MdsalUtils;
 import org.opendaylight.yang.gen.v1.urn.mef.unimgr.ext.rev160725.CTagVlanId;
 import org.opendaylight.yang.gen.v1.urn.mef.unimgr.ext.rev160725.FcPort1;
@@ -36,11 +38,13 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Set;
 
 public class P2pConnectionActivator implements ResourceActivator {
 
     private static final Logger LOG = LoggerFactory.getLogger(P2pConnectionActivator.class);
+    private static final String XE_TOPOLOGY_ID = "topology-cisco-xe";
 
     private DataBroker dataBroker;
 
@@ -48,51 +52,83 @@ public class P2pConnectionActivator implements ResourceActivator {
         this.dataBroker = dataBroker;
     }
 
+//    @Override
+//    public void activate(String nodeName, String outerName, String innerName, FcPort portA, FcPort portZ, long mtu) throws TransactionCommitFailedException, ResourceActivatorException {
+//        LOG.info("Activate\nPort A: " + portA + "\nPort Z: " + portZ);
+//
+//        checkPreconditions(portA, portZ);
+//
+//        Node1 node1A = getNode1augmentation(getNode(portA));
+//        Node1 node1Z = getNode1augmentation(getNode(portZ));
+//
+//        CiscoExecutor restExecutorA = createCiscoExecutor(node1A);
+//    	CiscoExecutor restExecutorZ = createCiscoExecutor(node1Z);
+//
+//        RunningConfig configA = new RunningConfig(getRunningConfig(restExecutorA));
+//        RunningConfig configZ = new RunningConfig(getRunningConfig(restExecutorZ));
+//
+//        int vcId = getVcId(configA, configZ);
+//
+//        LOG.info("Activating A side");
+//        activateSide(portA, vcId, restExecutorA, configZ);
+//
+//        LOG.info("Activating Z side");
+//        activateSide(portZ, vcId, restExecutorZ, configA);
+//
+//        LOG.info("Activation finished");
+//    }
+//
+//    @Override
+//    public void deactivate(String nodeName, String outerName, String innerName, FcPort portA, FcPort portZ, long mtu)
+//    		throws TransactionCommitFailedException, ResourceActivatorException {
+//    	LOG.info("Deactivate\nPort A: " + portA + "\nPort Z: " + portZ);
+//
+//        checkPreconditions(portA, portZ);
+//
+//        LOG.info("Deactivating A side");
+//        deactivateSide(portA);
+//
+//        LOG.info("Deactivating Z side");
+//        deactivateSide(portZ);
+//
+//        LOG.info("Deactivation finished");
+//    }
     @Override
-    public void activate(String nodeName, String outerName, String innerName, FcPort portA, FcPort portZ, long mtu) throws TransactionCommitFailedException, ResourceActivatorException {
+    public void activate(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
+        ServicePort portA = ServicePort.toServicePort(endPoints.get(0), XE_TOPOLOGY_ID);
+        ServicePort portZ = ServicePort.toServicePort(endPoints.get(1), XE_TOPOLOGY_ID);
         LOG.info("Activate\nPort A: " + portA + "\nPort Z: " + portZ);
 
-        checkPreconditions(portA, portZ);
-
-        Node1 node1A = getNode1augmentation(getNode(portA));
-        Node1 node1Z = getNode1augmentation(getNode(portZ));
-
-        CiscoExecutor restExecutorA = createCiscoExecutor(node1A);
-    	CiscoExecutor restExecutorZ = createCiscoExecutor(node1Z);
-
-        RunningConfig configA = new RunningConfig(getRunningConfig(restExecutorA));
-        RunningConfig configZ = new RunningConfig(getRunningConfig(restExecutorZ));
-
-        int vcId = getVcId(configA, configZ);
-
-        LOG.info("Activating A side");
-        activateSide(portA, vcId, restExecutorA, configZ);
-
-        LOG.info("Activating Z side");
-        activateSide(portZ, vcId, restExecutorZ, configA);
-
-        LOG.info("Activation finished");
+//        checkPreconditions(portA, portZ);
+//
+//        Node1 node1A = getNode1augmentation(getNode(portA));
+//        Node1 node1Z = getNode1augmentation(getNode(portZ));
+//
+//        CiscoExecutor restExecutorA = createCiscoExecutor(node1A);
+//    	CiscoExecutor restExecutorZ = createCiscoExecutor(node1Z);
+//
+//        RunningConfig configA = new RunningConfig(getRunningConfig(restExecutorA));
+//        RunningConfig configZ = new RunningConfig(getRunningConfig(restExecutorZ));
+//
+//        int vcId = getVcId(configA, configZ);
+//
+//        LOG.info("Activating A side");
+//        activateSide(portA, vcId, restExecutorA, configZ);
+//
+//        LOG.info("Activating Z side");
+//        activateSide(portZ, vcId, restExecutorZ, configA);
+//
+//        LOG.info("Activation finished");
     }
 
     @Override
-    public void deactivate(String nodeName, String outerName, String innerName, FcPort portA, FcPort portZ, long mtu)
-    		throws TransactionCommitFailedException, ResourceActivatorException {
-    	LOG.info("Deactivate\nPort A: " + portA + "\nPort Z: " + portZ);
-
-        checkPreconditions(portA, portZ);
-
-        LOG.info("Deactivating A side");
-        deactivateSide(portA);
-
-        LOG.info("Deactivating Z side");
-        deactivateSide(portZ);
-
-        LOG.info("Deactivation finished");
+    public void deactivate(List<EndPoint> endPoints, String serviceName) throws TransactionCommitFailedException, ResourceNotAvailableException {
+        //TODO: implement
     }
 
-    private void checkPreconditions(FcPort portA, FcPort portZ) throws ResourceActivatorException {
-    	checkPreconditionsForPort(portA);
-    	checkPreconditionsForPort(portZ);
+    private void checkPreconditions(ServicePort portA, ServicePort portZ) throws ResourceActivatorException {
+//    	checkPreconditionsForPort(portA);
+//    	checkPreconditionsForPort(portZ);
     }
 
     private void checkPreconditionsForPort(FcPort port) throws ResourceActivatorException{

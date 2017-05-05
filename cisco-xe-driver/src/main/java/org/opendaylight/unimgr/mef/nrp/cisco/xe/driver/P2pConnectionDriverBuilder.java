@@ -18,6 +18,7 @@ import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xe.activator.P2pConnectionActivator;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
+import org.opendaylight.unimgr.utils.DriverConstants;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceAttrs;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.forwarding.constructs.ForwardingConstruct;
@@ -33,16 +34,14 @@ public class P2pConnectionDriverBuilder implements ActivationDriverBuilder {
     private static final String XE_TOPOLOGY_ID = "topology-cisco-xe";
     private P2pConnectionActivator activator;
 
-
-
     public P2pConnectionDriverBuilder(DataBroker dataBroker) {
         activator = new P2pConnectionActivator(dataBroker);
     }
 
     protected ActivationDriver getDriver() {
         final ActivationDriver driver = new ActivationDriver() {
-            public FcPort aEnd;
-            public FcPort zEnd;
+            List<EndPoint> endPoints;
+            String serviceId;
 
             @Override
             public void commit() {
@@ -56,21 +55,19 @@ public class P2pConnectionDriverBuilder implements ActivationDriverBuilder {
 
             @Override
             public void initialize(List<EndPoint> endPoints, String serviceId, NrpCreateConnectivityServiceAttrs context) {
-
+                this.endPoints = endPoints;
+                this.serviceId = serviceId;
             }
 
 
             @Override
             public void activate() throws TransactionCommitFailedException, ResourceActivatorException {
-                String aEndNodeName = aEnd.getNode().getValue();
-                activator.activate(aEndNodeName, GROUP_NAME, GROUP_NAME, aEnd, zEnd, 1522);
+                activator.activate(endPoints,serviceId);
             }
 
             @Override
             public void deactivate() throws TransactionCommitFailedException, ResourceActivatorException {
-
-                String aEndNodeName = aEnd.getNode().getValue();
-                activator.deactivate(aEndNodeName, GROUP_NAME, GROUP_NAME, aEnd, zEnd, 1522);
+                activator.deactivate(endPoints,serviceId);
             }
 
             @Override
@@ -89,6 +86,6 @@ public class P2pConnectionDriverBuilder implements ActivationDriverBuilder {
 
     @Override
     public UniversalId getNodeUuid() {
-        return null;
+        return new UniversalId(DriverConstants.XE_NODE);
     }
 }

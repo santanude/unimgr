@@ -16,12 +16,11 @@ import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
+import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnActivatorTestUtils;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4AddressNoZone;
-import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.unimgr.rev151012.LoopbackAugmentation;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.unimgr.rev151012.LoopbackAugmentationBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
@@ -59,7 +58,7 @@ public class LoopbackUtilsTest extends AbstractDataBrokerTest {
     @Test
     public void testLoopbackAddress(){
         //given
-        XrPort port = L2vpnActivatorTestUtils.port(topoName, nodeName, portNumber);
+        ServicePort port = L2vpnActivatorTestUtils.port(topoName, nodeName, portNumber);
         createAndPersistNode(true);
 
         //when
@@ -72,7 +71,7 @@ public class LoopbackUtilsTest extends AbstractDataBrokerTest {
     @Test
     public void testAbsenceOfLoopbackAddress(){
         //given
-        XrPort port = L2vpnActivatorTestUtils.port(topoName, nodeName, portNumber);
+        ServicePort port = L2vpnActivatorTestUtils.port(topoName, nodeName, portNumber);
         createAndPersistNode(false);
 
         //when

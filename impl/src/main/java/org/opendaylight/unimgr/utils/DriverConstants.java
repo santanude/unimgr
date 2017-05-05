@@ -6,11 +6,12 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.common;
+package org.opendaylight.unimgr.utils;
 
 /**
  * @author bartosz.michalik@amartus.com
  */
 public interface DriverConstants {
     String XR_NODE = "xr-node";
+    String XE_NODE = "xe-node";
 }

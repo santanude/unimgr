@@ -8,7 +8,8 @@
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.unimgr.utils.MdsalUtils;
 import org.opendaylight.unimgr.utils.NullAwareDatastoreGetter;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
@@ -28,6 +29,14 @@ import org.opendaylight.yang.gen.v1.urn.mef.nrp.specs.rev160630.AdapterSpec1;
 import org.opendaylight.yang.gen.v1.urn.mef.nrp.specs.rev160630.TerminationSpec1;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.TerminationPoint1;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_layerprotocol.LpSpec;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.TopologyKey;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeKey;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPoint;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointKey;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,9 +70,9 @@ public class BandwidthProfileHelper {
         }
     }
 
-    private static List<BandwidthProfileComposition> retrieveBandwidthProfiles(DataBroker dataBroker, XrPort port) {
+    private static List<BandwidthProfileComposition> retrieveBandwidthProfiles(DataBroker dataBroker, ServicePort port) {
         List<BandwidthProfileComposition> bwCompositionList = new ArrayList<>();
-        List<NullAwareDatastoreGetter<LpSpec>> lpSpecNadgs = new NullAwareDatastoreGetter<>(MdsalUtils.readTerminationPoint(dataBroker, CONFIGURATION, port.getTopology(), port.getNode(), port.getTp()))
+        List<NullAwareDatastoreGetter<LpSpec>> lpSpecNadgs = new NullAwareDatastoreGetter<>(readTerminationPoint(dataBroker, CONFIGURATION, port))
                 .collect(x -> x::getAugmentation, TerminationPoint1.class)
                 .collect(x -> x::getLtpAttrs)
                 .collectMany(x -> x::getLpList)
@@ -99,7 +108,7 @@ public class BandwidthProfileHelper {
 
     private List<PolicyMap> policyMaps;
 
-    public BandwidthProfileHelper(DataBroker dataBroker, XrPort port) {
+    public BandwidthProfileHelper(DataBroker dataBroker, ServicePort port) {
         bandwidthProfiles = BandwidthProfileHelper.retrieveBandwidthProfiles(dataBroker, port);
         policyMaps = new ArrayList<>();
     }
@@ -187,5 +196,15 @@ public class BandwidthProfileHelper {
                 .setPolicyMaps(new PolicyMapsBuilder().setPolicyMap(policyMaps).build())
                 .build()
         );
+    }
+
+    public static com.google.common.base.Optional<TerminationPoint> readTerminationPoint(DataBroker dataBroker, LogicalDatastoreType store, ServicePort port) {
+        InstanceIdentifier tpIid = InstanceIdentifier.builder(NetworkTopology.class)
+                .child(Topology.class, new TopologyKey(port.getTopology()))
+                .child(Node.class, new NodeKey(port.getNode()))
+                .child(TerminationPoint.class, new TerminationPointKey(port.getTp()))
+                .build();
+
+        return MdsalUtils.readOptional(dataBroker, store, tpIid);
     }
 }

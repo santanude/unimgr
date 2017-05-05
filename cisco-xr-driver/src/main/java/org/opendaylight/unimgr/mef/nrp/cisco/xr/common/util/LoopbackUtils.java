@@ -10,7 +10,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util;
 import com.google.common.base.Optional;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
+import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.unimgr.utils.MdsalUtils;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4AddressNoZone;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.unimgr.rev151012.LoopbackAugmentation;
@@ -37,7 +37,7 @@ public class LoopbackUtils {
     private static final String DEFAULT_LOOPBACK = "127.0.0.1";
 
     //TODO: learn how to get proper ip
-    public static Ipv4AddressNoZone getIpv4Address(XrPort port, DataBroker dataBroker) {
+    public static Ipv4AddressNoZone getIpv4Address(ServicePort port, DataBroker dataBroker) {
         String loopback = null;
         NodeId nodeId = port.getNode();
         TopologyId topologyId = port.getTopology();

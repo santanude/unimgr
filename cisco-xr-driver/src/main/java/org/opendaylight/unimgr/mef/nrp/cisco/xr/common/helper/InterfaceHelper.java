@@ -7,7 +7,7 @@
  */
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper;
 
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
+import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurationsBuilder;
@@ -33,7 +33,7 @@ import java.util.Optional;
 public class InterfaceHelper {
     private List<InterfaceConfiguration> configurations;
 
-    public static InterfaceName getInterfaceName(XrPort port) {
+    public static InterfaceName getInterfaceName(ServicePort port) {
         String interfaceName = port.getTp().getValue();
 
         if(interfaceName.contains(":")) {
@@ -51,7 +51,7 @@ public class InterfaceHelper {
         configurations = new LinkedList<>();
     }
 
-    public InterfaceHelper addInterface(XrPort port, Optional<Mtus> mtus, boolean setL2Transport) {
+    public InterfaceHelper addInterface(ServicePort port, Optional<Mtus> mtus, boolean setL2Transport) {
         return addInterface(getInterfaceName(port), mtus, setL2Transport);
     }
 

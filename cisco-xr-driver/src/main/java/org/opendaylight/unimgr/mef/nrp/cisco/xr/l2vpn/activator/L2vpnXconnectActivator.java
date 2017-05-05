@@ -9,7 +9,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.XrPort;
+import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.LoopbackUtils;
@@ -51,7 +51,7 @@ public class L2vpnXconnectActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    protected Optional<PolicyManager> activateQos(String name, XrPort port) {
+    protected Optional<PolicyManager> activateQos(String name, ServicePort port) {
         return new BandwidthProfileHelper(dataBroker, port)
                 .addPolicyMap(name, INGRESS, UNI)
                 .addPolicyMap(name, EGRESS, UNI)
@@ -59,7 +59,7 @@ public class L2vpnXconnectActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    public InterfaceConfigurations activateInterface(XrPort port, XrPort neighbor, long mtu) {
+    public InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor, long mtu) {
         Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString("GigabitEthernet"));
 
         return new InterfaceHelper()
@@ -68,14 +68,14 @@ public class L2vpnXconnectActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    public Pseudowires activatePseudowire(XrPort neighbor) {
+    public Pseudowires activatePseudowire(ServicePort neighbor) {
         return new PseudowireHelper()
              .addPseudowire(LoopbackUtils.getIpv4Address(neighbor, dataBroker))
              .build();
     }
 
     @Override
-    public XconnectGroups activateXConnect(String outerName, String innerName, XrPort port, XrPort neighbor, Pseudowires pseudowires) {
+    public XconnectGroups activateXConnect(String outerName, String innerName, ServicePort port, ServicePort neighbor, Pseudowires pseudowires) {
         AttachmentCircuits attachmentCircuits = new AttachmentCircuitHelper()
              .addPort(port)
              .build();
