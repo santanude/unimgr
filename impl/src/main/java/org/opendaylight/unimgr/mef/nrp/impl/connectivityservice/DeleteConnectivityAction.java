@@ -157,7 +157,13 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
                 .flatMap(c -> {
                     UniversalId nodeId = c.getNode();
                     return c.getConnectionEndPoint().stream().map(cep -> {
-                        EndPoint ep = new EndPoint(null, null).setSystemNepUuid(cep.getServerNodeEdgePoint());
+                        Optional<org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.service.EndPoint> optEndPoint =
+                                cs.getEndPoint().stream()
+                                        .filter(endPoint1 -> endPoint1.getServiceInterfacePoint().getValue().contains(cep.getServerNodeEdgePoint().getValue()))
+                                        .findFirst();
+                        org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.connectivity.service.EndPoint endPoint =
+                                optEndPoint.isPresent() ? optEndPoint.get() : null;
+                        EndPoint ep = new EndPoint(endPoint, null).setSystemNepUuid(cep.getServerNodeEdgePoint());
                         return new Pair(nodeId, ep);
                     });
                 }).collect(Collectors.toMap(p -> p.getNodeId(), p -> new LinkedList<>(Arrays.asList(p.getEndPoint())), (ol, nl) -> {

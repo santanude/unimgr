@@ -8,6 +8,7 @@
 package org.opendaylight.unimgr.mef.nrp.ovs.activator;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
@@ -15,18 +16,22 @@ import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TableTransaction;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TopologyTransaction;
 import org.opendaylight.unimgr.mef.nrp.ovs.util.OpenFlowUtils;
+import org.opendaylight.unimgr.utils.MdsalUtils;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceAttrs;
 import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Link;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * @author marek.ryznar@amartus.com
@@ -90,9 +95,10 @@ public class OvsActivator implements ResourceActivator {
 
     private void deactivateEndpoint(EndPoint endPoint) throws ResourceNotAvailableException, TransactionCommitFailedException {
         // Transaction - Get Open vSwitch node and its flow table
-        String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getValue());
         TopologyTransaction topologyTransaction = new TopologyTransaction(dataBroker);
-        Node node = topologyTransaction.readNode(portName);
+        OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction,endPoint);
+
+        Node node = topologyTransaction.readNodeOF(ovsActivatorHelper.getOpenFlowPortName());
         Table table = OpenFlowUtils.getTable(node);
         // Get list of flows to be removed
         List<Flow> flowsToDelete = OpenFlowUtils.getServiceFlows(table, serviceName);
@@ -101,6 +107,5 @@ public class OvsActivator implements ResourceActivator {
         TableTransaction tableTransaction = new TableTransaction(dataBroker, node, table);
         tableTransaction.deleteFlows(flowsToDelete, false);
     }
-
 
 }

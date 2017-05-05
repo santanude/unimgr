@@ -40,6 +40,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -65,6 +66,9 @@ public class OvsActivatorTest extends AbstractDataBrokerTest{
     private static final String vlanName = "vlan-openflow";
     private static final String dropName = "default-DROP";
 
+    List<String> of1InterwitchPorts = Arrays.asList("openflow:1:3", "openflow:1:4", "openflow:1:5");
+    List<String> of2InterwitchPorts = Arrays.asList("openflow:5:3", "openflow:5:4");
+
     @Before
     public void setUp(){
         //given
@@ -78,8 +82,6 @@ public class OvsActivatorTest extends AbstractDataBrokerTest{
     @Test
     public void testActivate(){
         //given
-        List<String> of1InterwitchPorts = Arrays.asList("openflow:1:3", "openflow:1:4", "openflow:1:5");
-        List<String> of2InterwitchPorts = Arrays.asList("openflow:5:3", "openflow:5:4");
         List<EndPoint> endPoints = prepareEndpoints();
 
         //when
@@ -93,19 +95,8 @@ public class OvsActivatorTest extends AbstractDataBrokerTest{
 
         //then
         Nodes nodes = readOpenFLowTopology(dataBroker);
-        nodes.getNode()
-                .forEach(node -> {
-                    try {
-                        Table t = OpenFlowUtils.getTable(node);
-                        if(node.getKey().getId().getValue().equals(ofPort1Name)){
-                            checkTable(t,of1InterwitchPorts);
-                        } else if(node.getKey().getId().getValue().equals(ofPort2Name)){
-                            checkTable(t,of2InterwitchPorts);
-                        }
-                    } catch (ResourceNotAvailableException e) {
-                        fail(e.getMessage());
-                    }
-                });
+        checkTable(nodes,activated);
+        System.out.println("Before deactivation: "+ nodes.toString());
 
         //when
         try {
@@ -115,9 +106,12 @@ public class OvsActivatorTest extends AbstractDataBrokerTest{
         } catch (ResourceNotAvailableException e) {
             fail(e.getMessage());
         }
+        nodes = readOpenFLowTopology(dataBroker);
+        checkTable(nodes,deactivated);
+        System.out.println("After deactivation: "+ nodes.toString());
     }
 
-    private void checkTable(Table table, List<String> interswitchPorts){
+    BiConsumer<Table,List<String>> activated = (table,interswitchPorts) -> {
         List<Flow> flows = table.getFlow();
         int interswitchPortCount = interswitchPorts.size();
         //vlan & interwitch + 1 vlan + 1 drop
@@ -135,6 +129,37 @@ public class OvsActivatorTest extends AbstractDataBrokerTest{
         assertEquals(interswitchPortCount+1,vlanFlows.size());
 
         assertTrue(flows.stream().anyMatch(flow -> flow.getId().getValue().equals(dropName)));
+    };
+
+    BiConsumer<Table,List<String>> deactivated = (table,interswitchPorts) -> {
+        List<Flow> flows = table.getFlow();
+        boolean hasVlanFlows = flows.stream()
+                .filter(flow -> flow.getId().getValue().contains(serviceId+"-"+vlanName))
+                .anyMatch(this::hasVlanMatch);
+        assertFalse(hasVlanFlows);
+    };
+
+    private boolean hasVlanMatch(Flow flow){
+        if(flow.getMatch().getVlanMatch().getVlanId().getVlanId().getValue().equals(expectedVlanId)){
+            return true;
+        }
+        return false;
+    }
+
+    private void checkTable(Nodes nodes, BiConsumer<Table,List<String>> checkTable){
+        nodes.getNode()
+                .forEach(node -> {
+                    try {
+                        Table t = OpenFlowUtils.getTable(node);
+                        if(node.getKey().getId().getValue().equals(ofPort1Name)){
+                            checkTable.accept(t,of1InterwitchPorts);
+                        } else if(node.getKey().getId().getValue().equals(ofPort2Name)){
+                            checkTable.accept(t,of2InterwitchPorts);
+                        }
+                    } catch (ResourceNotAvailableException e) {
+                        fail(e.getMessage());
+                    }
+                });
     }
 
     private List<EndPoint> prepareEndpoints(){
