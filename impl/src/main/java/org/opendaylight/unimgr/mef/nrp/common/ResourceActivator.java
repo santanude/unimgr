@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * Device facing SPI for activating or deactivating a fragment of an NRP
- * ForwardingConstruct on a single device.
+ * Connectivity Service on a single device.
  */
 public interface ResourceActivator {
 
