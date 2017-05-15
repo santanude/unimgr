@@ -14,12 +14,11 @@ import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
-import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
-import org.opendaylight.unimgr.utils.SipHandler;
+import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
@@ -35,10 +34,6 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.P2pXconnectKey;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.Pseudowires;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TpId;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,8 +65,15 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     public void activate(List<EndPoint> endPoints, String serviceId) throws TransactionCommitFailedException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
-        ServicePort port = ServicePort.toServicePort(endPoints.get(0), NETCONF_TOPOLODY_NAME);
-        ServicePort neighbor = ServicePort.toServicePort(endPoints.get(1), NETCONF_TOPOLODY_NAME);
+        ServicePort port = null;
+        ServicePort neighbor = null;
+        for(EndPoint endPoint: endPoints){
+            if(port==null){
+                port = ServicePort.toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
+            } else {
+                neighbor = ServicePort.toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
+            }
+        }
 
         java.util.Optional<PolicyManager> qosConfig = activateQos(innerName, port);
         InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu);
@@ -86,7 +88,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     public void deactivate(List<EndPoint> endPoints, String serviceId) throws TransactionCommitFailedException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
-        ServicePort port = ServicePort.toServicePort(endPoints.get(0), NETCONF_TOPOLODY_NAME);
+        ServicePort port = ServicePort.toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
 
         InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
         InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port);

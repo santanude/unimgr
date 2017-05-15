@@ -15,12 +15,19 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TpId;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Class representing port (replacement for FcPort)
  *
  * @author marek.ryznar@amartus.com
  */
 public class ServicePort {
+    private static final String pattern = ".+?(?=((((\\d+)/)+)\\d+))";
+    private static final Pattern interface_name_pattern = Pattern.compile(pattern);
+    private static final String default_interface_name = "GigabitEthernet";
+
     //netconf topology
     private TopologyId topoId;
     //represents device ie dev-68 in netconf topology
@@ -95,5 +102,11 @@ public class ServicePort {
 
     private static int getVlan(EndPoint endPoint){
         return endPoint.getAttrs().getNrpCgEthFrameFlowCpaAspec().getCeVlanIdList().getVlanIdList().get(0).getVlanId().getValue().intValue();
+    }
+
+    public String getInterfaceName(){
+        TpId tpId = this.getTp();
+        Matcher matcher = interface_name_pattern.matcher(tpId.getValue());
+        return matcher.find() ? matcher.group() : default_interface_name;
     }
 }

@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
@@ -16,8 +16,8 @@ import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
-import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.common.MountPointHelper;
+import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.mtus.Mtu;
@@ -50,7 +50,7 @@ import static org.mockito.Mockito.when;
  *
  * @author marek.ryznar@amartus.com
  */
-public class L2vpnActivatorTestUtils {
+public class L2vpnTestUtils {
 
     public static MountPointService getMockedMountPointService(Optional<DataBroker> optBroker){
         PowerMockito.mockStatic(MountPointHelper.class);
@@ -152,7 +152,7 @@ public class L2vpnActivatorTestUtils {
     private static void checkL2vpnDeactivation(CheckedFuture<Optional<L2vpn>, ReadFailedException>driverL2vpn) throws ExecutionException, InterruptedException {
         if (driverL2vpn.get().isPresent()){
             L2vpn l2vpn = driverL2vpn.get().get();
-            L2vpnActivatorTestUtils.checkL2vpn(l2vpn);
+            L2vpnTestUtils.checkL2vpn(l2vpn);
 
             XconnectGroup xconnectGroup = l2vpn.getDatabase().getXconnectGroups().getXconnectGroup().get(0);
             assertTrue(xconnectGroup.getP2pXconnects().getP2pXconnect().isEmpty());
@@ -164,7 +164,7 @@ public class L2vpnActivatorTestUtils {
     private static void checkInterfaceConfigurationDeactivation(CheckedFuture<Optional<InterfaceConfigurations>, ReadFailedException> driverInterfaceConfigurations, String deactivatedPort) throws InterruptedException, ExecutionException{
         if (driverInterfaceConfigurations.get().isPresent()){
             InterfaceConfigurations interfaceConfigurations = driverInterfaceConfigurations.get().get();
-            L2vpnActivatorTestUtils.checkInterfaceConfigurations(interfaceConfigurations);
+            L2vpnTestUtils.checkInterfaceConfigurations(interfaceConfigurations);
 
             List<InterfaceConfiguration> interfaceConfigurationList = interfaceConfigurations.getInterfaceConfiguration();
             assertFalse(interfaceConfigurationList.stream().anyMatch(x -> x.getInterfaceName().getValue().equals(deactivatedPort)));

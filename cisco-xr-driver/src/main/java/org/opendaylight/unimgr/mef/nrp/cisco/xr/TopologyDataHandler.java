@@ -17,10 +17,10 @@ import com.google.common.util.concurrent.Futures;
 import org.opendaylight.controller.md.sal.binding.api.*;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
-import org.opendaylight.unimgr.utils.DriverConstants;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.utils.CapabilitiesService;
+import org.opendaylight.unimgr.utils.DriverConstants;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationKey;
@@ -206,7 +206,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     //simplyfied version of selecting
-    private Pattern gbPort = Pattern.compile(".*GigabitEthernet[^.]+$");
+    private Pattern gbPort = Pattern.compile(".*(GigabitEthernet|TenGigE)[^.]+$");
 
     final Predicate<InterfaceConfiguration> isNep = ic -> {
         final String name = ic.getKey().getInterfaceName().getValue();

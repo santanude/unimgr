@@ -20,73 +20,65 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.L2vpnTestUtils;
 import org.opendaylight.unimgr.mef.nrp.common.MountPointHelper;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.mtus.Mtu;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.L2vpn;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.XconnectGroup;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.P2pXconnect;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.attachment.circuits.AttachmentCircuit;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm_connectivity.rev170227.PositiveInteger;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm_connectivity.rev170227.cg.eth.frame.flow.cpa.aspec.CeVlanIdList;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm_connectivity.rev170227.vlan.id.listing.VlanIdList;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.NrpCreateConnectivityServiceEndPointAttrs;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp_interface.rev170227.nrp.create.connectivity.service.end.point.attrs.NrpCgEthFrameFlowCpaAspec;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.UniversalId;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.ConnectivityServiceEndPoint;
-import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_forwardingconstruct.FcPort;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.pseudowires.Pseudowire;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.pseudowires.pseudowire.Neighbor;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.pseudowires.pseudowire.pseudowire.content.MplsStaticLabels;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.fail;
 
 /**
  * @author marek.ryznar@amartus.com
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(MountPointHelper.class)
-public class L2vpnBridgeActivatorTest extends AbstractDataBrokerTest{
-    private static final Logger log = LoggerFactory.getLogger(L2vpnBridgeActivatorTest.class);
+public class L2vpnP2pConnectionActivatorTest extends AbstractDataBrokerTest {
 
-    private L2vpnBridgeActivator l2vpnBridgeActivator;
+    private L2vpnP2pConnectActivator l2VpnP2PConnectActivator;
     private MountPointService mountService;
     private Optional<DataBroker> optBroker;
-    private String outerName;
-    private String innerName;
-    private String portNo1;
-    private String portNo2;
+    private Long mtu;
     private String deviceName = "localhost";
-    private List<EndPoint> endPoints;
+    private String portNo1="80";
+    private String portNo2="8080";
     private String serviceId = "serviceId";
+    private List<EndPoint> endPoints;
 
     @Before
     public void setUp(){
         //given
         DataBroker broker = getDataBroker();
         optBroker = Optional.of(broker);
-        mountService = L2vpnActivatorTestUtils.getMockedMountPointService(optBroker);
-        l2vpnBridgeActivator = new L2vpnBridgeActivator(broker,mountService);
 
-        outerName = "local";
-        innerName = "local";
-        portNo1 = "80";
-        portNo2 = "8080";
-        endPoints = L2vpnActivatorTestUtils.mockEndpoints(deviceName,deviceName,portNo1,portNo2);
+        mountService = L2vpnTestUtils.getMockedMountPointService(optBroker);
+        l2VpnP2PConnectActivator = new L2vpnP2pConnectActivator(broker,mountService);
+
+        mtu = Long.valueOf(1500);
+        endPoints = L2vpnTestUtils.mockEndpoints(deviceName,deviceName,portNo1,portNo2);
     }
 
     @Test
     public void testActivateAndDeactivate(){
         //when
-        activate();
+        try {
+            l2VpnP2PConnectActivator.activate(endPoints,serviceId);
+        } catch (TransactionCommitFailedException e) {
+            fail("Error during activation : " + e.getMessage());
+        }
 
         //then
         ReadOnlyTransaction transaction = optBroker.get().newReadOnlyTransaction();
@@ -108,47 +100,40 @@ public class L2vpnBridgeActivatorTest extends AbstractDataBrokerTest{
         deactivate();
 
         //then
-        L2vpnActivatorTestUtils.checkDeactivated(optBroker,portNo1);
+        L2vpnTestUtils.checkDeactivated(optBroker,portNo1);
     }
 
     private void deactivate(){
+        //when
         try {
-            l2vpnBridgeActivator.deactivate(endPoints,serviceId);
+            l2VpnP2PConnectActivator.deactivate(endPoints,serviceId);
         } catch (TransactionCommitFailedException e) {
             fail("Error during deactivation : " + e.getMessage());
         }
     }
 
-    private void activate(){
-        log.debug("activate L2VPN");
-        try {
-            l2vpnBridgeActivator.activate(endPoints,serviceId);
-        } catch (TransactionCommitFailedException e) {
-            fail("Error during activation : " + e.getMessage());
-        }
-    }
-
-    private void checkL2vpnTree(CheckedFuture<Optional<L2vpn>, ReadFailedException> driverL2vpn) throws InterruptedException, ExecutionException {
+    private void checkL2vpnTree(CheckedFuture<Optional<L2vpn>, ReadFailedException> driverL2vpn) throws InterruptedException, ExecutionException{
         if (driverL2vpn.get().isPresent()){
             L2vpn l2vpn = driverL2vpn.get().get();
-            L2vpnActivatorTestUtils.checkL2vpn(l2vpn);
+            L2vpnTestUtils.checkL2vpn(l2vpn);
 
             XconnectGroup xconnectGroup = l2vpn.getDatabase().getXconnectGroups().getXconnectGroup().get(0);
-            L2vpnActivatorTestUtils.checkXConnectGroup(xconnectGroup,outerName);
+            L2vpnTestUtils.checkXConnectGroup(xconnectGroup,"EUR16-"+serviceId);
 
             P2pXconnect p2pXconnect = xconnectGroup.getP2pXconnects().getP2pXconnect().get(0);
-            L2vpnActivatorTestUtils.checkP2pXconnect(p2pXconnect,innerName);
+            L2vpnTestUtils.checkP2pXconnect(p2pXconnect,"EUR16-p2p-"+serviceId);
 
-            List<AttachmentCircuit> attachmentCircuits = p2pXconnect.getAttachmentCircuits().getAttachmentCircuit();
-            assertNotNull(attachmentCircuits);
-            assertEquals(2, attachmentCircuits.size());
+            AttachmentCircuit attachmentCircuit = p2pXconnect.getAttachmentCircuits().getAttachmentCircuit().get(0);
+            L2vpnTestUtils.checkAttachmentCircuit(attachmentCircuit,portNo1);
 
-            attachmentCircuits.sort(
-                    (AttachmentCircuit ac1, AttachmentCircuit ac2)
-                            -> ac1.getName().getValue().compareTo(ac2.getName().getValue()));
+            Pseudowire pseudowire = p2pXconnect.getPseudowires().getPseudowire().get(0);
+            L2vpnTestUtils.checkPseudowire(pseudowire);
 
-            L2vpnActivatorTestUtils.checkAttachmentCircuit(attachmentCircuits.get(0), portNo1);
-            L2vpnActivatorTestUtils.checkAttachmentCircuit(attachmentCircuits.get(1), portNo2);
+            Neighbor neighbor = pseudowire.getNeighbor().get(0);
+            L2vpnTestUtils.checkNeighbor(neighbor);
+
+            MplsStaticLabels mplsStaticLabels = neighbor.getMplsStaticLabels();
+            L2vpnTestUtils.checkMplsStaticLabels(mplsStaticLabels);
         } else {
             fail("L2vpn was not found.");
         }
@@ -157,17 +142,16 @@ public class L2vpnBridgeActivatorTest extends AbstractDataBrokerTest{
     private void checkInterfaceConfigurationTree(CheckedFuture<Optional<InterfaceConfigurations>, ReadFailedException> driverInterfaceConfigurations) throws InterruptedException, ExecutionException{
         if (driverInterfaceConfigurations.get().isPresent()){
             InterfaceConfigurations interfaceConfigurations = driverInterfaceConfigurations.get().get();
-            L2vpnActivatorTestUtils.checkInterfaceConfigurations(interfaceConfigurations);
+            L2vpnTestUtils.checkInterfaceConfigurations(interfaceConfigurations);
 
-            List<InterfaceConfiguration> interfaceConfigurationList = interfaceConfigurations.getInterfaceConfiguration();
-            interfaceConfigurationList.sort(
-                    (InterfaceConfiguration ic1, InterfaceConfiguration ic2)
-                            -> ic1.getInterfaceName().getValue().compareTo(ic2.getInterfaceName().getValue()));
+            InterfaceConfiguration interfaceConfiguration = interfaceConfigurations.getInterfaceConfiguration().get(0);
+            L2vpnTestUtils.checkInterfaceConfiguration(interfaceConfiguration,portNo1,true);
 
-            L2vpnActivatorTestUtils.checkInterfaceConfiguration(interfaceConfigurationList.get(0),portNo1,false);
-            L2vpnActivatorTestUtils.checkInterfaceConfiguration(interfaceConfigurationList.get(1),portNo2,false);
+            Mtu mtu1 = interfaceConfiguration.getMtus().getMtu().get(0);
+            L2vpnTestUtils.checkMtu(mtu1,mtu);
         } else {
             fail("InterfaceConfigurations was not found.");
         }
     }
+
 }
