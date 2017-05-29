@@ -82,12 +82,6 @@
     <feature version="${dlux.version}">odl-dlux-all</feature>
   </feature>
 
-  <feature name="odl-unimgr-cisco-xe-driver" version="${project.version}" description='OpenDaylight :: UniMgr :: Cisco XE Driver'>
-    <feature version='${project.version}'>odl-unimgr</feature>
-    <bundle>mvn:org.opendaylight.unimgr/unimgr-cisco-xe-driver/{{VERSION}}</bundle>
-    <bundle>mvn:com.eclipsesource.jaxrs/jersey-all/2.22.2</bundle>
-  </feature>
-
   <feature name='odl-unimgr-cisco-xr-driver' version='${project.version}' description='OpenDaylight :: UniMgr :: Cisco XR Driver'>
     <feature version='${project.version}'>odl-unimgr</feature>
     <feature version="${netconf.version}">odl-netconf-topology</feature>
@@ -99,8 +93,6 @@
     <feature version='${project.version}'>odl-unimgr</feature>
     <bundle>mvn:org.opendaylight.unimgr/unimgr-template-driver/{{VERSION}}</bundle>
   </feature>
-
-
 
   <feature name="odl-unimgr-ovs-driver" version="${project.version}" description='OpenDaylight :: UniMgr :: OVSDB Driver'>
     <feature version='${project.version}'>odl-unimgr</feature>
