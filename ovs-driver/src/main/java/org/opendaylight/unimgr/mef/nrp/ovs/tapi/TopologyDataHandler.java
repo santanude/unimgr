@@ -176,7 +176,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
             @Override
             public void onSuccess(@Nullable Void result) {
-                LOG.info("Ovs TAPI node action executed successfully");
+                LOG.debug("Ovs TAPI node action executed successfully");
             }
 
             @Override
@@ -226,17 +226,12 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     private List<OwnedNodeEdgePoint> getNewNeps(Map<TerminationPoint,String> toAddMap){
-        List<OwnedNodeEdgePoint> neps = new LinkedList<>();
-
-        toAddMap.entrySet().stream()
-                //.filter(entry -> isNep(entry.getKey()))
-                .forEach(entry -> {
-                    OwnedNodeEdgePoint nep = createNep(getFullPortName(entry.getValue(),entry.getKey().getTpId().getValue()));
-                    neps.add(nep);
-                });
-        return neps;
+        return toAddMap.entrySet().stream()
+                .map(entry -> createNep(getFullPortName(entry.getValue(),entry.getKey().getTpId().getValue())) )
+                .collect(Collectors.toList());
     }
 
+    //TODO: write better implementation
     private boolean isNep(TerminationPoint terminationPoint){
         OvsdbTerminationPointAugmentation ovsdbTerminationPoint = terminationPoint.getAugmentation(OvsdbTerminationPointAugmentation.class);
         if( ovsdbTerminationPoint==null || (ovsdbTerminationPoint.getInterfaceType()!=null && ovsdbTerminationPoint.getInterfaceType().equals(InterfaceTypeInternal.class))) {

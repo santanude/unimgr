@@ -160,8 +160,7 @@ public class BandwidthProfileHelper {
 
     public BandwidthProfileHelper addPolicyMap(String fcName, BandwidthProfileComposition.BwpDirection direction, BandwidthProfileComposition.BwpApplicability applicability) {
         if(bandwidthProfiles.size() > 0) {
-            //TODO .get(0) ?
-            Optional<GNRPBwpFlow> bwProfileOptional = bandwidthProfiles.get(0).get(direction, applicability);
+            Optional<GNRPBwpFlow> bwProfileOptional = bandwidthProfiles.stream().findFirst().get().get(direction, applicability);
 
             if (bwProfileOptional.isPresent()) {
                 List<PolicyMapRule> policyMapRules = new ArrayList<>();
@@ -171,7 +170,6 @@ public class BandwidthProfileHelper {
                                 .setPolice(addPolice(bwProfileOptional.get()))
                                 .build()
                 );
-
 
                 policyMaps.add(new PolicyMapBuilder()
                         .setName(PolicyMapNameGenerator.generate(fcName, direction, applicability))

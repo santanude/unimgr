@@ -52,7 +52,6 @@ public class OvsActivator implements ResourceActivator {
      */
     @Override
     public void activate(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
-        LOG.info("OvsActivator.activate(endpoints)");
         this.serviceName = serviceName;
         for (EndPoint endPoint:endPoints)
             activateEndpoint(endPoint);

@@ -195,7 +195,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
             @Override
             public void onSuccess(@Nullable Void result) {
-                log.info("TAPI node upadate successful");
+                log.debug("TAPI node upadate successful");
             }
 
             @Override

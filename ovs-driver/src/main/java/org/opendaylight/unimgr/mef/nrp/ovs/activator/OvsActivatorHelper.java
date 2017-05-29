@@ -31,7 +31,6 @@ import java.util.Map;
  */
 class OvsActivatorHelper {
     private List<NullAwareDatastoreGetter<Node>> nodes;
-    //private FcPort flowPoint;
     private EndPoint endPoint;
     private String tpName;
     private Map<String, String> portMap;
@@ -55,7 +54,6 @@ class OvsActivatorHelper {
      * @return Integer with VLAN Id
      */
     int getCeVlanId() throws ResourceNotAvailableException {
-        endPoint.getAttrs().getNrpCgEthFrameFlowCpaAspec().getCeVlanIdList().getVlanIdList().get(0).getVlanId();
 
         if( (endPoint.getAttrs() != null) && (endPoint.getAttrs().getNrpCgEthFrameFlowCpaAspec()!=null) ){
             NrpCgEthFrameFlowCpaAspec attr = endPoint.getAttrs().getNrpCgEthFrameFlowCpaAspec();

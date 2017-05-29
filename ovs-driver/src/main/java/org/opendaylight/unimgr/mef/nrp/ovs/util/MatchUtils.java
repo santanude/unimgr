@@ -19,7 +19,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026
  *
  * @author jakub.niezgoda@amartus.com
  */
-
 class MatchUtils {
 
     static Match createInPortMatch(String inPort) {

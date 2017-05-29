@@ -36,7 +36,7 @@ public class LoopbackUtils {
 
     private static final String DEFAULT_LOOPBACK = "127.0.0.1";
 
-    //TODO: learn how to get proper ip
+    //TODO: First, loopback address must be added with netconf device on POST request
     public static Ipv4AddressNoZone getIpv4Address(ServicePort port, DataBroker dataBroker) {
         String loopback = null;
         NodeId nodeId = port.getNode();
