@@ -6,14 +6,12 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.opendaylight.unimgr.mef.netvirt;
+package org.opendaylight.unimgr.mef.nrp.netvirt.ovs.util;
 
 import com.google.common.base.Optional;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.yang.gen.v1.http.metroethernetforum.org.ns.yang.mef.services.rev150526.mef.services.MefService;
-import org.opendaylight.yang.gen.v1.http.metroethernetforum.org.ns.yang.mef.types.rev150526.RetailSvcIdType;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.iana._if.type.rev140508.L2vlan;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpPrefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.Interfaces;
@@ -33,7 +31,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.dhcp_allocation_poo
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.dhcp_allocation_pool.rev161214.dhcp_allocation_pool.Network;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.dhcp_allocation_pool.rev161214.dhcp_allocation_pool.NetworkKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.dhcp_allocation_pool.rev161214.dhcp_allocation_pool.network.AllocationPool;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.dhcp_allocation_pool.rev161214.dhcp_allocation_pool.network.AllocationPoolBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.dhcp_allocation_pool.rev161214.dhcp_allocation_pool.network.AllocationPoolKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.elan.etree.rev160614.EtreeInstance;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.elan.etree.rev160614.EtreeInstanceBuilder;
@@ -49,7 +46,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.elan.rev150602.elan
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.elan.rev150602.elan.interfaces.ElanInterface;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.elan.rev150602.elan.interfaces.ElanInterfaceBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netvirt.elan.rev150602.elan.interfaces.ElanInterfaceKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.unimgr.unimgr.dhcp.rev161214.unimgr.dhcp.unimgr.services.network.UnimgrAllocationPool;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.InstanceIdentifierBuilder;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -68,12 +64,12 @@ public class NetvirtUtils {
     private static final long DEFAULT_MAC_TIMEOUT = 300;
 
     public static void createElanInstance(DataBroker dataBroker, String instanceName, boolean isEtree,
-            Long segmentationId) {
+                                          Long segmentationId) {
         createElanInstance(dataBroker, instanceName, isEtree, segmentationId, DEFAULT_MAC_TIMEOUT);
     }
 
     public static void createElanInstance(DataBroker dataBroker, String instanceName, boolean isEtree,
-            Long segmentationId, Long macTimeout) {
+                                          Long segmentationId, Long macTimeout) {
         ElanInstanceBuilder einstBuilder = createElanInstanceBuilder(instanceName, segmentationId, macTimeout);
 
         if (isEtree) {
@@ -102,7 +98,7 @@ public class NetvirtUtils {
     }
 
     public static void updateElanInstance(String instanceName, WriteTransaction tx, Long segmentationId,
-            Long macTimeout) {
+                                          Long macTimeout) {
         ElanInstanceBuilder einstBuilder = createElanInstanceBuilder(instanceName, segmentationId, macTimeout);
         saveElanInstance(instanceName, tx, einstBuilder);
     }
@@ -180,7 +176,7 @@ public class NetvirtUtils {
     }
 
     private static ElanInstanceBuilder createElanInstanceBuilder(String instanceName, Long segmentationId,
-            Long macTimeout) {
+                                                                 Long macTimeout) {
         if (segmentationId == null) {
             segmentationId = Long.valueOf(Math.abs((short) instanceName.hashCode()));
         }
@@ -201,7 +197,7 @@ public class NetvirtUtils {
     }
 
     private static ElanInterfaceBuilder createEtreeInterface(String instanceName, String interfaceName,
-            EtreeInterfaceType interfaceType) {
+                                                             EtreeInterfaceType interfaceType) {
         ElanInterfaceBuilder einterfaceBuilder = new ElanInterfaceBuilder();
         einterfaceBuilder.setElanInstanceName(instanceName);
         einterfaceBuilder.setName(interfaceName);
@@ -256,14 +252,21 @@ public class NetvirtUtils {
     }
 
     public static void createElanInterface(DataBroker dataBroker, String instanceName, String interfaceName,
-            EtreeInterfaceType etreeInterfaceType, boolean isEtree) {
+                                           EtreeInterfaceType etreeInterfaceType, boolean isEtree) {
         WriteTransaction tx = MdsalUtils.createTransaction(dataBroker);
         createElanInterface(instanceName, interfaceName, etreeInterfaceType, isEtree, tx);
         MdsalUtils.commitTransaction(tx);
     }
 
+    public static void createElanInterface(DataBroker dataBroker, String instanceName, String interfaceName,
+                                           boolean isEtree) {
+        WriteTransaction tx = MdsalUtils.createTransaction(dataBroker);
+        createElanInterface(instanceName, interfaceName, tx);
+        MdsalUtils.commitTransaction(tx);
+    }
+
     public static void createElanInterface(String instanceName, String interfaceName,
-            EtreeInterfaceType etreeInterfaceType, boolean isEtree, WriteTransaction tx) {
+                                           EtreeInterfaceType etreeInterfaceType, boolean isEtree, WriteTransaction tx) {
         logger.info("Adding {} interface: {}", isEtree ? "etree" : "elan", interfaceName);
 
         if (isEtree) {
@@ -274,7 +277,7 @@ public class NetvirtUtils {
     }
 
     private static void createEtreeInterface(String instanceName, String interfaceName, EtreeInterfaceType type,
-            WriteTransaction tx) {
+                                             WriteTransaction tx) {
         ElanInterfaceBuilder einterfaceBuilder = createEtreeInterface(instanceName, interfaceName, type);
 
         tx.put(LogicalDatastoreType.CONFIGURATION, getElanInterfaceInstanceIdentifier(interfaceName),
@@ -322,55 +325,55 @@ public class NetvirtUtils {
         }
     }
 
-    public static void createDhcpAllocationPool(DataBroker dataBroker, UnimgrAllocationPool unimgrAllocationPool,
-            String unimgrNetworkId, RetailSvcIdType svcId) {
-        String networkId = convertNetworkToNetvirtNetwork(dataBroker, unimgrNetworkId, svcId);
-        if (networkId != null) {
-            // add allocation pool to netvirt
-            MdsalUtils.syncWrite(dataBroker, LogicalDatastoreType.CONFIGURATION,
-                    createDhcpAllocationPoolInstanceIdentifier(networkId, unimgrAllocationPool.getKey().getSubnet()),
-                    buildDhcpAllocationPool(unimgrAllocationPool));
-        } else {
-            logger.warn("no network found for svc-id {}", svcId);
-        }
-    }
-
-    public static void removeDhcpAllocationPool(DataBroker dataBroker, String unimgrNetworkId, RetailSvcIdType svcId,
-            IpPrefix subnet) {
-        String networkId = convertNetworkToNetvirtNetwork(dataBroker, unimgrNetworkId, svcId);
-        if (networkId != null) {
-            // remove allocation pool from netvirt
-            MdsalUtils.syncDelete(dataBroker, LogicalDatastoreType.CONFIGURATION,
-                    createDhcpAllocationPoolInstanceIdentifier(networkId, subnet));
-        } else {
-            logger.warn("no network found for svc-id {}", svcId);
-        }
-    }
-
-    private static String convertNetworkToNetvirtNetwork(DataBroker dataBroker, String unimgrNetworkId,
-            RetailSvcIdType svcId) {
-        Optional<MefService> optionalOpMefService = MefServicesUtils.getOpMefServiceBySvcId(dataBroker, svcId);
-        if (!optionalOpMefService.isPresent()) {
-            logger.warn("no mef-service found for svc-id {}", svcId);
-            return null;
-        }
-        MefService opMefService = optionalOpMefService.get();
-        return MefServicesUtils.getNetworkIdFromOpMefService(opMefService, unimgrNetworkId);
-    }
+//    public static void createDhcpAllocationPool(DataBroker dataBroker, UnimgrAllocationPool unimgrAllocationPool,
+//                                                String unimgrNetworkId, RetailSvcIdType svcId) {
+//        String networkId = convertNetworkToNetvirtNetwork(dataBroker, unimgrNetworkId, svcId);
+//        if (networkId != null) {
+//            // add allocation pool to netvirt
+//            MdsalUtils.syncWrite(dataBroker, LogicalDatastoreType.CONFIGURATION,
+//                    createDhcpAllocationPoolInstanceIdentifier(networkId, unimgrAllocationPool.getKey().getSubnet()),
+//                    buildDhcpAllocationPool(unimgrAllocationPool));
+//        } else {
+//            logger.warn("no network found for svc-id {}", svcId);
+//        }
+//    }
+//
+//    public static void removeDhcpAllocationPool(DataBroker dataBroker, String unimgrNetworkId, RetailSvcIdType svcId,
+//                                                IpPrefix subnet) {
+//        String networkId = convertNetworkToNetvirtNetwork(dataBroker, unimgrNetworkId, svcId);
+//        if (networkId != null) {
+//            // remove allocation pool from netvirt
+//            MdsalUtils.syncDelete(dataBroker, LogicalDatastoreType.CONFIGURATION,
+//                    createDhcpAllocationPoolInstanceIdentifier(networkId, subnet));
+//        } else {
+//            logger.warn("no network found for svc-id {}", svcId);
+//        }
+//    }
+//
+//    private static String convertNetworkToNetvirtNetwork(DataBroker dataBroker, String unimgrNetworkId,
+//                                                         RetailSvcIdType svcId) {
+//        Optional<MefService> optionalOpMefService = MefServicesUtils.getOpMefServiceBySvcId(dataBroker, svcId);
+//        if (!optionalOpMefService.isPresent()) {
+//            logger.warn("no mef-service found for svc-id {}", svcId);
+//            return null;
+//        }
+//        MefService opMefService = optionalOpMefService.get();
+//        return MefServicesUtils.getNetworkIdFromOpMefService(opMefService, unimgrNetworkId);
+//    }
 
     private static InstanceIdentifier<AllocationPool> createDhcpAllocationPoolInstanceIdentifier(String networkId,
-            IpPrefix subnet) {
+                                                                                                 IpPrefix subnet) {
         return InstanceIdentifier.builder(DhcpAllocationPool.class).child(Network.class, new NetworkKey(networkId))
                 .child(AllocationPool.class, new AllocationPoolKey(subnet)).build();
     }
 
-    private static AllocationPool buildDhcpAllocationPool(UnimgrAllocationPool unimgrAllocationPool) {
-        AllocationPool allocationPool = new AllocationPoolBuilder()
-                .setKey(new AllocationPoolKey(unimgrAllocationPool.getSubnet()))
-                .setSubnet(unimgrAllocationPool.getSubnet()).setAllocateFrom(unimgrAllocationPool.getAllocateFrom())
-                .setAllocateTo(unimgrAllocationPool.getAllocateTo()).setDnsServers(unimgrAllocationPool.getDnsServers())
-                .setGateway(unimgrAllocationPool.getGateway()).build();
-        return allocationPool;
-    }
+//    private static AllocationPool buildDhcpAllocationPool(UnimgrAllocationPool unimgrAllocationPool) {
+//        AllocationPool allocationPool = new AllocationPoolBuilder()
+//                .setKey(new AllocationPoolKey(unimgrAllocationPool.getSubnet()))
+//                .setSubnet(unimgrAllocationPool.getSubnet()).setAllocateFrom(unimgrAllocationPool.getAllocateFrom())
+//                .setAllocateTo(unimgrAllocationPool.getAllocateTo()).setDnsServers(unimgrAllocationPool.getDnsServers())
+//                .setGateway(unimgrAllocationPool.getGateway()).build();
+//        return allocationPool;
+//    }
 
 }

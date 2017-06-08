@@ -35,6 +35,7 @@
     <module>odl-unimgr-ui</module>
     <module>odl-unimgr-cisco-xr-driver</module>
     <module>odl-unimgr-ovs-driver</module>
+    <module>odl-unimgr-netvirt-ovs-driver</module>
     <module>odl-unimgr-template-driver</module>
   </modules>
 </project>

@@ -11,12 +11,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
 
     <reference id="dataBroker" interface="org.opendaylight.controller.md.sal.binding.api.DataBroker" />
 
-    <service id="ovsDriverService" interface="org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder">
-        <bean class="OvsDriver">
+    <service id="netvirtOvsDriverService" interface="org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder">
+        <bean class="org.opendaylight.unimgr.mef.nrp.netvirt.ovs.driver.OvsDriver">
             <argument ref="dataBroker" />
         </bean>
     </service>
-    <bean id="topologyHandler" class="TopologyDataHandler" init-method="init" destroy-method="close">
+
+    <bean id="topologyHandler" class="org.opendaylight.unimgr.mef.nrp.netvirt.ovs.tapi.TopologyDataHandler" init-method="init" destroy-method="close">
         <argument ref="dataBroker" />
     </bean>
 </blueprint>
