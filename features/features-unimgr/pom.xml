@@ -38,6 +38,8 @@
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
     <openflowplugin.version>0.4.0-Carbon</openflowplugin.version>
     <openflowjava.version>0.9.0-Carbon</openflowjava.version>
+    <openflowplugin.version>0.4.0-Carbon</openflowplugin.version>
+    <openflowjava.version>0.9.0-Carbon</openflowjava.version>
   </properties>
   <dependencyManagement>
     <dependencies>

@@ -19,10 +19,6 @@
   <name>ODL :: unimgr :: ${project.artifactId}</name>
   <modelVersion>4.0.0</modelVersion>
 
-  <properties>
-    <configfile.directory>etc/opendaylight/karaf</configfile.directory>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.opendaylight.unimgr</groupId>
