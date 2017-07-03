@@ -8,18 +8,23 @@
 
 package org.opendaylight.unimgr.mef.nrp.impl;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
-import org.opendaylight.unimgr.mef.nrp.impl.decomposer.BasicDecomposer;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.OperationalState;
-import org.opendaylight.yangtools.yang.common.OperationFailedException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
+import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
+import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
+import org.opendaylight.unimgr.mef.nrp.impl.decomposer.BasicDecomposer;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapicommon.rev170227.OperationalState;
+import org.opendaylight.yangtools.yang.common.OperationFailedException;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -35,8 +40,17 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
 
     }
 
+    @Rule
+    public ExpectedException expected = ExpectedException.none();
+
+    @Test()
+    public void emptyNodeInventoryTest() throws FailureResult {
+        expected.expect(FailureResult.class);
+        decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n1:2")), null);
+    }
+
     @Test
-    public void singleNodeTest() throws OperationFailedException {
+    public void singleNodeTest() throws FailureResult, OperationFailedException {
         //having
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
         n(tx, "n1", "n1:1", "n1:2", "n1:3");
@@ -49,7 +63,7 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
     }
 
     @Test
-    public void noPathTest() throws OperationFailedException {
+    public void noPathTest() throws FailureResult, OperationFailedException {
         //having
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
         n(tx, "n1", "n1:1", "n1:2", "n1:3");
@@ -61,7 +75,7 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
     }
 
     @Test
-    public void twoNodesTest() throws OperationFailedException {
+    public void twoNodesTest() throws FailureResult, OperationFailedException {
         //having
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
         n(tx, "n1", "n1:1", "n1:2", "n1:3");
@@ -77,7 +91,7 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
     }
 
     @Test
-    public void threeNodesTest() throws OperationFailedException {
+    public void threeNodesTest() throws FailureResult, OperationFailedException {
         //having
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
         n(tx, "n1", "n1:1", "n1:2", "n1:3");
@@ -93,7 +107,7 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
     }
 
     @Test
-    public void threeNodesDisabledLinkTest() throws OperationFailedException {
+    public void threeNodesDisabledLinkTest() throws FailureResult, OperationFailedException {
         //having
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
         n(tx, "n1", "n1:1", "n1:2", "n1:3");

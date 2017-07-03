@@ -110,7 +110,7 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
         }
     }
 
-    private ActivationTransaction prepareTransaction(String serviceId) {
+    private ActivationTransaction prepareTransaction(String serviceId) throws FailureResult {
         log.debug("decompose request");
         decomposedRequest = service.getDecomposer().decompose(endpoints, null);
 

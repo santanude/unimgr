@@ -177,11 +177,14 @@ public class TapiConnectivityServiceImplTest {
 
 
     private void configureDecomposerAnswer(Function<List<org.opendaylight.unimgr.mef.nrp.api.EndPoint>, List<Subrequrest>> resp) {
+        try {
         when(decomposer.decompose(any(), any(Constraints.class)))
                 .thenAnswer(a -> {
                     List<org.opendaylight.unimgr.mef.nrp.api.EndPoint> eps = a.getArgumentAt(0, List.class);
                     return resp.apply(eps);
                 });
+        } catch (FailureResult f) {
+        }
     }
 
     private CreateConnectivityServiceInput input(int count) {

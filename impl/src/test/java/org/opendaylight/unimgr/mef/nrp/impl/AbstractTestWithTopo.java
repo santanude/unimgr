@@ -8,6 +8,13 @@
 
 package org.opendaylight.unimgr.mef.nrp.impl;
 
+import static org.opendaylight.unimgr.mef.nrp.api.TapiConstants.PRESTO_SYSTEM_TOPO;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.junit.Before;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
@@ -28,13 +35,6 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.LinkBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.LinkKey;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.Node;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.opendaylight.unimgr.mef.nrp.api.TapiConstants.PRESTO_SYSTEM_TOPO;
 
 /**
  * @author bartosz.michalik@amartus.com

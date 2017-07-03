@@ -8,18 +8,36 @@
 
 package org.opendaylight.unimgr.mef.nrp.impl.connectivityservice;
 
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.unimgr.mef.nrp.api.*;
+import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverRepoService;
+import org.opendaylight.unimgr.mef.nrp.api.RequestDecomposer;
+import org.opendaylight.unimgr.mef.nrp.api.RequestValidator;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.ConnectivityServiceIdResourcePool;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.*;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.Context1;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.CreateConnectivityServiceInput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.CreateConnectivityServiceOutput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.DeleteConnectivityServiceInput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.DeleteConnectivityServiceOutput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.GetConnectionDetailsInput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.GetConnectionDetailsOutput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.GetConnectivityServiceDetailsInput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.GetConnectivityServiceDetailsOutput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.GetConnectivityServiceListOutput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.TapiConnectivityService;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.UpdateConnectivityServiceInput;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.UpdateConnectivityServiceOutput;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Objects;
-import java.util.concurrent.*;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -78,7 +96,7 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
 
     @Override
     public Future<RpcResult<GetConnectivityServiceListOutput>> getConnectivityServiceList() {
-        return null;
+        return executor.submit(new ListConnectivityAction(this));
     }
 
     @Override

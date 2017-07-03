@@ -201,6 +201,17 @@ public class NrpDao  {
         tx.delete(LogicalDatastoreType.OPERATIONAL, nodeIdent);
     }
 
+    public List<ConnectivityService> getConnectivityServiceList() {
+        try {
+            return rtx.read(LogicalDatastoreType.OPERATIONAL,
+                    ctx().augmentation(org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.Context1.class))
+                    .checkedGet().orNull().getConnectivityService();
+        } catch (ReadFailedException e) {
+            log.warn("reading connectivity services failed", e);
+            return null;
+        }
+    }
+
     public ConnectivityService getConnectivityService(UniversalId id) {
         try {
             return rtx.read(LogicalDatastoreType.OPERATIONAL, ctx().augmentation(org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170227.Context1.class).child(ConnectivityService.class, new ConnectivityServiceKey(id)))

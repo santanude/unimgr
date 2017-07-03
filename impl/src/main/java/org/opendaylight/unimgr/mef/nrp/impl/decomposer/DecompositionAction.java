@@ -8,6 +8,13 @@
 
 package org.opendaylight.unimgr.mef.nrp.impl.decomposer;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
@@ -17,6 +24,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
+import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
@@ -26,10 +34,6 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapitopology.rev170227.topology.context.Topology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -48,7 +52,7 @@ public class DecompositionAction {
         this.broker = broker;
     }
 
-    List<Subrequrest> decompose() {
+    List<Subrequrest> decompose() throws FailureResult {
         Graph<Vertex, DefaultEdge> graph = prepareData();
 
         List<Vertex> vertexes = endpoints.stream().map(e -> sipToNep.get(e.getEndpoint().getServiceInterfacePoint())).collect(Collectors.toList());
@@ -87,11 +91,13 @@ public class DecompositionAction {
         }
     }
 
-    protected Graph<Vertex, DefaultEdge> prepareData() {
+    protected Graph<Vertex, DefaultEdge> prepareData() throws FailureResult {
         ReadWriteTransaction tx = broker.newReadWriteTransaction();
         try {
             Topology topo = new NrpDao(tx).getTopology(TapiConstants.PRESTO_SYSTEM_TOPO);
-
+            if (topo.getNode() == null) {
+                throw new FailureResult("There are no nodes in {0} topology", TapiConstants.PRESTO_SYSTEM_TOPO);
+            }
 
             Graph<Vertex, DefaultEdge> graph = new SimpleGraph<>(DefaultEdge.class);
             topo.getNode().stream().map(this::nodeToGraph).forEach(vs -> {
@@ -111,11 +117,9 @@ public class DecompositionAction {
                 });
             }
 
-
             return graph;
         } catch (ReadFailedException e) {
-            log.warn("Cannot read {} topology", TapiConstants.PRESTO_SYSTEM_TOPO);
-            return null;
+            throw new FailureResult("Cannot read {0} topology", TapiConstants.PRESTO_SYSTEM_TOPO);
         }
     }
 
