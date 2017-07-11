@@ -11,12 +11,14 @@ package org.opendaylight.unimgr.mef.nrp.impl.connectivityservice;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
+import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170531.GetConnectivityServiceDetailsInput;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170531.GetConnectivityServiceDetailsOutput;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170531.GetConnectivityServiceDetailsOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170531.connectivity.context.g.ConnectivityService;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapiconnectivity.rev170531.get.connectivity.service.details.output.ServiceBuilder;
+import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 
@@ -34,12 +36,27 @@ public class GetConnectivityDetailsAction implements Callable<RpcResult<GetConne
     @Override
     public RpcResult<GetConnectivityServiceDetailsOutput> call() throws Exception {
 
-        NrpDao nrpDao = new NrpDao(service.getBroker().newReadOnlyTransaction());
-        ConnectivityService value = nrpDao.getConnectivityService(input.getServiceIdOrName());
+        try {
+            if (input.getServiceIdOrName() == null) {
+                throw new FailureResult("get-connectivity-service-details requires a valid service-id-or-name");
+            }
 
-        return RpcResultBuilder.success(
-                new GetConnectivityServiceDetailsOutputBuilder()
-                .setService(new ServiceBuilder(value).build())).build();
+            NrpDao nrpDao = new NrpDao(service.getBroker().newReadOnlyTransaction());
+            ConnectivityService value = nrpDao.getConnectivityService(input.getServiceIdOrName());
+
+            if (value == null) {
+                throw new FailureResult("There is no service with id {0}", input.getServiceIdOrName());
+            }
+
+            return RpcResultBuilder.success(
+                    new GetConnectivityServiceDetailsOutputBuilder()
+                    .setService(new ServiceBuilder(value).build())).build();
+
+        } catch (FailureResult e) {
+            return RpcResultBuilder
+                    .<GetConnectivityServiceDetailsOutput>failed()
+                    .withError(ErrorType.APPLICATION, e.getMessage())
+                    .build();
+        }
     }
-
 }

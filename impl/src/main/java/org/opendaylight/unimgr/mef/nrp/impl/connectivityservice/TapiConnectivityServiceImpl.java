@@ -80,7 +80,7 @@ public class TapiConnectivityServiceImpl implements TapiConnectivityService, Aut
 
     @Override
     public Future<RpcResult<GetConnectionDetailsOutput>> getConnectionDetails(GetConnectionDetailsInput input) {
-        return null;
+        return executor.submit(new GetConnectionDetailsAction(this, input));
     }
 
     @Override
