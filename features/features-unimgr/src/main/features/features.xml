@@ -120,6 +120,7 @@
     <feature version="${openflowplugin.version}">odl-openflowplugin-flow-services</feature>
     <feature version="${openflowplugin.version}">odl-openflowplugin-southbound</feature>
     <bundle>mvn:org.opendaylight.unimgr/ovs-driver/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.ovsdb/utils.mdsal-utils/${ovsdb.version}</bundle>
   </feature>
 
 </features>
