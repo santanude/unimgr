@@ -23,7 +23,7 @@
 
     <groupId>org.opendaylight.unimgr</groupId>
     <artifactId>unimgr-template-driver</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>ODL :: unimgr :: ${project.artifactId}</name>
