@@ -14,6 +14,7 @@
         <checkstyle.skip>true</checkstyle.skip>
         <powermock.version>1.6.4</powermock.version>
         <openflow.version>0.5.0</openflow.version>
+        <ovsdb.version>1.5.0</ovsdb.version>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
@@ -38,12 +39,30 @@
         </plugins>
     </build>
 
+    <dependencyManagement>
+      <dependencies>
+        <dependency>
+          <groupId>org.opendaylight.controller</groupId>
+          <artifactId>mdsal-artifacts</artifactId>
+          <version>1.6.0</version>
+          <type>pom</type>
+          <scope>import</scope>
+        </dependency>
+      </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>unimgr-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+	<dependency>
+		<groupId>org.opendaylight.ovsdb</groupId>
+		<artifactId>utils.mdsal-utils</artifactId>
+		<version>${ovsdb.version}</version>
+	</dependency>
 
         <!-- Testing Dependencies -->
         <dependency>
