@@ -93,7 +93,7 @@ public abstract class AbstractTestWithTopo extends AbstractDataBrokerTest {
         NrpDao nrpDao = new NrpDao(tx);
         if (addSips) {
             eps.stream().map(e -> new ServiceInterfacePointBuilder()
-                    .setUuid(new Uuid("sip:" + e))
+                    .setUuid(new Uuid("sip:" + e.getId()))
                     .build())
                     .forEach(nrpDao::addSip);
         }
@@ -104,14 +104,14 @@ public abstract class AbstractTestWithTopo extends AbstractDataBrokerTest {
                             .setLinkPortDirection(e.getDir())
                             .setUuid(new Uuid(e.getId()));
                     if (addSips) {
-                        builder.setMappedServiceInterfacePoint(Collections.singletonList(new Uuid("sip:" + e)));
+                        builder.setMappedServiceInterfacePoint(Collections.singletonList(new Uuid("sip:" + e.getId())));
                     }
                     return builder.build();
                 }).collect(Collectors.toList()));
     }
 
 
-    static class Pair {
+    protected static class Pair {
         private String id;
         private PortDirection dir;
 
