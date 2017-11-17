@@ -96,30 +96,10 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
     }
 
     @Test
-    public void threeNodesTestNone() throws FailureResult, OperationFailedException {
-        //having three nodes, but only two nodes connected, with directional links and ports
-        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        threeNodesTopo(tx);
-        tx.submit().checkedGet();
-        //when
-        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n1:2")), null);
-        assertNull(decomposed);
-
-    }
-
-    private  void threeNodesTopo(ReadWriteTransaction tx) {
-        n(tx, true, "n1", Stream.of(pI("n1:1"), pI("n1:2"), pO("n1:3")));
-        n(tx, true, "n2", Stream.of(pI("n2:1"), pO("n2:2")));
-        n(tx, true, "n3", Stream.of(pI("n3:1"), pO("n3:2"), pO("n3:3")));
-        l(tx, "n1", "n1:3", "n2", "n2:1", OperationalState.Enabled, ForwardingDirection.Bidirectional);
-        l(tx, "n2", "n2:2", "n3", "n3:1", OperationalState.Enabled, ForwardingDirection.Bidirectional);
-    }
-
-    @Test
     public void fourNodesTestAll() throws FailureResult, OperationFailedException {
         //having three nodes, but only two nodes connected, with directional links and ports
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        threeNodesTopo(tx);
+        fourNodesTopo(tx);
         tx.submit().checkedGet();
         //when
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n3:2")), null);
@@ -132,7 +112,7 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
     public void fourNodesTestNone() throws FailureResult, OperationFailedException {
         //having four nodes, but only two nodes connected, with directional links and ports
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        threeNodesTopo(tx);
+        fourNodesTopo(tx);
         tx.submit().checkedGet();
         //when
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n1:2")), null);
@@ -154,35 +134,10 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
     }
 
     @Test
-    public void fourNodesTestNone() throws FailureResult, OperationFailedException {
-        //having four nodes, but only two nodes connected, with directional links and ports
-        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        threeNodesTopo(tx);
-        tx.submit().checkedGet();
-        //when
-        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n3:2"), ep("n1:2")), null);
-        assertNull(decomposed);
-
-    }
-
-    private  void fourNodesTopo(ReadWriteTransaction tx) {
-        n(tx, true, "n1", Stream.of(pB("n1:1"), pB("n1:2"), pI("n1:3"), pO("n1:4"), pO("n1:5")));
-        n(tx, true, "n2", Stream.of(pB("n2:1"), pB("n2:2"), pO("n2:3"), pI("n2:4"), pI("n2:5")));
-        n(tx, true, "n3", Stream.of(pB("n3:1"), pB("n3:2"), pO("n3:3"), pO("n3:4"), pI("n3:5")));
-        n(tx, true, "n4", Stream.of(pB("n4:1"), pB("n4:2"), pI("n4:3"), pI("n4:4"), pO("n4:5")));
-        l(tx, "n1", "n1:5", "n2", "n2:5", OperationalState.Enabled, ForwardingDirection.Unidirectional);
-        l(tx, "n1", "n1:4", "n4", "n4:4", OperationalState.Enabled, ForwardingDirection.Unidirectional);
-        l(tx, "n2", "n2:3", "n4", "n4:3", OperationalState.Enabled, ForwardingDirection.Unidirectional);
-        l(tx, "n3", "n3:4", "n2", "n2:4", OperationalState.Enabled, ForwardingDirection.Unidirectional);
-        //l(tx, "n3", "n3:3", "n1", "n1:3", OperationalState.Enabled, ForwardingDirection.Unidirectional); Disabled topo link to simulate failure
-        l(tx, "n4", "n4:5", "n3", "n3:5", OperationalState.Enabled, ForwardingDirection.Unidirectional);
-    }
-
-    @Test
     public void fiveNodesTestAll() throws FailureResult, OperationFailedException {
         //having five nodes, but only two nodes connected, with directional links and ports
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        threeNodesTopo(tx);
+        fiveNodesTopo(tx);
         tx.submit().checkedGet();
         //when
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n3:2")), null);
@@ -195,7 +150,7 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
     public void fiveNodesTestNone() throws FailureResult, OperationFailedException {
         //having five nodes, but only two nodes connected, with directional links and ports
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        threeNodesTopo(tx);
+        fiveNodesTopo(tx);
         tx.submit().checkedGet();
         //when
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n5:3")), null);
@@ -217,31 +172,6 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
         l(tx, "n5", "n5:4", "n4", "n4:2", OperationalState.Enabled, ForwardingDirection.Bidirectional);
     }
 
-    @Test
-    public void fiveNodesTestNone() throws FailureResult, OperationFailedException {
-        //having five nodes, but only two nodes connected, with directional links and ports
-        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        threeNodesTopo(tx);
-        tx.submit().checkedGet();
-        //when
-        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n2:2")), null);
-        assertNull(decomposed);
-
-    }
-
-    private  void fiveNodesTopo(ReadWriteTransaction tx) {
-        n(tx, true, "n1", Stream.of(pI("n1:1"), pB("n1:2"), pI("n1:3"), pO("n1:4")));
-        n(tx, true, "n2", Stream.of(pI("n2:1"), pB("n2:2"), pO("n2:3"), pB("n2:4")));
-        n(tx, true, "n3", Stream.of(pO("n3:1"), pB("n3:2"), pO("n3:3"), pI("n3:4")));
-        n(tx, true, "n4", Stream.of(pO("n4:1"), pI("n4:2"), pB("n4:3"), pB("n4:4")));
-        n(tx, true, "n5", Stream.of(pI("n5:1"), pB("n5:2"), pB("n5:3"), pO("n5:4")));
-        //l(tx, "n1", "n1:5", "n2", "n2:5", OperationalState.Enabled, ForwardingDirection.Bidirectional); Disabled topo link to simulate failure
-        l(tx, "n2", "n2:3", "n3", "n3:4", OperationalState.Enabled, ForwardingDirection.Bidirectional);
-        l(tx, "n3", "n3:1", "n1", "n1:1", OperationalState.Enabled, ForwardingDirection.Bidirectional);
-        l(tx, "n3", "n3:3", "n5", "n5:1", OperationalState.Enabled, ForwardingDirection.Bidirectional);
-        l(tx, "n4", "n4:1", "n1", "n1:3", OperationalState.Enabled, ForwardingDirection.Bidirectional);
-        l(tx, "n5", "n5:4", "n4", "n4:2", OperationalState.Enabled, ForwardingDirection.Bidirectional);
-    }
 
     AbstractTestWithTopo.Pair pO(String id) {
         return new Pair(id, PortDirection.Output);
