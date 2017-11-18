@@ -115,7 +115,7 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
         fourNodesTopo(tx);
         tx.submit().checkedGet();
         //when
-        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n1:2")), null);
+        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n1:1")), null);
         assertNull(decomposed);
 
     }
@@ -140,7 +140,7 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
         fiveNodesTopo(tx);
         tx.submit().checkedGet();
         //when
-        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n3:2")), null);
+        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n5:3")), null);
         assertNotNull(decomposed);
         assertEquals(3, decomposed.size());
     }
@@ -153,7 +153,7 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
         fiveNodesTopo(tx);
         tx.submit().checkedGet();
         //when
-        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n5:3")), null);
+        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n5:4")), null);
         assertNull(decomposed);
 
     }
