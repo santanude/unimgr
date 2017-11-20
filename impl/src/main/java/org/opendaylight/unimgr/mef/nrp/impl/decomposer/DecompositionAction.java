@@ -37,13 +37,13 @@ import java.util.stream.Stream;
 /**
  * @author bartosz.michalik@amartus.com
  */
-public class DecompositionAction {
+class DecompositionAction {
     private static final Logger LOG = LoggerFactory.getLogger(DecompositionAction.class);
     private final List<EndPoint> endpoints;
     private final DataBroker broker;
-    private HashMap<Uuid, Vertex> sipToNep = new HashMap<>();
+    private final HashMap<Uuid, Vertex> sipToNep = new HashMap<>();
 
-    public DecompositionAction(List<EndPoint> endpoints, DataBroker broker) {
+    DecompositionAction(List<EndPoint> endpoints, DataBroker broker) {
         Objects.requireNonNull(endpoints);
         Objects.requireNonNull(broker);
         if (endpoints.size() < 2) {
@@ -56,24 +56,38 @@ public class DecompositionAction {
     List<Subrequrest> decompose() throws FailureResult {
         Graph<Vertex, DefaultEdge> graph = prepareData();
 
-        List<Vertex> vertices = endpoints.stream().map(e -> sipToNep.get(e.getEndpoint().getServiceInterfacePoint())).collect(Collectors.toList());
+        List<Vertex> vertices = endpoints.stream().map(e -> {
+            Vertex v = sipToNep.get(e.getEndpoint().getServiceInterfacePoint());
+            if((v.dir == PortDirection.Output && e.getEndpoint().getDirection() != PortDirection.Output) ||
+               (v.dir == PortDirection.Input && e.getEndpoint().getDirection() != PortDirection.Input)) {
+                throw new IllegalArgumentException("Port direction for " + e.getEndpoint().getLocalId() + " incompatible with NEP." +
+                        "CEP " + e.getEndpoint().getDirection() + "  NEP " + v.dir);
+            }
+            return new Vertex(v, e.getEndpoint().getDirection());
+        }).collect(Collectors.toList());
 
         assert vertices.size() > 1;
 
         Set<GraphPath<Vertex, DefaultEdge>> paths = new HashSet<>();
 
         Set<Vertex> inV = vertices.stream().filter(isInput).collect(Collectors.toSet());
-        Set<Vertex> outV = vertices.stream().filter(isOuput).collect(Collectors.toSet());
+        Set<Vertex> outV = vertices.stream().filter(isOutput).collect(Collectors.toSet());
 
         //do the verification whether it is possible to connect two nodes.
-        inV.forEach(i -> {
-            outV.stream().filter(o -> i != o).forEach(o -> {
-                GraphPath<Vertex, DefaultEdge> path = DijkstraShortestPath.findPathBetween(graph, i, o);
-                if(path != null) {
+        inV.forEach(i ->
+                outV.stream().filter(o -> i != o).forEach(o -> {
+                    GraphPath<Vertex, DefaultEdge> path = DijkstraShortestPath.findPathBetween(graph, i, o);
+                    if(path != null) {
+                        LOG.debug("Couldn't find path between {} and  {}", i, o);
+                    }
                     paths.add(path);
-                }
-            });
-        });
+                })
+        );
+
+        if(paths.stream().anyMatch(Objects::isNull)) {
+            LOG.info("At least single path between endpoints not found");
+            return null;
+        }
 
         List<Subrequrest> result = paths.stream()
                 .flatMap(gp -> gp.getVertexList().stream()).collect(Collectors.groupingBy(Vertex::getNodeUuid))
@@ -92,35 +106,32 @@ public class DecompositionAction {
         return ep;
     }
 
-    private Predicate<Vertex> isInput = v -> v.getDir() == PortDirection.Bidirectional || v.getDir() == PortDirection.Input;
-    private Predicate<Vertex> isOuput = v -> v.getDir() == PortDirection.Bidirectional || v.getDir() == PortDirection.Output;
+    private final Predicate<Vertex> isInput = v -> v.getDir() == PortDirection.Bidirectional || v.getDir() == PortDirection.Input;
+    private final Predicate<Vertex> isOutput = v -> v.getDir() == PortDirection.Bidirectional || v.getDir() == PortDirection.Output;
 
-    private void interconnectNode(Graph graph, List<Vertex> vertices) {
-        vertices.forEach(v -> graph.addVertex(v));
+    private void interconnectNode(Graph<Vertex, DefaultEdge> graph, List<Vertex> vertices) {
+        vertices.forEach(graph::addVertex);
         Set<Vertex> inV = vertices.stream().filter(isInput).collect(Collectors.toSet());
-        Set<Vertex> outV = vertices.stream().filter(isOuput).collect(Collectors.toSet());
+        Set<Vertex> outV = vertices.stream().filter(isOutput).collect(Collectors.toSet());
         interconnect(graph, inV, outV);
     }
 
-    private void interconnectLink(Graph graph, List<Vertex> vertices) {
-        vertices.forEach(v -> graph.addVertex(v));
+    private void interconnectLink(Graph<Vertex, DefaultEdge> graph, List<Vertex> vertices) {
+        vertices.forEach(graph::addVertex);
         Set<Vertex> inV = vertices.stream().filter(isInput).collect(Collectors.toSet());
-        Set<Vertex> outV = vertices.stream().filter(isOuput).collect(Collectors.toSet());
+        Set<Vertex> outV = vertices.stream().filter(isOutput).collect(Collectors.toSet());
         interconnect(graph, outV, inV);
 
 
     }
 
     private void interconnect(Graph<Vertex, DefaultEdge> graph, Collection<Vertex> from, Collection<Vertex> to) {
-        from.forEach(iV -> {
-            to.stream().filter(oV -> iV != oV).forEach(oV -> {
-                graph.addEdge(iV,oV);
-            });
-        });
+        from.forEach(iV ->
+                to.stream().filter(oV -> iV != oV).forEach(oV -> graph.addEdge(iV,oV)));
     }
 
 
-    protected Graph<Vertex, DefaultEdge> prepareData() throws FailureResult {
+    private Graph<Vertex, DefaultEdge> prepareData() throws FailureResult {
         ReadWriteTransaction tx = broker.newReadWriteTransaction();
         try {
             Topology topo = new NrpDao(tx).getTopology(TapiConstants.PRESTO_SYSTEM_TOPO);
@@ -128,7 +139,7 @@ public class DecompositionAction {
                 throw new FailureResult("There are no nodes in {0} topology", TapiConstants.PRESTO_SYSTEM_TOPO);
             }
 
-            Graph<Vertex, DefaultEdge> graph = new DefaultDirectedGraph<Vertex, DefaultEdge>(DefaultEdge.class);
+            Graph<Vertex, DefaultEdge> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
 
             topo.getNode().stream().map(this::nodeToGraph).forEach(vs -> {
                 List<Vertex> vertices = vs.collect(Collectors.toList());
@@ -154,7 +165,7 @@ public class DecompositionAction {
         }
     }
 
-    protected Stream<Vertex> nodeToGraph(Node n) {
+    private Stream<Vertex> nodeToGraph(Node n) {
         Uuid nodeUuid = n.getUuid();
 
 
@@ -173,14 +184,21 @@ public class DecompositionAction {
         });
     }
 
-    public class Vertex implements Comparable<Vertex> {
+    class Vertex implements Comparable<Vertex> {
 
         private final Uuid nodeUuid;
         private final Uuid uuid;
         private final Uuid sip;
         private final PortDirection dir;
 
-        public Vertex(Uuid nodeUuid, Uuid uuid, Uuid sip, PortDirection dir) {
+        Vertex(Vertex px, PortDirection csDir) {
+            this.nodeUuid = px.nodeUuid;
+            this.uuid = px.uuid;
+            this.sip = px.sip;
+            this.dir = csDir;
+        }
+
+        Vertex(Uuid nodeUuid, Uuid uuid, Uuid sip, PortDirection dir) {
             this.sip = sip;
             this.dir = dir;
             Objects.requireNonNull(nodeUuid);
@@ -189,15 +207,15 @@ public class DecompositionAction {
             this.uuid = uuid;
         }
 
-        public Uuid getNodeUuid() {
+        Uuid getNodeUuid() {
             return nodeUuid;
         }
 
-        public Uuid getUuid() {
+        Uuid getUuid() {
             return uuid;
         }
 
-        public Uuid getSip() {
+        Uuid getSip() {
             return sip;
         }
 
@@ -213,7 +231,7 @@ public class DecompositionAction {
             return Objects.equals(uuid, vertex.uuid);
         }
 
-        public PortDirection getDir() {
+        PortDirection getDir() {
             return dir;
         }
 

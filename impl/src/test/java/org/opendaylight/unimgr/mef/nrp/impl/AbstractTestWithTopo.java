@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 import org.junit.Before;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
@@ -37,7 +37,7 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.topolog
 /**
  * @author bartosz.michalik@amartus.com
  */
-public abstract class AbstractTestWithTopo extends AbstractDataBrokerTest {
+public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerTest {
 
 
     protected DataBroker dataBroker;
@@ -48,9 +48,14 @@ public abstract class AbstractTestWithTopo extends AbstractDataBrokerTest {
         new NrpInitializer(dataBroker).init();
     }
 
-    protected EndPoint ep(String nepId) {
+    protected  EndPoint ep(String nepId) {
+        return ep(nepId, PortDirection.Bidirectional);
+    }
+
+    protected EndPoint ep(String nepId, PortDirection pd) {
         ConnectivityServiceEndPoint ep = new EndPointBuilder()
                 .setLocalId("ep_" + nepId)
+                .setDirection(pd)
                 .setServiceInterfacePoint(new Uuid("sip:" + nepId))
                 .build();
 
@@ -63,6 +68,17 @@ public abstract class AbstractTestWithTopo extends AbstractDataBrokerTest {
 
     protected void l(ReadWriteTransaction tx, String nA, String nepA, String nB, String nepB, OperationalState state, ForwardingDirection dir) {
         Uuid uuid = new Uuid(nepA + "-" + nepB);
+
+        NrpDao dao = new NrpDao(tx);
+
+        if(dao.hasSip(nepA)) {
+            dao.removeSip(new Uuid("sip:" + nepA));
+        }
+
+        if(dao.hasSip(nepB)) {
+            dao.removeSip(new Uuid("sip:" + nepB));
+        }
+
         Link link = new LinkBuilder()
                 .setUuid(uuid)
                 .setKey(new LinkKey(uuid))
@@ -85,7 +101,7 @@ public abstract class AbstractTestWithTopo extends AbstractDataBrokerTest {
     }
 
     protected Node n(ReadWriteTransaction tx, boolean addSips, String node, String ... endpoints) {
-        return n(tx, addSips, node, Arrays.asList(endpoints).stream().map(i -> new Pair(i, PortDirection.Bidirectional)));
+        return n(tx, addSips, node, Arrays.stream(endpoints).map(i -> new Pair(i, PortDirection.Bidirectional)));
     }
 
     protected Node n(ReadWriteTransaction tx, boolean addSips, String node, Stream<Pair> endpoints) {
