@@ -14,6 +14,7 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -24,8 +25,13 @@ import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
 import org.opendaylight.unimgr.mef.nrp.impl.NrpInitializer;
+import org.opendaylight.unimgr.mef.nrp.impl.decomposer.BasicDecomposer;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.ForwardingDirection;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.OperationalState;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.PortDirection;
 import org.opendaylight.yangtools.yang.common.OperationFailedException;
+
+import javax.sound.sampled.Port;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -77,7 +83,7 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
 
     @Test
     public void twoNodesTest() throws FailureResult, OperationFailedException {
-        //having
+        //having three nodes, but only two nodes connected
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
         n(tx, "n1", "n1:1", "n1:2", "n1:3");
         n(tx, "n2", "n2:1", "n2:2", "n2:3");
@@ -90,6 +96,8 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
         assertNotNull(decomposed);
         assertEquals(2, decomposed.size());
     }
+
+
 
     @Test
     public void threeNodesTest() throws FailureResult, OperationFailedException {
@@ -106,6 +114,8 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
         assertNotNull(decomposed);
         assertEquals(3, decomposed.size());
     }
+
+
 
     @Test
     public void threeNodesDisabledLinkTest() throws FailureResult, OperationFailedException {
