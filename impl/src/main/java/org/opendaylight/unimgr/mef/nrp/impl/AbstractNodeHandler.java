@@ -60,16 +60,20 @@ public class AbstractNodeHandler implements DataTreeChangeListener<Topology> {
 
     public void init() {
         registration = dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<>(LogicalDatastoreType.OPERATIONAL, NRP_TOPOLOGY_SYSTEM_IID), this);
+
+        LOG.debug("AbstractNodeHandler registered: {}", registration);
     }
 
     public void close() {
         if (registration != null) {
             registration.close();
+            LOG.debug("AbstractNodeHandler closed");
         }
     }
 
     @Override
     public void onDataTreeChanged(@Nonnull Collection<DataTreeModification<Topology>> collection) {
+
 
         List<OwnedNodeEdgePoint> toUpdateNeps =
                 collection.stream()
@@ -102,7 +106,7 @@ public class AbstractNodeHandler implements DataTreeChangeListener<Topology> {
 
             @Override
             public void onSuccess(@Nullable Void result) {
-                LOG.info("Abstract TAPI node upadate successful");
+                LOG.info("Abstract TAPI node updated successful");
             }
 
             @Override
