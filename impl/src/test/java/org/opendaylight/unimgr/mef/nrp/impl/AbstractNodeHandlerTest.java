@@ -7,38 +7,31 @@
  */
 package org.opendaylight.unimgr.mef.nrp.impl;
 
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import com.google.common.util.concurrent.CheckedFuture;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
-import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.Context;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.TerminationDirection;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.Uuid;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.Context1;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.node.OwnedNodeEdgePoint;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.node.OwnedNodeEdgePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.node.OwnedNodeEdgePointKey;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.topology.context.Topology;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.topology.context.TopologyKey;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.topology.Node;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.topology.NodeKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
-import com.google.common.base.Optional;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
@@ -47,11 +40,7 @@ import static org.junit.Assert.*;
  */
 public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
 
-    private static final InstanceIdentifier NRP_ABSTRACT_NODE_IID = InstanceIdentifier
-            .create(Context.class)
-            .augmentation(Context1.class)
-            .child(Topology.class, new TopologyKey(new Uuid(TapiConstants.PRESTO_EXT_TOPO)))
-            .child(Node.class,new NodeKey(new Uuid(TapiConstants.PRESTO_ABSTRACT_NODE)));
+
     private AbstractNodeHandler abstractNodeHandler;
     private static final String testSystemNodeName = "testSystemNode";
     private static final String testNepName = "testNep";
@@ -62,13 +51,6 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
     public void setUp() {
         //given
         dataBroker = getDataBroker();
-
-        NrpInitializer nrpInitializer = new NrpInitializer(dataBroker);
-        try {
-            nrpInitializer.init();
-        } catch (Exception e) {
-            fail("Could not initialize NRP topology.");
-        }
 
         abstractNodeHandler = new AbstractNodeHandler(dataBroker);
         abstractNodeHandler.init();
@@ -251,39 +233,6 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
         return builder.build();
     }
 
-    private Node getAbstractNode() {
-
-        try(ReadOnlyTransaction tx = dataBroker.newReadOnlyTransaction()) {
-            Optional<Node> opt =
-                    (Optional<Node>) tx.read(LogicalDatastoreType.OPERATIONAL,NRP_ABSTRACT_NODE_IID).checkedGet();
-            if (opt.isPresent()) {
-                return opt.get();
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-
-        return null;
-    }
-
-
-    private Node getAbstractNode(Predicate<Node> nodePredicate) {
-
-        for(int i = 0; i < 5; ++i) {
-            Node node = getAbstractNode();
-            if(node != null && nodePredicate.test(node)) {
-                return node;
-            }
-            try {
-                TimeUnit.MILLISECONDS.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        throw new IllegalStateException("No NEPs matching predicate");
-    }
 
     private Node getAbstractNodeNotNullNep() {
 
