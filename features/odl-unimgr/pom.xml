@@ -76,13 +76,6 @@
       <classifier>features</classifier>
     </dependency>
     <dependency>
-      <groupId>org.opendaylight.unimgr</groupId>
-      <artifactId>odl-unimgr-presto-api</artifactId>
-      <version>${project.version}</version>
-      <type>xml</type>
-      <classifier>features</classifier>
-    </dependency>
-    <dependency>
       <groupId>org.opendaylight.netconf</groupId>
       <artifactId>odl-netconf-connector</artifactId>
       <version>${netconf.version}</version>
