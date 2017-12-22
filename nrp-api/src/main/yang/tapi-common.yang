@@ -163,6 +163,44 @@ Editor: your-name<mailto:your-email@example.com>";
     /***********************
     * package type-definitions
     **********************/ 
+        identity layer-protocol-name {
+            description "none";
+        }
+        identity OCH {
+            base layer-protocol-name;
+            description "none";
+        }
+        identity ODU {
+            base layer-protocol-name;
+            description "none";
+        }
+        identity ETH {
+            base layer-protocol-name;
+            description "none";
+        }
+        identity MPLS_TP {
+            base layer-protocol-name;
+            description "none";
+        }
+        identity capacity-unit {
+            description "none";
+        }
+        identity GBPS {
+            base capacity-unit;
+            description "none";
+        }
+        identity KBPS {
+            base capacity-unit;
+            description "none";
+        }
+        identity MBPS {
+            base capacity-unit;
+            description "none";
+        }
+        identity NOT_APPLICABLE {
+            base capacity-unit;
+            description "none";
+        }
         typedef administrative-state {
             type enumeration {
                 enum LOCKED {
@@ -225,19 +263,8 @@ Editor: your-name<mailto:your-email@example.com>";
             description "The directionality of a Forwarding entity.";
         }
         typedef layer-protocol-name {
-            type enumeration {
-                enum OCH {
-                    description "none";
-                }
-                enum ODU {
-                    description "none";
-                }
-                enum ETH {
-                    description "none";
-                }
-                enum MPLS_TP {
-                    description "none";
-                }
+            type identityref {
+                base layer-protocol-name;
             }
             description "Provides a controlled list of layer protocol names and indicates the naming authority.
                 Note that it is expected that attributes will be added to this structure to convey the naming authority name, the name of the layer protocol using a human readable string and any particular standard reference.
@@ -441,19 +468,8 @@ Editor: your-name<mailto:your-email@example.com>";
             description "The Capacity (Bandwidth) values that are applicable for digital layers.";
         }
         typedef capacity-unit {
-            type enumeration {
-                enum GBPS {
-                    description "none";
-                }
-                enum KBPS {
-                    description "none";
-                }
-                enum MBPS {
-                    description "none";
-                }
-                enum NOT_APPLICABLE {
-                    description "none";
-                }
+            type identityref {
+                base capacity-unit;
             }
             description "none";
         }
