@@ -15,13 +15,13 @@ import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.Context;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.TerminationDirection;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.Uuid;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.node.OwnedNodeEdgePoint;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.node.OwnedNodeEdgePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.node.OwnedNodeEdgePointKey;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Context;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.TerminationDirection;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePointKey;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Node;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 import java.util.Arrays;
@@ -94,7 +94,7 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
         performNrpDaoAction(addNode,null).checkedGet();
 
         //when
-        OwnedNodeEdgePoint newNep = createNep(newNepName,TerminationDirection.Bidirectional);
+        OwnedNodeEdgePoint newNep = createNep(newNepName,TerminationDirection.BIDIRECTIONAL);
         performNrpDaoAction(update, newNep).checkedGet();
 
         //then
@@ -109,7 +109,7 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
         performNrpDaoAction(addNode, null).checkedGet();
 
         //when changing not sip related attribute
-        OwnedNodeEdgePoint toUpdateNep = createNep(testNepName + "1", TerminationDirection.UndefinedOrUnknown);
+        OwnedNodeEdgePoint toUpdateNep = createNep(testNepName + "1", TerminationDirection.UNDEFINEDORUNKNOWN);
         performNrpDaoAction(update, toUpdateNep).checkedGet();
 
 
@@ -211,7 +211,7 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
 
     private List<OwnedNodeEdgePoint> createTestOwnedNodeEdgePointList() {
         return IntStream.range(0,init_neps_count)
-            .mapToObj(i -> createNep(testNepName + i, TerminationDirection.Bidirectional))
+            .mapToObj(i -> createNep(testNepName + i, TerminationDirection.BIDIRECTIONAL))
             .collect(Collectors.toList());
     }
 
