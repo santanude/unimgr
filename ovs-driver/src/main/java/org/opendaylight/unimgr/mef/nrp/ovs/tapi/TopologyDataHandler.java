@@ -30,9 +30,7 @@ import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TopologyTransaction;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.LifecycleState;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.TerminationDirection;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.Uuid;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.*;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.context.attrs.ServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.context.attrs.ServiceInterfacePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.context.attrs.ServiceInterfacePointKey;
@@ -214,6 +212,8 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         return new OwnedNodeEdgePointBuilder()
                 .setUuid(uuid)
                 .setKey(new OwnedNodeEdgePointKey(uuid))
+                .setLinkPortDirection(PortDirection.Bidirectional)
+                .setLinkPortRole(PortRole.Symmetric)
                 .setMappedServiceInterfacePoint(Collections.singletonList(sipUuid))
                 .build();
     }
@@ -224,7 +224,6 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                 .setUuid(uuid)
                 .setKey(new ServiceInterfacePointKey(uuid))
                 .setState(new StateBuilder().setLifecycleState(LifecycleState.Installed).build())
-// TODO donaldh .setDirection(TerminationDirection.Bidirectional)
                 .build();
     }
 
