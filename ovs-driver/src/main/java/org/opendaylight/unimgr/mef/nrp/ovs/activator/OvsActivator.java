@@ -89,9 +89,13 @@ public class OvsActivator implements ResourceActivator {
 				.map(link -> ovsActivatorHelper.getTpNameFromOpenFlowPortName(link.getLinkId().getValue()))
 				.collect(Collectors.toList());
 
-        //Create egress qos
-		OvsdbUtils.createEgressQos(dataBroker, portName, outputPortNames, ovsActivatorHelper.getQosMinRate(),
-				ovsActivatorHelper.getQosMaxRate(), serviceName, queueNumber);
+		if(ovsActivatorHelper.isIBwpConfigured()) {
+            //Create egress qos
+            OvsdbUtils.createEgressQos(dataBroker, portName, outputPortNames, ovsActivatorHelper.getQosMinRate(),
+                    ovsActivatorHelper.getQosMaxRate(), serviceName, queueNumber);
+        }
+
+
 
     }
 
