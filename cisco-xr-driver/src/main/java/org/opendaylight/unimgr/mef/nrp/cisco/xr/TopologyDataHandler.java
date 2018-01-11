@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.util.concurrent.MoreExecutors;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
@@ -86,6 +87,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                     .child(Topology.class,
                             new TopologyKey(new TopologyId(TopologyNetconf.QNAME.getLocalName())));
 
+    private final int MAX_RETRIALS = 5;
 
     LoadingCache<NodeKey, KeyedInstanceIdentifier<Node, NodeKey>> mountIds = CacheBuilder.newBuilder()
             .maximumSize(20)
@@ -114,6 +116,10 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
     public void init() {
         LOG.debug("initializing topology handler for {}", DriverConstants.XR_NODE);
+        initializeWithRetrial(MAX_RETRIALS);
+    }
+
+    private void initializeWithRetrial(int retrialCouter) {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
 
         NrpDao dao = new NrpDao(tx);
@@ -125,25 +131,24 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                 LOG.info("Node {} created", DriverConstants.XR_NODE);
                 capabilitiesService = new CapabilitiesService(dataBroker);
                 registerNetconfTreeListener();
-
             }
 
             @Override
             public void onFailure(Throwable t) {
-                LOG.error("No node created due to the error", t);
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                } catch (InterruptedException _e) {
-
+                if(retrialCouter != 0) {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(500);
+                    } catch (InterruptedException _e) { }
+                    if(retrialCouter != MAX_RETRIALS) {
+                        LOG.debug("Retrying initialization of {} for {} time", DriverConstants.XR_NODE, MAX_RETRIALS - retrialCouter + 1);
+                    }
+                    initializeWithRetrial(retrialCouter - 1);
+                } else {
+                    LOG.error("No node created due to the error", t);
                 }
-                LOG.info("retrying initialization of Topology handler for {}", DriverConstants.XR_NODE);
-                init();
+
             }
-        });
-
-
-
-
+        }, MoreExecutors.directExecutor());
     }
 
     public void close() {

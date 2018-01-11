@@ -13,12 +13,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.util.concurrent.MoreExecutors;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
@@ -72,6 +74,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     private DataObjectModificationQualifier dataObjectModificationQualifier;
 
     private final DataBroker dataBroker;
+    private final int MAX_RETRIALS = 5;
 
     public TopologyDataHandler(DataBroker dataBroker) {
         Objects.requireNonNull(dataBroker);
@@ -80,6 +83,10 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     public void init() {
+        initializeWithRetrial(MAX_RETRIALS);
+    }
+
+    private void initializeWithRetrial(int retrialCouter) {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
 
         NrpDao dao = new NrpDao(tx);
@@ -89,19 +96,30 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
             @Override
             public void onSuccess(@Nullable Void result) {
                 LOG.info("Node {} created", OVS_NODE);
+                registerOvsdbTreeListener();
             }
 
             @Override
             public void onFailure(Throwable t) {
-                LOG.error("No node created due to the error", t);
-            }
-        });
+                if(retrialCouter != 0) {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException e) { }
+                    if(retrialCouter != MAX_RETRIALS) {
+                        LOG.debug("Retrying initialization of {} for {} time", OVS_NODE, MAX_RETRIALS - retrialCouter + 1);
+                    }
+                    initializeWithRetrial(retrialCouter - 1);
+                } else {
+                    LOG.error("No node created due to the error", t);
+                }
 
-        dataObjectModificationQualifier = new DataObjectModificationQualifier(dataBroker);
-        registerOvsdbTreeListener();
+            }
+        }, MoreExecutors.directExecutor());
     }
 
+
     private void registerOvsdbTreeListener() {
+        dataObjectModificationQualifier = new DataObjectModificationQualifier(dataBroker);
         InstanceIdentifier<Node> nodeId = OVSDB_TOPO_IID.child(Node.class);
         registration = dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<>(LogicalDatastoreType.OPERATIONAL, nodeId), this);
     }
@@ -122,7 +140,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
             public void onFailure(Throwable t) {
                 LOG.error("No node deleted due to the error", t);
             }
-        });
+        }, MoreExecutors.directExecutor());
 
         if (registration != null) {
             LOG.info("closing netconf tree listener");

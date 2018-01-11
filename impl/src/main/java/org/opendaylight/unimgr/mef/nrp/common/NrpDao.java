@@ -73,7 +73,7 @@ public class NrpDao  {
 
     private void verifyTx() {
         if (tx == null) {
-            throw new IllegalStateException("Top perform write operation read write transaction is needed");
+            throw new IllegalStateException("To perform write operation read write transaction is needed");
         }
     }
 
@@ -184,7 +184,9 @@ public class NrpDao  {
             try {
                 Optional<Node> opt = tx.read(LogicalDatastoreType.OPERATIONAL, node(nodeId)).checkedGet();
                 if (opt.isPresent()) {
-                    removeSips(opt.get().getOwnedNodeEdgePoint().stream().flatMap(nep -> nep.getMappedServiceInterfacePoint() == null
+                    List<OwnedNodeEdgePoint> neps = opt.get().getOwnedNodeEdgePoint();
+                    if(neps != null)
+                    removeSips(neps.stream().flatMap(nep -> nep.getMappedServiceInterfacePoint() == null
                                                                                   ? Stream.empty()
                                                                                   : nep.getMappedServiceInterfacePoint().stream()
                     ));
