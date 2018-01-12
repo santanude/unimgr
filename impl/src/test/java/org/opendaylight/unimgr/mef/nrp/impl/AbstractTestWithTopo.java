@@ -28,6 +28,7 @@ import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBro
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
+import org.opendaylight.unimgr.mef.nrp.api.TopologyManager;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.*;
@@ -37,7 +38,6 @@ import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.Context1;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.link.*;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.edge.point.LayerProtocolBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.risk.parameter.pac.RiskCharacteristicBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.*;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.context.*;
@@ -59,10 +59,13 @@ public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerT
 
     protected DataBroker dataBroker;
 
+    protected NrpInitializer topologyManager;
+
     @Before
     public void setupBroker() throws Exception {
         dataBroker = getDataBroker();
-        new NrpInitializer(dataBroker).init();
+        topologyManager = new NrpInitializer(dataBroker);
+        topologyManager.init();
     }
 
     protected  EndPoint ep(String nepId) {
@@ -187,7 +190,7 @@ public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerT
                     .forEach(nrpDao::addSip);
         }
 
-        return nrpDao.createSystemNode(node, eps.stream()
+        return nrpDao.createNode(TapiConstants.PRESTO_SYSTEM_TOPO, node, ETH.class, eps.stream()
                 .map(e-> {
                     OwnedNodeEdgePointBuilder builder = new OwnedNodeEdgePointBuilder()
                             .setLinkPortDirection(e.getDir())
@@ -204,7 +207,7 @@ public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerT
 
         try(ReadOnlyTransaction tx = dataBroker.newReadOnlyTransaction()) {
             Optional<Node> opt =
-                    (Optional<Node>) tx.read(LogicalDatastoreType.OPERATIONAL,NRP_ABSTRACT_NODE_IID).checkedGet();
+                    tx.read(LogicalDatastoreType.OPERATIONAL,NRP_ABSTRACT_NODE_IID).checkedGet();
             if (opt.isPresent()) {
                 return opt.get();
             } else {

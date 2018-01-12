@@ -17,12 +17,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     </bean>
 
     <service id="unimgrProviderService" interface="org.opendaylight.unimgr.api.IUnimgrConsoleProvider" ref="unimgrProvider" odl:type="default" />
+    <service interface="org.opendaylight.unimgr.mef.nrp.api.TopologyManager" ref="topologyService" odl:type="default" />
 
     <bean id="activationDriverRepo" class="org.opendaylight.unimgr.mef.nrp.impl.ActivationDriverRepoServiceImpl">
         <argument ref="driverBuilders" />
     </bean>
 
-    <bean id="topologyService" class="org.opendaylight.unimgr.mef.nrp.impl.NrpInitializer" init-method="init" destroy-method="close">
+    <bean id="topologyService" class="org.opendaylight.unimgr.mef.nrp.impl.NrpInitializer" init-method="init" destroy-method="close"
+          activation="eager">
         <argument index="0" ref="dataBroker" />
     </bean>
 

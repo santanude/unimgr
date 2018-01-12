@@ -68,13 +68,7 @@ public class NrpDao  {
         this.tx =  null;
     }
 
-    public Node createSystemNode(String nodeId, List<OwnedNodeEdgePoint> neps) {
-
-        return createSystemNode(nodeId, ETH.class, neps);
-    }
-
-
-    public Node createSystemNode(String nodeId, Class<? extends LayerProtocolName> name, List<OwnedNodeEdgePoint> neps) {
+    public Node createNode(String topologyId, String nodeId, Class<? extends LayerProtocolName> name, List<OwnedNodeEdgePoint> neps) {
         verifyTx();
         Uuid uuid = new Uuid(nodeId);
 
@@ -165,17 +159,29 @@ public class NrpDao  {
     }
 
     public static InstanceIdentifier<Topology> topo(String topoId) {
+        return topo(new Uuid(topoId));
+    }
+
+    public static InstanceIdentifier<Topology> topo(Uuid topoId) {
         return ctx()
                 .augmentation(Context1.class)
-                .child(Topology.class, new TopologyKey(new Uuid(topoId)));
+                .child(Topology.class, new TopologyKey(topoId));
     }
 
     public static InstanceIdentifier<Node> node(String nodeId) {
         return node(new Uuid(nodeId));
     }
 
+    public static InstanceIdentifier<Node> node(String topologyId, String nodeId) {
+        return node(new Uuid(nodeId));
+    }
+
+    public static InstanceIdentifier<Node> node(Uuid topologyId, Uuid nodeId) {
+        return topo(topologyId).child(Node.class, new NodeKey(nodeId));
+    }
+
     public static InstanceIdentifier<Node> node(Uuid nodeId) {
-        return topo(TapiConstants.PRESTO_SYSTEM_TOPO).child(Node.class, new NodeKey(nodeId));
+        return node(new Uuid(TapiConstants.PRESTO_SYSTEM_TOPO), nodeId);
     }
 
     public static InstanceIdentifier<Node> abstractNode() {
