@@ -40,6 +40,7 @@ public class TapiTopologyServiceImplIntTest extends AbstractTestWithTopo {
     public void setUp() throws Exception {
         tapiTopologyService = new TapiTopologyServiceImpl();
         tapiTopologyService.setBroker(dataBroker);
+        tapiTopologyService.init();
     }
 
     @Test
