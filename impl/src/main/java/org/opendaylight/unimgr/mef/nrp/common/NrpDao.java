@@ -154,6 +154,11 @@ public class NrpDao  {
         return topology.orNull();
     }
 
+    public Node getNode(String uuidTopo, String uuidNode) throws ReadFailedException {
+        Optional<Node> topology = rtx.read(LogicalDatastoreType.OPERATIONAL, node(new Uuid(uuidTopo), new Uuid(uuidNode))).checkedGet();
+        return topology.orNull();
+    }
+
     public static InstanceIdentifier<Context> ctx() {
         return InstanceIdentifier.create(Context.class);
     }
@@ -169,10 +174,6 @@ public class NrpDao  {
     }
 
     public static InstanceIdentifier<Node> node(String nodeId) {
-        return node(new Uuid(nodeId));
-    }
-
-    public static InstanceIdentifier<Node> node(String topologyId, String nodeId) {
         return node(new Uuid(nodeId));
     }
 

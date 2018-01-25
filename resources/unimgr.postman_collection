@@ -219,6 +219,88 @@
 				"description": ""
 			},
 			"response": []
+		},
+		{
+			"name": "get topology list RPC",
+			"request": {
+				"url": "{{host}}/restconf/operations/tapi-topology:get-topology-list",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get topology details RPC",
+			"request": {
+				"url": "{{host}}/restconf/operations/tapi-topology:get-topology-details",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"input\" : {\n\t\t\"topology-id-or-name\" : \"mef:presto-nrp-topology\"\n\t}\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get node details RPC",
+			"request": {
+				"url": "{{host}}/restconf/operations/tapi-topology:get-node-details",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4=",
+						"description": ""
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"input\" : {\n\t\t\"topology-id-or-name\" : \"mef:presto-nrp-topology\",\n\t\t\"node-id-or-name\" : \"mef:presto-nrp-abstract-node\"\n\t}\n}"
+				},
+				"description": ""
+			},
+			"response": []
 		}
 	]
 }

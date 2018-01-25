@@ -82,11 +82,11 @@ public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerT
         return new EndPoint(ep, null);
     }
 
-    protected void l(ReadWriteTransaction tx, String nA, String nepA, String nB, String nepB, OperationalState state) {
-        l(tx, nA, nepA, nB, nepB, state, ForwardingDirection.BIDIRECTIONAL);
+    protected Link l(ReadWriteTransaction tx, String nA, String nepA, String nB, String nepB, OperationalState state) {
+        return l(tx, nA, nepA, nB, nepB, state, ForwardingDirection.BIDIRECTIONAL);
     }
 
-    protected void l(ReadWriteTransaction tx, String nA, String nepA, String nB, String nepB, OperationalState state, ForwardingDirection dir) {
+    protected Link l(ReadWriteTransaction tx, String nA, String nepA, String nB, String nepB, OperationalState state, ForwardingDirection dir) {
         Uuid uuid = new Uuid(nepA + "-" + nepB);
 
         NrpDao dao = new NrpDao(tx);
@@ -115,6 +115,7 @@ public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerT
                 .build();
 
         tx.put(LogicalDatastoreType.OPERATIONAL, NrpDao.topo(PRESTO_SYSTEM_TOPO).child(Link.class, new LinkKey(uuid)), link);
+        return link;
     }
 
     private LpTransition emptyLpTransition() {
