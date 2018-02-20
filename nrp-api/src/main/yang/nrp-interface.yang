@@ -48,6 +48,17 @@ module nrp-interface {
         uses nrp-sip-attrs;
         description "none";
     }
+
+    augment "/tapi-common:get-service-interface-point-details/tapi-common:output/tapi-common:sip" {
+        uses nrp-sip-attrs;
+        description "none";
+    }
+
+    augment "/tapi-common:get-service-interface-point-list/tapi-common:output/tapi-common:sip" {
+        uses nrp-sip-attrs;
+        description "none";
+    }
+
     augment "/tapi-connectivity:create-connectivity-service/tapi-connectivity:input/tapi-connectivity:end-point" {
         uses nrp-sip-attrs;
         description "none";

@@ -24,11 +24,10 @@ import org.opendaylight.unimgr.mef.nrp.template.TemplateConstants;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev171221.NaturalNumber;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.ServiceInterfacePoint1;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.ServiceInterfacePoint1Builder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthEnniNResourceBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthInniNResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthUniNResourceBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.ETH;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.PortDirection;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.PortRole;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.*;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePoint;
@@ -43,6 +42,7 @@ public class TopologyDataHandler {
     private static final Logger LOG = LoggerFactory.getLogger(TopologyDataHandler.class);
     private DataBroker dataBroker;
     private TopologyManager topologyManager;
+    private enum SIPType {uni, enni, inni}
 
     public TopologyDataHandler(DataBroker dataBroker, TopologyManager topologyManager) {
         this.dataBroker = dataBroker;
@@ -67,10 +67,12 @@ public class TopologyDataHandler {
             //add sip for one of these endpoints
 
             //create sid and add it to model
-            ServiceInterfacePoint someSip1 = createSomeSip("some-sip-1");
-            ServiceInterfacePoint someSip2 = createSomeSip("some-sip-2");
+            ServiceInterfacePoint someSip1 = createSomeSip("some-sip-1", SIPType.uni);
+            ServiceInterfacePoint someSip2 = createSomeSip("some-sip-2", SIPType.inni);
+            ServiceInterfacePoint someSip3 = createSomeSip("some-sip-3", SIPType.enni);
             nrpDao.addSip(someSip1);
             nrpDao.addSip(someSip2);
+            nrpDao.addSip(someSip3);
 
             //update an existing nep with mapping to sip
             OwnedNodeEdgePoint updatedNep1 = new OwnedNodeEdgePointBuilder(someEndpoints.get(1))
@@ -81,8 +83,13 @@ public class TopologyDataHandler {
                     .setMappedServiceInterfacePoint(Collections.singletonList(someSip2.getUuid()))
                     .build();
 
+            OwnedNodeEdgePoint updatedNep3 = new OwnedNodeEdgePointBuilder(someEndpoints.get(3))
+                    .setMappedServiceInterfacePoint(Collections.singletonList(someSip3.getUuid()))
+                    .build();
+
             nrpDao.updateNep(TemplateConstants.DRIVER_ID, updatedNep1);
             nrpDao.updateNep(TemplateConstants.DRIVER_ID, updatedNep2);
+            nrpDao.updateNep(TemplateConstants.DRIVER_ID, updatedNep3);
 
 
             tx.submit().checkedGet();
@@ -92,18 +99,40 @@ public class TopologyDataHandler {
 
     }
 
-    private ServiceInterfacePoint createSomeSip(String idx) {
-        ServiceInterfacePoint1 sip = new ServiceInterfacePoint1Builder()
-                .setNrpCarrierEthUniNResource(
-                        new NrpCarrierEthUniNResourceBuilder()
-                                .setMaxFrameSize(new NaturalNumber(new Long(1703)))
-                                .build()
-                ).build();
+    private ServiceInterfacePoint createSomeSip(String idx, SIPType type) {
+
+        ServiceInterfacePoint1Builder sipBuilder = new ServiceInterfacePoint1Builder();
+
+
+        switch(type) {
+            case enni:
+                sipBuilder.setNrpCarrierEthEnniNResource(new NrpCarrierEthEnniNResourceBuilder()
+                    .setMaxFrameSize(new NaturalNumber(new Long(1024)))
+                    .build()
+
+                );
+                break;
+            case uni:
+                sipBuilder.setNrpCarrierEthUniNResource(new NrpCarrierEthUniNResourceBuilder()
+                        .setMaxFrameSize(new NaturalNumber(new Long(1024)))
+                        .build()
+
+                );
+                break;
+            case inni:
+            default:
+                sipBuilder.setNrpCarrierEthInniNResource(new NrpCarrierEthInniNResourceBuilder()
+                        .setMaxFrameSize(new NaturalNumber(new Long(1024)))
+                        .build()
+
+                );
+                break;
+        }
 
         return new ServiceInterfacePointBuilder()
                 .setUuid(new Uuid("sip" + ":" + TemplateConstants.DRIVER_ID + ":" + idx))
                 .setLayerProtocol(Collections.singletonList(TapiUtils.toSipPN(ETH.class)))
-                .addAugmentation(ServiceInterfacePoint1.class, sip)
+                .addAugmentation(ServiceInterfacePoint1.class, sipBuilder.build())
                 .build();
     }
 
@@ -114,7 +143,12 @@ public class TopologyDataHandler {
                 .setLayerProtocol(Collections.singletonList(TapiUtils.toNepPN(ETH.class)))
                 .setLinkPortDirection(PortDirection.BIDIRECTIONAL)
                 .setLinkPortRole(PortRole.SYMMETRIC)
-
+                .setState(new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.edge.point.StateBuilder()
+                        .setAdministrativeState(AdministrativeState.UNLOCKED)
+                        .setLifecycleState(LifecycleState.INSTALLED)
+                        .setOperationalState(OperationalState.DISABLED)
+                        .build()
+                )
                 .build()).collect(Collectors.toList());
     }
 

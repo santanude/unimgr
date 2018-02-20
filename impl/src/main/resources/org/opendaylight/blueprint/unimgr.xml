@@ -48,12 +48,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <property name="broker" ref="dataBroker" />
     </bean>
 
+    <bean id="tapiCommonService" class="org.opendaylight.unimgr.mef.nrp.impl.commonservice.TapiCommonServiceImpl" init-method="init">
+        <property name="broker" ref="dataBroker" />
+    </bean>
+
     <bean id="basicDecomposer" class="org.opendaylight.unimgr.mef.nrp.impl.decomposer.BasicDecomposer">
         <argument ref="dataBroker" />
     </bean>
 
     <odl:rpc-implementation ref="tapiConnectivityService" interface="org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.TapiConnectivityService" />
     <odl:rpc-implementation ref="tapiTopologyService" interface="org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.TapiTopologyService" />
+    <odl:rpc-implementation ref="tapiCommonService" interface="org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.TapiCommonService" />
 
     <reference id="dataBroker" interface="org.opendaylight.controller.md.sal.binding.api.DataBroker"/>
     <reference-list id="driverBuilders" interface="org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder" availability="optional">

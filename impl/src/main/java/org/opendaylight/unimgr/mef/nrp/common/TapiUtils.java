@@ -7,7 +7,6 @@
  */
 package org.opendaylight.unimgr.mef.nrp.common;
 
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.LayerProtocol;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.LayerProtocolName;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.TerminationDirection;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.TerminationState;
@@ -27,7 +26,7 @@ public class TapiUtils {
         org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.service._interface.point.LayerProtocolBuilder builder
                 = new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.service._interface.point.LayerProtocolBuilder();
 
-        return builder.setLayerProtocolName(name).setLocalId(name.toString()).build();
+        return builder.setLayerProtocolName(name).setLocalId(name.getSimpleName()).build();
     }
 
 

@@ -31,6 +31,11 @@ import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.api.TopologyManager;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev171221.NaturalNumber;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.ServiceInterfacePoint1;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.ServiceInterfacePoint1Builder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthInniNResource;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthInniNResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.*;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.ConnectivityServiceEndPoint;
@@ -184,9 +189,16 @@ public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerT
         List<Pair> eps = endpoints.collect(Collectors.toList());
         NrpDao nrpDao = new NrpDao(tx);
         if (addSips) {
+
+            ServiceInterfacePoint1Builder sipBuilder = new ServiceInterfacePoint1Builder();
+            sipBuilder.setNrpCarrierEthInniNResource(new NrpCarrierEthInniNResourceBuilder()
+                    .setMaxFrameSize(new NaturalNumber(2048L))
+            .build());
+
             eps.stream().map(e -> new ServiceInterfacePointBuilder()
                     .setUuid(new Uuid("sip:" + e.getId()))
                     .setLayerProtocol(Collections.singletonList(TapiUtils.toSipPN(ETH.class)))
+                    .addAugmentation(ServiceInterfacePoint1.class, sipBuilder.build())
                     .build())
                     .forEach(nrpDao::addSip);
         }
