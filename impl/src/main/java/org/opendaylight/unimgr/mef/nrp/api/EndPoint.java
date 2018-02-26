@@ -9,8 +9,8 @@
 package org.opendaylight.unimgr.mef.nrp.api;
 
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.NrpConnectivityServiceEndPointAttrs;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.ConnectivityServiceEndPoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.ConnectivityServiceEndPoint;
 
 import java.util.Objects;
 

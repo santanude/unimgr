@@ -19,7 +19,7 @@ import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
 import org.opendaylight.unimgr.mef.nrp.impl.NrpInitializer;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.OperationalState;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.OperationalState;
 import org.opendaylight.yangtools.yang.common.OperationFailedException;
 
 import java.util.Arrays;
@@ -66,8 +66,8 @@ public class BasicDecomposerMultipointTest extends AbstractTestWithTopo {
         n(tx, "n1", "n1:1", "n1:2", "n1:3","n1:4");
         n(tx, "n2", "n2:1", "n2:2", "n2:3","n2:4");
         n(tx, "n3", "n3:1", "n3:2", "n3:3","n3:4");
-        l(tx, "n1", "n1:1", "n2", "n2:1", OperationalState.ENABLED);
-        l(tx, "n2", "n2:3", "n3", "n3:3", OperationalState.ENABLED);
+        l(tx, "n1:1", "n2:1", OperationalState.ENABLED);
+        l(tx, "n2:3", "n3:3", OperationalState.ENABLED);
         tx.submit().checkedGet();
         //when
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n2:2"), ep("n2:3")), null);
@@ -85,10 +85,10 @@ public class BasicDecomposerMultipointTest extends AbstractTestWithTopo {
         n(tx, "n2", "n2:1", "n2:2", "n2:3");
         n(tx, "n3", "n3:1", "n3:2", "n3:3");
         n(tx, "n3", "n3:1", "n3:2", "n3:3");
-        l(tx, "n1", "n1:1", "n2", "n2:1", OperationalState.ENABLED);
-        l(tx, "n1", "n1:2", "n3", "n3:2", OperationalState.ENABLED);
-        l(tx, "n4", "n4:1", "n3", "n3:1", OperationalState.ENABLED);
-        l(tx, "n4", "n4:2", "n2", "n2:2", OperationalState.ENABLED);
+        l(tx, "n1:1", "n2:1", OperationalState.ENABLED);
+        l(tx, "n1:2", "n3:2", OperationalState.ENABLED);
+        l(tx, "n4:1", "n3:1", OperationalState.ENABLED);
+        l(tx, "n4:2", "n2:2", OperationalState.ENABLED);
 
         tx.submit().checkedGet();
         //when

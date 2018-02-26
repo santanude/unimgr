@@ -18,30 +18,27 @@ import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Context;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.ETH;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.LayerProtocolName;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePoint;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePointKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.context.Connection;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.context.ConnectionKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.context.ConnectivityService;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.context.ConnectivityServiceKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.Context1;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePoint;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePointKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.TransferCostBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.TransferTimingBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.context.Topology;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.context.TopologyKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Node;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.NodeBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.NodeKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.transfer.cost.pac.CostCharacteristic;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.transfer.cost.pac.CostCharacteristicBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.transfer.timing.pac.LatencyCharacteristic;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.transfer.timing.pac.LatencyCharacteristicBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.Context;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.LayerProtocolName;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.tapi.context.ServiceInterfacePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.tapi.context.ServiceInterfacePointKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.context.Connection;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.context.ConnectionKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.context.ConnectivityService;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.context.ConnectivityServiceKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.Context1;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.node.OwnedNodeEdgePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.node.OwnedNodeEdgePointKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.topology.context.Topology;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.topology.context.TopologyKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.topology.NodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.topology.NodeKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.transfer.cost.pac.CostCharacteristic;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.transfer.cost.pac.CostCharacteristicBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.transfer.timing.pac.LatencyCharacteristic;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.transfer.timing.pac.LatencyCharacteristicBuilder;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.binding.KeyedInstanceIdentifier;
 import org.slf4j.Logger;
@@ -68,7 +65,7 @@ public class NrpDao  {
         this.tx =  null;
     }
 
-    public Node createNode(String topologyId, String nodeId, Class<? extends LayerProtocolName> name, List<OwnedNodeEdgePoint> neps) {
+    public Node createNode(String topologyId, String nodeId, LayerProtocolName name, List<OwnedNodeEdgePoint> neps) {
         verifyTx();
         Uuid uuid = new Uuid(nodeId);
 
@@ -76,8 +73,6 @@ public class NrpDao  {
                 .setKey(new NodeKey(uuid))
                 .setUuid(uuid)
                 .setLayerProtocolName(Collections.singletonList(name))
-                .setTransferCost(new TransferCostBuilder().setCostCharacteristic(TapiUtils.emptyCostCharacteristic()).build())
-                .setTransferTiming(new TransferTimingBuilder().setLatencyCharacteristic(TapiUtils.emptyTransferCost()).build())
                 .setOwnedNodeEdgePoint(neps)
                 .build();
         tx.put(LogicalDatastoreType.OPERATIONAL, node(nodeId), node);
@@ -239,8 +234,8 @@ public class NrpDao  {
 
     public List<ConnectivityService> getConnectivityServiceList() {
         try {
-            org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.Context1 connections = rtx.read(LogicalDatastoreType.OPERATIONAL,
-                    ctx().augmentation(org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.Context1.class))
+            org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.Context1 connections = rtx.read(LogicalDatastoreType.OPERATIONAL,
+                    ctx().augmentation(org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.Context1.class))
                     .checkedGet().orNull();
             return connections == null ? null : connections.getConnectivityService();
         } catch (ReadFailedException e) {
@@ -251,7 +246,7 @@ public class NrpDao  {
 
     public ConnectivityService getConnectivityService(Uuid id) {
         try {
-            return rtx.read(LogicalDatastoreType.OPERATIONAL, ctx().augmentation(org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.Context1.class).child(ConnectivityService.class, new ConnectivityServiceKey(id)))
+            return rtx.read(LogicalDatastoreType.OPERATIONAL, ctx().augmentation(org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.Context1.class).child(ConnectivityService.class, new ConnectivityServiceKey(id)))
                     .checkedGet().orNull();
 
         } catch (ReadFailedException e) {
@@ -271,7 +266,7 @@ public class NrpDao  {
 
     public Connection getConnection(Uuid connectionId) {
         try {
-            return rtx.read(LogicalDatastoreType.OPERATIONAL, ctx().augmentation(org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.Context1.class).child(Connection.class, new ConnectionKey(connectionId)))
+            return rtx.read(LogicalDatastoreType.OPERATIONAL, ctx().augmentation(org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.Context1.class).child(Connection.class, new ConnectionKey(connectionId)))
                     .checkedGet().orNull();
 
         } catch (ReadFailedException e) {

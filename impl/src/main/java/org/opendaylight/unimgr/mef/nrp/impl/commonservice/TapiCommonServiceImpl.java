@@ -15,8 +15,8 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.*;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.*;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.*;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.tapi.context.ServiceInterfacePoint;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -57,8 +57,8 @@ public class TapiCommonServiceImpl implements TapiCommonService {
             try {
                 ServiceInterfacePoint result = dao.getSip(sip);
                 if(result == null) throw new IllegalArgumentException("Cannot find SIP for uuid " + sip);
-                org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.get.service._interface.point.details.output.SipBuilder sipBuilder
-                        = new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.get.service._interface.point.details.output.SipBuilder(result);
+                org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.get.service._interface.point.details.output.SipBuilder sipBuilder
+                        = new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.get.service._interface.point.details.output.SipBuilder(result);
                 NrpSipAttrs aug = result.getAugmentation(ServiceInterfacePoint1.class);
                 if(aug != null)
                     sipBuilder.addAugmentation(Sip1.class, new Sip1Builder(aug).build());
@@ -99,8 +99,8 @@ public class TapiCommonServiceImpl implements TapiCommonService {
                             new GetServiceInterfacePointListOutputBuilder()
                                     .setSip(sips.stream().map(t -> {
                                         NrpSipAttrs nrpAug = t.getAugmentation(ServiceInterfacePoint1.class);
-                                        org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.get.service._interface.point.list.output.SipBuilder sipBuilder
-                                                = new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.get.service._interface.point.list.output.SipBuilder(t);
+                                        org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.get.service._interface.point.list.output.SipBuilder sipBuilder
+                                                = new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.get.service._interface.point.list.output.SipBuilder(t);
                                         if(nrpAug != null)
                                             sipBuilder.addAugmentation(Sip2.class, new Sip2Builder(nrpAug).build());
 

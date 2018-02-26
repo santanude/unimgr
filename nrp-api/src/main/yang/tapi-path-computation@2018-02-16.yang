@@ -1,5 +1,5 @@
 module tapi-path-computation {
-    namespace "urn:onf:params:xml:ns:yang:tapi-path-computation";
+    namespace "urn:onf:otcc:yang:tapi-path-computation";
     prefix tapi-path-computation;
     import tapi-topology {
         prefix tapi-topology;
@@ -7,15 +7,24 @@ module tapi-path-computation {
     import tapi-common {
         prefix tapi-common;
     }
-    organization "ONF (Open Networking Foundation) IMP Working Group";
-    contact "WG Web: <https://www.open{[]}networking.org/technical-communities/areas/services/> 
- WG List: mailto: <wg list name>@opennetworking.org>, 
-.WG Chair: your-WG-chair<mailto:your-WG-chair@example.com> 
-Editor: your-name<mailto:your-email@example.com>";
-    description "none";
-    revision 2017-11-13 {
-        description "TAPI SDK 2.0-alpha";
-        reference "ONF-TR-527, ONF-TR-512, ONF-TR-531, RFC 6020 and RFC 6087";
+    organization "ONF OTCC (Open Transport Configuration & Control) Project";
+    contact "
+        Project Web: <https://wiki.opennetworking.org/display/OTCC/TAPI>
+        Project List: <mailto:transport-api@opennetworking.org>
+        Editor: Karthik Sethuraman
+                <mailto:karthik.sethuraman@necam.com>";
+    description "
+        This module contains TAPI Path Computation Model definitions.
+        Source: TapiPathComputation.uml
+        Copyright (c) 2018 Open Networking Foundation (ONF). All rights reserved.
+        License: This module is distributed under the Apache License 2.0";
+    revision 2018-02-16 {
+        description "ONF Transport API version 2.0.1
+        This YANG module has been generated from the TAPI UML Model using the IISOMI-Eagle xmi2yang mapping tool version .
+        <https://wiki.opennetworking.org/display/OIMT/IISOMI>
+        Changes in this revision: <https://github.com/OpenNetworkingFoundation/Snowmass-ONFOpenTransport/blob/develop/change-log.md>";
+        reference "ONF-TR-527, ONF-TR-512, ONF-TR-531, RFC 6020, RFC 6087 and ONF TAPI UML model
+                  <https://github.com/OpenNetworkingFoundation/Snowmass-ONFOpenTransport/tree/develop/UML>";
     }
     augment "/tapi-common:context" {
         uses path-computation-context;
@@ -159,13 +168,13 @@ Editor: your-name<mailto:your-email@example.com>";
                 description "none";
             }
             list cost-characteristic {
-                key 'cost-name cost-value cost-algorithm';
+                key 'cost-name';
                 config false;
                 uses tapi-topology:cost-characteristic;
                 description "The list of costs where each cost relates to some aspect of the TopologicalEntity.";
             }
             list latency-characteristic {
-                key 'traffic-property-name traffic-property-queing-latency';
+                key 'traffic-property-name';
                 config false;
                 uses tapi-topology:latency-characteristic;
                 description "The effect on the latency of a queuing process. This only has significant effect for packet based systems and has a complex characteristic.";
@@ -205,7 +214,7 @@ Editor: your-name<mailto:your-email@example.com>";
     /***********************
     * package interfaces
     **********************/ 
-        rpc compute-p-2-ppath {
+        rpc compute-p-2-p-path {
             description "none";
             input {
                 list sep {
@@ -230,7 +239,7 @@ Editor: your-name<mailto:your-email@example.com>";
                 }
             }
         }
-        rpc optimize-p-2-ppath {
+        rpc optimize-p-2-p-path {
             description "none";
             input {
                 leaf path-id-or-name {
@@ -257,7 +266,7 @@ Editor: your-name<mailto:your-email@example.com>";
                 }
             }
         }
-        rpc delete-p-2-ppath {
+        rpc delete-p-2-p-path {
             description "none";
             input {
                 leaf path-id-or-name {

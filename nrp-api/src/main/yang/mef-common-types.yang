@@ -922,5 +922,34 @@ module mef-common-types {
             }
             description "none";
         }
+        typedef sat-test-result {
+            type enumeration {
+                enum Pass {
+                    description "none";
+                }
+                enum Fail {
+                    description "none";
+                }
+                enum Untested {
+                    description "none";
+                }
+                enum Unsupported {
+                    description "none";
+                }
+                enum Not_Applicable {
+                    description "none";
+                }
+                enum Not_Testable {
+                    description "none";
+                }
+                enum Unresolved {
+                    description "none";
+                }
+                enum Not_Initiated {
+                    description "none";
+                }
+            }
+            description "none";
+        }
 
 }

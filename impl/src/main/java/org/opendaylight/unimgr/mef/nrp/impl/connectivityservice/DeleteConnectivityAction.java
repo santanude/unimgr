@@ -9,12 +9,7 @@
 package org.opendaylight.unimgr.mef.nrp.impl.connectivityservice;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -25,18 +20,18 @@ import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.ActivationTransaction;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.Context1;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.DeleteConnectivityServiceInput;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.DeleteConnectivityServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.DeleteConnectivityServiceOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connection.Route;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.context.Connection;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.context.ConnectionKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.context.ConnectivityService;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.context.ConnectivityServiceKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.delete.connectivity.service.output.Service;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.delete.connectivity.service.output.ServiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.Context1;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.DeleteConnectivityServiceInput;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.DeleteConnectivityServiceOutput;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.DeleteConnectivityServiceOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connection.Route;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.context.Connection;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.context.ConnectionKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.context.ConnectivityService;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.context.ConnectivityServiceKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.delete.connectivity.service.output.Service;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.delete.connectivity.service.output.ServiceBuilder;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -158,25 +153,26 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
 
         connectionIds.addAll(systemConnectionIds);
 
-        return systemConnectionIds.stream().map(nrpDao::getConnection)
-                .flatMap(c -> {
-                    Uuid nodeId = c.getContainerNode();
-                    return c.getConnectionEndPoint().stream().map(cep -> {
-                        Optional<org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.service.EndPoint> optEndPoint = Optional.empty();
-                        if (cs.getEndPoint() != null) {
-                            optEndPoint = cs.getEndPoint().stream()
-                                    .filter(endPoint1 -> endPoint1.getServiceInterfacePoint().getValue().contains(cep.getServerNodeEdgePoint().getValue()))
-                                    .findFirst();
-                        }
-                        org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.service.EndPoint endPoint =
-                                optEndPoint.isPresent() ? optEndPoint.get() : null;
-                        EndPoint ep = new EndPoint(endPoint, null).setSystemNepUuid(cep.getServerNodeEdgePoint());
-                        return new Pair(nodeId, ep);
-                    });
-                }).collect(Collectors.toMap(p -> p.getNodeId(), p -> new LinkedList<>(Arrays.asList(p.getEndPoint())), (ol, nl) -> {
-                    ol.addAll(nl);
-                    return ol;
-                }));
+//        return systemConnectionIds.stream().map(nrpDao::getConnection)
+//                .flatMap(c -> {
+//                    Uuid nodeId = c.getContainerNode();
+//                    return c.getConnectionEndPoint().stream().map(cep -> {
+//                        Optional<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.service.EndPoint> optEndPoint = Optional.empty();
+//                        if (cs.getEndPoint() != null) {
+//                            optEndPoint = cs.getEndPoint().stream()
+//                                    .filter(endPoint1 -> endPoint1.getServiceInterfacePoint().getValue().contains(cep.getServerNodeEdgePoint().getValue()))
+//                                    .findFirst();
+//                        }
+//                        org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.service.EndPoint endPoint =
+//                                optEndPoint.isPresent() ? optEndPoint.get() : null;
+//                        EndPoint ep = new EndPoint(endPoint, null).setSystemNepUuid(cep.getServerNodeEdgePoint());
+//                        return new Pair(nodeId, ep);
+//                    });
+//                }).collect(Collectors.toMap(p -> p.getNodeId(), p -> new LinkedList<>(Arrays.asList(p.getEndPoint())), (ol, nl) -> {
+//                    ol.addAll(nl);
+//                    return ol;
+//                }));
+        return Collections.emptyMap();
     }
 
     private static  class Pair {

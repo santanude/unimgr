@@ -42,8 +42,8 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev171221.carr
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev171221.vlan.id.list.and.untag.VlanId;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.NrpConnectivityServiceEndPointAttrs;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResource;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.ConnectivityServiceEndPoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.ConnectivityServiceEndPoint;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;

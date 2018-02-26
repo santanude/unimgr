@@ -206,6 +206,10 @@ module nrm-connectivity {
                     uses frame-delivery-condition;
                     description "When the value is conditionally, the conditions that determine whether a Data Service Frame is delivered or discarded MUST be specified. Conditions can be described in the name-value pair list.";
                 }
+                container carrier-ethernet-sls {
+                    uses mef-common:carrier-ethernet-sls;
+                    description "This attribute presents the relationship between a Connectivity Service and a service level specification.";
+                }
                 description "This class represents the Ethernet end to end connectivity at resource level. It may map an original EVC, OVC, or Service Component. It augments the TAPI ConnectivityService class, which represents the request for connectivity between two or more ConnectivityServiceEndPoint.";
             }
 

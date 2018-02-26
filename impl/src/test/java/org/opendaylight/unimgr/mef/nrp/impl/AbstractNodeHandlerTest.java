@@ -16,19 +16,14 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
-import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Context;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.ETH;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.TerminationDirection;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.Context1;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePoint;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePointKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.context.Topology;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.context.TopologyKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Node;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.NodeKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.Context;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.LayerProtocolName;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.TerminationDirection;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.node.OwnedNodeEdgePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.node.OwnedNodeEdgePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.node.OwnedNodeEdgePointKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180216.topology.Node;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 import java.util.Arrays;
@@ -206,7 +201,7 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
 
     private BiConsumer<NrpDao,String> removeNep = (dao, nepId) -> dao.removeNep(testSystemNodeName,nepId,false);
     private BiConsumer<NrpDao,String> removeNode = (dao, nepId) -> dao.removeNode(testSystemNodeName,false);
-    private BiConsumer<NrpDao,String> addNode = (dao, nepId) -> dao.createNode(TapiConstants.PRESTO_SYSTEM_TOPO, testSystemNodeName, ETH.class,createTestOwnedNodeEdgePointList());
+    private BiConsumer<NrpDao,String> addNode = (dao, nepId) -> dao.createNode(TapiConstants.PRESTO_SYSTEM_TOPO, testSystemNodeName, LayerProtocolName.ETH,createTestOwnedNodeEdgePointList());
     private BiConsumer<NrpDao,OwnedNodeEdgePoint> update = (dao, nep) -> dao.updateNep(testSystemNodeName,nep);
 
     private <T extends Object> CheckedFuture<Void, TransactionCommitFailedException> performNrpDaoAction(BiConsumer<NrpDao,T> action, T attr) {
@@ -230,7 +225,7 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
         Uuid uuid = new Uuid(nepName);
         OwnedNodeEdgePointBuilder builder = new OwnedNodeEdgePointBuilder()
                 .setKey(new OwnedNodeEdgePointKey(uuid))
-                .setLayerProtocol(Collections.singletonList(TapiUtils.toNepPN(ETH.class)))
+                .setLayerProtocolName(LayerProtocolName.ETH)
                 .setUuid(uuid);
                 // TODO donaldh .setTerminationDirection(td);
 

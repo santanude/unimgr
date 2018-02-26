@@ -9,7 +9,7 @@
 package org.opendaylight.unimgr.mef.nrp.impl;
 
 import org.opendaylight.unimgr.mef.nrp.api.RequestValidator;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.CreateConnectivityServiceInput;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.CreateConnectivityServiceInput;
 
 /**
  * @author bartosz.michalik@amartus.com

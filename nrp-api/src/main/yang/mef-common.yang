@@ -62,10 +62,6 @@ module mef-common {
                     type mef-common-types:natural-number;
                     description "This attribute adjusts the number of tokens requested for each external interface frame.";
                 }
-                container envelope {
-                    uses envelope;
-                    description "This attribute represents the relationship between the BwpFlow and the Envelope, indicating which Envelope the BwpFlow belongs.";
-                }
                 description "The BwpFlow object class represents the Bandwidth Profile Flow which includes the bandwidth profile parameters such as CIR, CIR Max, EIR, EIR Max, CBS, EBS, Coupling Flag, Color Mode, etc.  The BwpFlow object class is associated with OperatorUni, ServiceProviderUni, VUNI, CosIdentifier, EecIdentifier, and Envelope, etc. ";
             }
             grouping envelope {
@@ -310,11 +306,11 @@ module mef-common {
                     type mef-common-types:percentage;
                     description "This attribute sets the one way group availability objective for a single EVC/OVC.";
                 }
-                list set-of-ordered-pair-list {
+                /*                list set-of-ordered-pair-list {
                     min-elements 1;
                     uses set-of-ordered-pairs;
                     description "This attributes associates this class with SetOfOrderedPairs(s).";
-                }
+                    } */
                 description "The OneWayGroupAvPmPac object class represents the One Way Group Availability PM for a single EVC/OVC. It is associated with SetOfOrderedPairs and SlsObjectiveAndParameters.";
             }
             grouping one-way-hli-pm-pac {
@@ -366,15 +362,11 @@ module mef-common {
             }
             grouping ordered-pair {
                 leaf from-carrier-ethernet-service-end-point {
-                    type leafref {
-                        path '/mef-common:carrier-ethernet-service-end-point/mef-common:uuid';
-                    }
+                  type string;
                     description "This attribute represents the relationship between OrderedPair and a 'from' CarrierEthernetServiceEndPoint (EVC End Point or OVC End Point).";
                 }
                 leaf to-carrier-ethernet-service-endpoint {
-                    type leafref {
-                        path '/mef-common:carrier-ethernet-service-end-point/mef-common:uuid';
-                    }
+                  type string;
                     description "This attribute represents the relationship between OrderedPair and a 'to' CarrierEthernetServiceEndPoint (EVC End Point or OVC End Point). ";
                 }
                 leaf uuid {
@@ -393,7 +385,7 @@ module mef-common {
                     description "This attribute represents the date and time for the start of the SLS. It is the beginning of the first Time Interval T. ";
                 }
                 list sls-cos-name-entry-list {
-                    min-elements 1;
+                    key 'cos-name';
                     uses sls-cos-name-entry;
                     description "This attribute represents the relationship between the CarrierEthernetSls and SlsCosNameEntry(s) representing CN (CoS Name) entries as lists of 4-tuples of the form <CoS Name, ∆t, C, n> as defined in MEF 26.2 (MEF 10.3 covered the descriptions but not as this format). ";
                 }
@@ -470,24 +462,10 @@ module mef-common {
                     type mef-common-types:color-field-type;
                     description "This attribute determines which conditional package (among EVC/OVC End Point, PCP, DEI or DSCP) to be used as the Color Identifier.";
                 }
-                container sep-color-pac {
-                    uses sep-color-id-pac;
-                    description "This attribute represents the relationship between the ColorIdentifier and the SepColorIdPac (representing the choice that maps EVC End Point or OVC End Point to Color).";
-                }
-                container dei-color-pac {
-                    uses dei-color-id-pac;
-                    description "This attribute represents the relationship between the ColorIdentifier and the DeiColorIdPac (representing the choice that maps Vlan tag DEI to Color).";
-                }
-                container pcp-color-pac {
-                    uses pcp-color-id-pac;
-                    description "This attribute represents the relationship between the ColorIdentifier and the PcpColorIdPac (representing the choice that maps Vlan tag PCPs to Color).";
-                }
-                list dcsp-color-pac {
-                    key 'ip-version';
-                    max-elements 2;
-                    uses dscp-color-id-pac;
-                    description "This attribute represents the relationship between the ColorIdentifier and the DscpColorIdPac (representing the choice that maps DSCP values to Color).";
-                }
+                uses sep-color-id-pac;
+                uses dei-color-id-pac;
+                uses pcp-color-id-pac;
+                uses dscp-color-id-pac;
                 description "The ColorIdentifier object class represents the Color Identifier. The Color Identifier is a pair of the form <F, M> where F is a field in the ingress EI Frame and M is a mapping between each possible value of the field F and a Color. The ColorIdentifier object class is associated with CarrierEthernetServiceEndPoint (EvcEndPoint or OvcEndPoint), in addition to the different field F, such as SepColorIdPac, PcpColorIdPac, DeiColorIdPac, and DscpColorIdPac, etc.";
             }
             grouping dei-color-id-pac {
@@ -544,24 +522,10 @@ module mef-common {
                     uses mef-common-types:l2cp-protocol;
                     description "This attribute lists the L2CP Protocols that map to the Class of Service Name.";
                 }
-                container sep-cos-id-pac {
-                    uses sep-cos-id-pac;
-                    description "This attribute represents the relationship between the CosIdentifier and the SepCosIdPac when the cosMappingType of EvcEndPoint or OvcEndPoint is END_POINT and the cosName is not only for L2CP.";
-                }
-                container pcp-cos-id-pac {
-                    uses pcp-cos-id-pac;
-                    description "This attribute represents the relationship between the CosIdentifier and the PcpCosIdPac  when the cosMappingType of EvcEndPoint or OvcEndPoint is PCP and the cosName is not only for L2CP.";
-                }
-                list dscp-cos-id-pac {
-                    key 'ip-version';
-                    max-elements 2;
-                    uses dscp-cos-id-pac;
-                    description "This attribute represents the relationship between the CosIdentifier and the DespCosIdPac when the cosMappingType of EvcEndPoint or OvcEndPoint is DSCP and the cosName is not only for L2CP.";
-                }
-                container ingress-bwp-per-cos {
-                    uses bwp-flow;
-                    description "This attribute represents the relationship between the CosIdentifier and the BwpFlow, for ingress bandwidth profile per CoS Name.";
-                }
+                uses sep-cos-id-pac;
+                uses pcp-cos-id-pac;
+                uses dscp-cos-id-pac;
+                uses bwp-flow;
                 description "The CosIdentifier object class represents the Class of Service Identifier. Each ingress EI Frame mapped to the given EVC/OVC End Point has a single Class of Service. The Class of Service can be determined from inspection of the content of the ingress EI Frame. It is associated with the SepCosIdPac, or the PcpCosIdPac, or the DscpCosIdPac (when the Class of Service Identifier mapping type is Service End Point, or PCP values, or DSCP values respectively). EI Frames of L2CP protocols may be identified by a Class of Service Identifier, mapping to specific CoS Name.";
             }
             grouping dscp-cos-id-pac {
@@ -616,24 +580,10 @@ module mef-common {
                     uses mef-common-types:l2cp-protocol;
                     description "This attribute lists the L2CP Protocols that map to the Egress Equivalence Class Name.";
                 }
-                container sep-eec-id-pac {
-                    uses sep-eec-id-pac;
-                    description "This attribute represents the relationship between the EecIdentifier and a SepEecIdPac when the eecMappingType of EvcEndPoint or OvcEndPoint is END_POINT and the eecName is not only for L2CP. This not addressed in MEF 10.3 but can be future consideration.";
-                }
-                container pcp-eec-id-pac {
-                    uses pcp-eec-id-pac;
-                    description "This attribute represents the relationship between the EecIdentifier and a PcpEecIdPac when the eecMappingType of EvcEndPoint or OvcEndPoint is PCP and the eecName is not only for L2CP.";
-                }
-                list dscp-eec-id-pac {
-                    key 'ip-version';
-                    max-elements 2;
-                    uses dscp-eec-id-pac;
-                    description "This attribute represents the relationship between the EecIdentifier and a DscpEecIdPac when the eecMappingType of EvcEndPoint or OvcEndPoint is DSCP and the eecName is not only for L2CP.";
-                }
-                container egress-bwp-per-eec {
-                    uses bwp-flow;
-                    description "This attribute represents the relationship between the EecIdentifier and the BwpFlow, for egress bandwidth profile per EEC Name.";
-                }
+                uses sep-eec-id-pac;
+                uses pcp-eec-id-pac;
+                uses dscp-eec-id-pac;
+                uses bwp-flow;
                 description "The EecIdentifier object class represents the Egress Equivalence Class Identifier. Each egress EI Frame mapped to the given EVC/OVC End Point has a single Egress Equivalence Class. 
 The Egress Equivalence Class can be determined from inspection of the content of the egress EI Frame. It is associated with the SepCosIdPac, or the PcpCosIdPac, or the DscpCosIdPac (representing mapping to EVC/OVC End Point, or PCP, or DSCP respectively). EI Frames of L2CP protocols may be identified by an Egress Equivalence Class Identifier, mapping to specific Egress Equivalence Class Name.";
             }
