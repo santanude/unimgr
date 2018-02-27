@@ -9,18 +9,13 @@
 package org.opendaylight.unimgr.mef.nrp.impl.connectivityservice;
 
 import java.text.MessageFormat;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
-import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
+import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
@@ -29,14 +24,15 @@ import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.RequestValidator;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
+import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.ActivationTransaction;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.EndPoint2;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.*;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.CreateConnectivityServiceInput;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.CreateConnectivityServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.CreateConnectivityServiceOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.*;
 //import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connection.ConnectionEndPoint;
 //import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connection.ConnectionEndPointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.cep.list.ConnectionEndPoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.cep.list.ConnectionEndPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connection.RouteBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.context.Connection;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.context.ConnectionBuilder;
@@ -48,15 +44,13 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev18021
 //import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.service.ConnConstraintBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.connectivity.service.EndPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180216.create.connectivity.service.output.ServiceBuilder;
+import org.opendaylight.yangtools.yang.common.OperationFailedException;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -151,11 +145,65 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
         return "cs:" + uniqueStamp;
     }
 
-    private ConnectivityService createConnectivityModel(String uniqueStamp) throws TransactionCommitFailedException, TimeoutException {
+    private class ConnectionData {
+        final Uuid sysNodeUuid;
+        final Map<Uuid, ConnectionEndPoint> nepToCep;
+
+        private ConnectionData(Uuid sysNodeUuid, Map<Uuid, ConnectionEndPoint> nepToCep) {
+            this.sysNodeUuid = sysNodeUuid;
+            this.nepToCep = nepToCep;
+        }
+    }
+
+    private ConnectivityService createConnectivityModel(String uniqueStamp) throws OperationFailedException, TimeoutException {
         assert decomposedRequest != null : "this method can be only run after request was successfuly decomposed";
         //sort of unique ;)
 
         LOG.debug("Preparing connectivity related model for {}", uniqueStamp);
+
+        final ReadWriteTransaction tx = service.getBroker().newReadWriteTransaction();
+
+//        final NrpDao nrpDao = new NrpDao(tx);
+
+        List<ConnectionData> systemConnectionsData = decomposedRequest.stream().map(s -> {
+            final LayerProtocolName layerProtocolName = s.getEndpoints().stream().filter(e -> e.getEndpoint() != null && e.getEndpoint().getLayerProtocolName() != null)
+                    .map(e -> e.getEndpoint().getLayerProtocolName()).findFirst().orElse(null);
+
+
+            Map<Uuid, ConnectionEndPoint> ceps = s.getEndpoints().stream().map(ep -> {
+                String cepUuid = Integer.toString(Objects.hash("cep", ep.getSystemNepUuid(), s.getNodeUuid(), uniqueStamp), 16);
+                ConnectivityServiceEndPoint sep = ep.getEndpoint();
+
+                ConnectionEndPointBuilder cepB = new ConnectionEndPointBuilder();
+                cepB.setUuid(new Uuid(cepUuid))
+                        .setLayerProtocolName(layerProtocolName);
+                if (sep != null && sep.getServiceInterfacePoint() != null) {
+                    cepB.setConnectivityServiceEndPoint(sep.getServiceInterfacePoint().getValue());
+                    //set others as well
+
+                }
+                return new Map.Entry<Uuid, ConnectionEndPoint>() {
+
+                    @Override
+                    public Uuid getKey() {
+                        return ep.getSystemNepUuid();
+                    }
+
+                    @Override
+                    public ConnectionEndPoint getValue() {
+                        return cepB.build();
+                    }
+
+                    @Override
+                    public ConnectionEndPoint setValue(ConnectionEndPoint value) {
+                        return null;
+                    }
+                };
+            }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+            return new ConnectionData(s.getNodeUuid(), ceps);
+        }).collect(Collectors.toList());
+
 
         List<Connection> systemConnections = decomposedRequest.stream().map(s -> new ConnectionBuilder()
                 .setUuid(new Uuid("conn:" + s.getNodeUuid().getValue() + ":" + uniqueStamp))
@@ -192,7 +240,7 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
                 .setEndPoint(toConnectionServiceEndpoints(endpoints, uniqueStamp))
                 .build();
 
-        final WriteTransaction tx = service.getBroker().newWriteOnlyTransaction();
+//        final WriteTransaction tx = service.getBroker().newWriteOnlyTransaction();
         systemConnections.forEach(c -> {
             tx.put(LogicalDatastoreType.OPERATIONAL, TapiConnectivityServiceImpl.connectivityCtx.child(Connection.class, new ConnectionKey(c.getUuid())), c);
         });

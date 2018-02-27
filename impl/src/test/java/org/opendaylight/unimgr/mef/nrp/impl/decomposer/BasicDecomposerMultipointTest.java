@@ -17,9 +17,11 @@ import org.junit.rules.ExpectedException;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
+import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
 import org.opendaylight.unimgr.mef.nrp.impl.NrpInitializer;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.OperationalState;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180216.Uuid;
 import org.opendaylight.yangtools.yang.common.OperationFailedException;
 
 import java.util.Arrays;
@@ -68,6 +70,9 @@ public class BasicDecomposerMultipointTest extends AbstractTestWithTopo {
         n(tx, "n3", "n3:1", "n3:2", "n3:3","n3:4");
         l(tx, "n1:1", "n2:1", OperationalState.ENABLED);
         l(tx, "n2:3", "n3:3", OperationalState.ENABLED);
+        NrpDao nrpDao = new NrpDao(tx);
+        nrpDao.removeSips(Stream.of(new Uuid("sip:n1:1"), new Uuid("sip:n2:1")));
+        nrpDao.removeSips(Stream.of(new Uuid("sip:n2:3"), new Uuid("sip:n3:3")));
         tx.submit().checkedGet();
         //when
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n2:2"), ep("n2:3")), null);
