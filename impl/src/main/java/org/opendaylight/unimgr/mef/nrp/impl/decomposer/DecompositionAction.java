@@ -56,6 +56,13 @@ class DecompositionAction {
     List<Subrequrest> decompose() throws FailureResult {
         Graph<Vertex, DefaultEdge> graph = prepareData();
 
+        Set<String> missingSips = endpoints.stream().filter(e -> sipToNep.get(e.getEndpoint().getServiceInterfacePoint()) == null)
+                .map(e -> e.getEndpoint().getServiceInterfacePoint().getValue()).collect(Collectors.toSet());
+        if(!missingSips.isEmpty()) {
+            throw new FailureResult("Some service interface points not found in the system: " +
+                    missingSips.stream().collect(Collectors.joining(",", "[", "]")));
+        }
+
         List<Vertex> vertices = endpoints.stream().map(e -> {
             Vertex v = sipToNep.get(e.getEndpoint().getServiceInterfacePoint());
             if((v.dir == PortDirection.OUTPUT && e.getEndpoint().getDirection() != PortDirection.OUTPUT) ||

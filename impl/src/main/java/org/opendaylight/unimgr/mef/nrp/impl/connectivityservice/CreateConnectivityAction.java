@@ -135,6 +135,10 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
         LOG.debug("decompose request");
         decomposedRequest = service.getDecomposer().decompose(endpoints, null);
 
+        if(decomposedRequest == null || decomposedRequest.isEmpty()) throw new FailureResult("Cannot define activation scheme for "
+                + endpoints.stream().map(e -> e.getEndpoint().getServiceInterfacePoint().getValue())
+                    .collect(Collectors.joining(",", "[", "]")));
+
         ActivationTransaction tx = new ActivationTransaction();
 
         decomposedRequest.stream().map(s -> {

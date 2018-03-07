@@ -68,6 +68,32 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
     }
 
     @Test
+    public void singleNodeTestSameEndpoint() throws FailureResult, OperationFailedException {
+        //having
+        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
+        n(tx, "n1", "n1:1", "n1:2", "n1:3");
+        n(tx, "n2", "n2:1", "n2:2", "n2:3");
+        tx.submit().checkedGet();
+        //when
+        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n1:1")), null);
+
+        assertNull(decomposed);
+
+    }
+
+    @Test
+    public void nonExistingEndpoint() throws FailureResult, OperationFailedException {
+        expected.expect(FailureResult.class);
+        //having
+        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
+        n(tx, "n1", "n1:1", "n1:2", "n1:3");
+        n(tx, "n2", "n2:1", "n2:2", "n2:3");
+        tx.submit().checkedGet();
+        //when
+        decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n3:1")), null);
+    }
+
+    @Test
     public void noPathTest() throws FailureResult, OperationFailedException {
         //having
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
