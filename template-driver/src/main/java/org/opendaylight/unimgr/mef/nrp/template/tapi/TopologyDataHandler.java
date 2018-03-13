@@ -13,9 +13,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TopologyManager;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
@@ -30,10 +32,17 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.si
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.*;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.link.StateBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Link;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.LinkBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.LinkKey;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.opendaylight.unimgr.mef.nrp.api.TapiConstants.PRESTO_SYSTEM_TOPO;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -61,9 +70,16 @@ public class TopologyDataHandler {
             // we have prepared an dao abstraction to make it easier to use some of the common interactions with
             // MD-SAL but you can use tx.put tx.merge etc. by yourself if you prefere to
             NrpDao nrpDao = new NrpDao(tx);
-            //we are creating a list of NodeEdgePoints for the node no sips are added to the system
-            List<OwnedNodeEdgePoint> someEndpoints = createSomeEndpoints(1, 2, 5, 7);
-            nrpDao.createNode(topologyManager.getSystemTopologyId(), TemplateConstants.DRIVER_ID, ETH.class, null);
+
+            Node node1 = nrpDao.createNode(topologyManager.getSystemTopologyId(), "node-id-1",TemplateConstants.DRIVER_ID, ETH.class, null);
+            Node node2 = nrpDao.createNode(topologyManager.getSystemTopologyId(), "node-id-2",TemplateConstants.DRIVER_ID, ETH.class, null);
+
+            //we are creating a list of NodeEdgePoints for the nodes no sips are added to the system
+            List<OwnedNodeEdgePoint> node1Endpoints = createSomeEndpoints(node1.getUuid().getValue(), 1, 2, 5, 7);
+            List<OwnedNodeEdgePoint> node2Endpoints = createSomeEndpoints(node2.getUuid().getValue(), 1, 2, 5, 7);
+            nrpDao.updateNep(node1.getUuid().getValue(), node1Endpoints.get(0));
+            nrpDao.updateNep(node2.getUuid().getValue(), node2Endpoints.get(0));
+            createLink(tx,node1,node1Endpoints.get(0),node2,node2Endpoints.get(0));
             //add sip for one of these endpoints
 
             //create sid and add it to model
@@ -75,26 +91,26 @@ public class TopologyDataHandler {
             nrpDao.addSip(someSip3);
 
             //update an existing nep with mapping to sip
-            OwnedNodeEdgePoint updatedNep1 = new OwnedNodeEdgePointBuilder(someEndpoints.get(1))
+            OwnedNodeEdgePoint updatedNep1 = new OwnedNodeEdgePointBuilder(node1Endpoints.get(1))
                     .setMappedServiceInterfacePoint(Collections.singletonList(someSip1.getUuid()))
                     .build();
 
-            OwnedNodeEdgePoint updatedNep2 = new OwnedNodeEdgePointBuilder(someEndpoints.get(2))
+            OwnedNodeEdgePoint updatedNep2 = new OwnedNodeEdgePointBuilder(node1Endpoints.get(2))
                     .setMappedServiceInterfacePoint(Collections.singletonList(someSip2.getUuid()))
                     .build();
 
-            OwnedNodeEdgePoint updatedNep3 = new OwnedNodeEdgePointBuilder(someEndpoints.get(3))
+            OwnedNodeEdgePoint updatedNep3 = new OwnedNodeEdgePointBuilder(node2Endpoints.get(3))
                     .setMappedServiceInterfacePoint(Collections.singletonList(someSip3.getUuid()))
                     .build();
 
-            nrpDao.updateNep(TemplateConstants.DRIVER_ID, updatedNep1);
-            nrpDao.updateNep(TemplateConstants.DRIVER_ID, updatedNep2);
-            nrpDao.updateNep(TemplateConstants.DRIVER_ID, updatedNep3);
+            nrpDao.updateNep(node1.getUuid().getValue(), updatedNep1);
+            nrpDao.updateNep(node1.getUuid().getValue(), updatedNep2);
+            nrpDao.updateNep(node2.getUuid().getValue(), updatedNep3);
 
 
             tx.submit().checkedGet();
         } catch (TransactionCommitFailedException e) {
-            LOG.error("Adding node to system topology has failed", e);
+            LOG.error("Adding nodes to system topology has failed", e);
         }
 
     }
@@ -136,10 +152,10 @@ public class TopologyDataHandler {
                 .build();
     }
 
-    private List<OwnedNodeEdgePoint> createSomeEndpoints(int... indexes) {
+    private List<OwnedNodeEdgePoint> createSomeEndpoints(String nodeId, int... indexes) {
 
         return Arrays.stream(indexes).mapToObj(idx -> new OwnedNodeEdgePointBuilder()
-                .setUuid(new Uuid(TemplateConstants.DRIVER_ID + ":nep" + idx))
+                .setUuid(new Uuid(nodeId + ":nep" + idx))
                 .setLayerProtocol(Collections.singletonList(TapiUtils.toNepPN(ETH.class)))
                 .setLinkPortDirection(PortDirection.BIDIRECTIONAL)
                 .setLinkPortRole(PortRole.SYMMETRIC)
@@ -150,6 +166,21 @@ public class TopologyDataHandler {
                         .build()
                 )
                 .build()).collect(Collectors.toList());
+    }
+
+    private void createLink(ReadWriteTransaction tx, Node n1, OwnedNodeEdgePoint onep1, Node n2, OwnedNodeEdgePoint onep2){
+        Uuid uuid = new Uuid(onep1.getUuid().getValue()+onep2.getUuid().getValue());
+        Link link = new LinkBuilder()
+                .setUuid(uuid)
+                .setKey(new LinkKey(uuid))
+                .setDirection(ForwardingDirection.BIDIRECTIONAL)
+                .setLayerProtocolName(Collections.singletonList(ETH.class))
+                .setNode(Stream.of(n1.getUuid(),n2.getUuid()).collect(Collectors.toList()))
+                .setNodeEdgePoint(Stream.of(onep1.getUuid(),onep2.getUuid()).collect(Collectors.toList()))
+                .setState(new StateBuilder().setOperationalState(OperationalState.ENABLED).build())
+                .build();
+
+        tx.put(LogicalDatastoreType.OPERATIONAL, NrpDao.topo(PRESTO_SYSTEM_TOPO).child(Link.class, new LinkKey(uuid)), link);
     }
 
     public void close() {

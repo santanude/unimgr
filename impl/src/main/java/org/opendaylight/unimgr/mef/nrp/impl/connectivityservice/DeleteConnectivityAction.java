@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
@@ -91,7 +92,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
         Service response = new ServiceBuilder(cs).build();
 
         try {
-            ActivationTransaction tx = prepareTransaction(data);
+            ActivationTransaction tx = prepareTransaction(data,nrpDao);
 
             if (tx != null) {
                 ActivationTransaction.Result txResult = tx.deactivate();
@@ -108,7 +109,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
             }
             throw new IllegalStateException("no transaction created for delete connectivity request");
         } catch (Exception e) {
-            LOG.warn("Exception in create connectivity service", e);
+            LOG.warn("Exception in delete connectivity service", e);
             return RpcResultBuilder
                     .<DeleteConnectivityServiceOutput>failed()
                     .build();
@@ -128,11 +129,16 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
         tx.submit().checkedGet();
     }
 
-    private ActivationTransaction prepareTransaction(Map<Uuid, LinkedList<EndPoint>> data) {
+    private ActivationTransaction prepareTransaction(Map<Uuid, LinkedList<EndPoint>> data, NrpDao nrpDao) {
         assert data != null;
         ActivationTransaction tx = new ActivationTransaction();
         data.entrySet().stream().map(e -> {
-            Optional<ActivationDriver> driver = service.getDriverRepo().getDriver(e.getKey());
+            Optional<ActivationDriver> driver = Optional.empty();
+            try {
+                driver = service.getDriverRepo().getDriver(nrpDao.getActivationDriverId(e.getKey()));
+            } catch (ReadFailedException e1) {
+                LOG.warn("Unable to get activationDriverId for node {}",e.getKey(),e1);
+            }
             if (!driver.isPresent()) {
                 throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", e.getKey()));
             }

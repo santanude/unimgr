@@ -68,6 +68,9 @@ public class TapiConnectivityServiceImplTest {
     private Uuid uuid1 = new Uuid("uuid1");
     private Uuid uuid2 = new Uuid("uuid2");
     private Uuid uuid3 = new Uuid("uuid3");
+    private String activationDriverId1 = "d1";
+    private String activationDriverId2 = "d2";
+    private String activationDriverId3 = "d3";
     private TapiConnectivityServiceImpl connectivityService;
     private RequestDecomposer decomposer;
     private RequestValidator validator;
@@ -79,9 +82,9 @@ public class TapiConnectivityServiceImplTest {
         ad2 = mock(ActivationDriver.class);
         ad3 = mock(ActivationDriver.class);
         ActivationDriverRepoService repo = ActivationDriverMocks.builder()
-                .add(uuid1, ad1)
-                .add(uuid2, ad2)
-                .add(uuid3, ad3)
+                .add(activationDriverId1, ad1)
+                .add(activationDriverId2, ad2)
+                .add(activationDriverId3, ad3)
                 .build();
 
         decomposer = mock(RequestDecomposer.class);
@@ -141,8 +144,8 @@ public class TapiConnectivityServiceImplTest {
 
 
         configureDecomposerAnswer(eps -> {
-            Subrequrest s1 = new Subrequrest(uuid1, Arrays.asList(eps.get(0), eps.get(1), eps.get(2)));
-            Subrequrest s3 = new Subrequrest(uuid3, Arrays.asList(eps.get(3), eps.get(4)));
+            Subrequrest s1 = new Subrequrest(uuid1, Arrays.asList(eps.get(0), eps.get(1), eps.get(2)),activationDriverId1);
+            Subrequrest s3 = new Subrequrest(uuid3, Arrays.asList(eps.get(3), eps.get(4)),activationDriverId3);
 
             return Arrays.asList(s1, s3);
         });
@@ -169,8 +172,8 @@ public class TapiConnectivityServiceImplTest {
         CreateConnectivityServiceInput input = input(4);
 
         configureDecomposerAnswer(eps -> {
-            Subrequrest s1 = new Subrequrest(uuid1, Arrays.asList(eps.get(0), eps.get(1)));
-            Subrequrest s2 = new Subrequrest(uuid2, Arrays.asList(eps.get(2), eps.get(3)));
+            Subrequrest s1 = new Subrequrest(uuid1, Arrays.asList(eps.get(0), eps.get(1)),activationDriverId1);
+            Subrequrest s2 = new Subrequrest(uuid2, Arrays.asList(eps.get(2), eps.get(3)),activationDriverId2);
 
             return Arrays.asList(s1, s2);
         });

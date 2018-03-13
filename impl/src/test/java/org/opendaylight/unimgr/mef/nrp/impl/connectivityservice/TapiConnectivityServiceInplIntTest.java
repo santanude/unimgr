@@ -34,6 +34,7 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.EndPoi
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.NrpConnectivityServiceEndPointAttrs;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResource;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResourceBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.OperationalState;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.PortDirection;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.PortRole;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
@@ -71,7 +72,8 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
     private ActivationDriver ad2;
 
     private String uuid1 = "uuid1";
-    private String uuid2 = "uuid2";
+    private String activationDriverId1 = "d1";
+    private String activationDriverId2 = "d2";
     private TapiConnectivityServiceImpl connectivityService;
     private ConnectivityServiceIdResourcePool mockPool;
 
@@ -82,8 +84,8 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
         ad1 = mock(ActivationDriver.class);
         ad2 = mock(ActivationDriver.class);
         ActivationDriverRepoService repo = ActivationDriverMocks.builder()
-                .add(new Uuid(uuid1), ad1)
-                .add(new Uuid(uuid2), ad2)
+                .add(activationDriverId1 , ad1)
+                .add(activationDriverId2 , ad2)
                 .build();
 
         RequestValidator validator = mock(RequestValidator.class);
@@ -109,7 +111,7 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
                 .build();
 
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        n(tx, uuid1, uuid1 + ":1", uuid1 + ":2", uuid1 + ":3");
+        n(tx, new Uuid(uuid1), activationDriverId1, uuid1 + ":1", uuid1 + ":2", uuid1 + ":3");
 
         when(mockPool.getServiceId()).thenReturn(servId);
 
@@ -119,14 +121,57 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
         RpcResult<CreateConnectivityServiceOutput> result = this.connectivityService.createConnectivityService(input).get();
         //then
         assertTrue(result.isSuccessful());
-        verify(ad1).activate();
-        verify(ad1).commit();
+        verify(ad1, times(1)).activate();
+        verify(ad1, times(1)).commit();
         verifyZeroInteractions(ad2);
 
         ReadOnlyTransaction tx2 = dataBroker.newReadOnlyTransaction();
 
         Context1 connCtx = tx2.read(LogicalDatastoreType.OPERATIONAL, TapiConnectivityServiceImpl.connectivityCtx).checkedGet().get();
         assertEquals(2, connCtx.getConnection().size());
+        connCtx.getConnection().forEach(this::verifyConnection);
+
+        assertEquals(1, connCtx.getConnectivityService().size());
+        assertFalse(connCtx.getConnectivityService().get(0).getEndPoint().isEmpty());
+        assertEquals("cs:" + servId, connCtx.getConnectivityService().get(0).getUuid().getValue());
+
+    }
+
+    @Test
+    public void testMultiDriverActivation() throws Exception {
+        //having
+        final String servId = "service-id";
+        final String uuid2 = "uuid2";
+        final String uuid3 = "uuid3";
+
+        CreateConnectivityServiceInput input = new CreateConnectivityServiceInputBuilder()
+                .setEndPoint(eps(uuid1 + ":1", uuid3 + ":3"))
+                .build();
+
+        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
+        n(tx, new Uuid(uuid1), activationDriverId1, uuid1 + ":1", uuid1 + ":2", uuid1 + ":3");
+        n(tx, new Uuid(uuid2), activationDriverId2, uuid2 + ":1", uuid2 + ":2", uuid2 + ":3");
+        n(tx, new Uuid(uuid3), activationDriverId2, uuid3 + ":1", uuid3 + ":2", uuid3 + ":3");
+        l(tx, uuid1, uuid1+":2", uuid2, uuid2 + ":1", OperationalState.ENABLED);
+        l(tx, uuid2, uuid2+":3", uuid3, uuid3 + ":2", OperationalState.ENABLED);
+
+        when(mockPool.getServiceId()).thenReturn(servId);
+
+        tx.submit().checkedGet();
+
+        //when
+        RpcResult<CreateConnectivityServiceOutput> result = this.connectivityService.createConnectivityService(input).get();
+        //then
+        assertTrue(result.isSuccessful());
+        verify(ad1, times(1)).activate();
+        verify(ad1, times(1)).commit();
+        verify(ad2, times(2)).activate();
+        verify(ad2, times(2)).commit();
+
+        ReadOnlyTransaction tx2 = dataBroker.newReadOnlyTransaction();
+
+        Context1 connCtx = tx2.read(LogicalDatastoreType.OPERATIONAL, TapiConnectivityServiceImpl.connectivityCtx).checkedGet().get();
+        assertEquals(4, connCtx.getConnection().size());
         connCtx.getConnection().forEach(this::verifyConnection);
 
         assertEquals(1, connCtx.getConnectivityService().size());
@@ -304,7 +349,7 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
 
     private void createConnectivityService() throws TransactionCommitFailedException {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        n(tx, uuid1, uuid1 + ":1", uuid1 + ":2", uuid1 + ":3");
+        n(tx, new Uuid(uuid1), activationDriverId1, uuid1 + ":1", uuid1 + ":2", uuid1 + ":3");
         Connection system = c(uuid1, uuid1 + ":1", uuid1 + ":2");
         Connection global = c(TapiConstants.PRESTO_ABSTRACT_NODE, Collections.singletonList(system.getUuid()), uuid1 + ":1", uuid1 + ":2");
         ConnectivityService cs = cs("some-service", global);

@@ -130,7 +130,7 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
     public void testNepUpdatedWithSipAddition() throws ExecutionException, InterruptedException, TransactionCommitFailedException {
         //given
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        Node n1 = n(tx, false, "n1", "n1:1", "n1:2");
+        Node n1 = n(tx, false, new Uuid("n1"), "d1", "n1:1", "n1:2");
         tx.submit().get();
 
         Node node = getAbstractNode();
@@ -156,7 +156,7 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
     public void testNepUpdatedWithSipRemoval() throws ExecutionException, InterruptedException, TransactionCommitFailedException {
         //given we have sips
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        Node n1 = n(tx, true, "n1", "n1:1", "n1:2");
+        Node n1 = n(tx, true, new Uuid("n1"), "d1", "n1:1", "n1:2");
         tx.submit().checkedGet();
 
         //assert

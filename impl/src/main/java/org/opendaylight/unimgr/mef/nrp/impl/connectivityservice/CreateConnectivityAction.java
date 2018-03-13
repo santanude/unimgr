@@ -138,7 +138,7 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
         ActivationTransaction tx = new ActivationTransaction();
 
         decomposedRequest.stream().map(s -> {
-            Optional<ActivationDriver> driver = service.getDriverRepo().getDriver(s.getNodeUuid());
+            Optional<ActivationDriver> driver = service.getDriverRepo().getDriver(s.getActivationDriverId());
             if (!driver.isPresent()) {
                 throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", s.getNodeUuid()));
             }

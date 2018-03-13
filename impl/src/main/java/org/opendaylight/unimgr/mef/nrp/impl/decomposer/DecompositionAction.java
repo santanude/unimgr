@@ -21,6 +21,7 @@ import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.OperationalState;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.PortDirection;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
@@ -94,7 +95,7 @@ class DecompositionAction {
                 .entrySet().stream()
                 .map(e -> {
                     Set<EndPoint> endpoints = e.getValue().stream().map(this::toEndPoint).collect(Collectors.toSet());
-                    return new Subrequrest(e.getKey(), new ArrayList<>(endpoints));
+                    return new Subrequrest(e.getKey(), new ArrayList<>(endpoints),e.getValue().stream().findFirst().get().getActivationDriverId());
                 }).collect(Collectors.toList());
         return result.isEmpty() ? null : result;
     }
@@ -167,6 +168,7 @@ class DecompositionAction {
 
     private Stream<Vertex> nodeToGraph(Node n) {
         Uuid nodeUuid = n.getUuid();
+        String activationDriverId = n.getAugmentation(Node1.class).getActivationDriverId();
 
 
         return n.getOwnedNodeEdgePoint().stream()
@@ -174,12 +176,12 @@ class DecompositionAction {
                 .map(nep -> {
             List<Uuid> sips = nep.getMappedServiceInterfacePoint();
             if (sips == null || sips.isEmpty()) {
-                return  new Vertex(nodeUuid, nep.getUuid(), null, nep.getLinkPortDirection());
+                return  new Vertex(nodeUuid, nep.getUuid(), null, nep.getLinkPortDirection(),activationDriverId);
             }
             if (sips.size() > 1) {
                 LOG.warn("NodeEdgePoint {} have multiple ServiceInterfacePoint mapped, selecting first one", nep.getUuid());
             }
-            return new Vertex(nodeUuid, nep.getUuid(), sips.get(0), nep.getLinkPortDirection());
+            return new Vertex(nodeUuid, nep.getUuid(), sips.get(0), nep.getLinkPortDirection(),activationDriverId);
 
         });
     }
@@ -189,6 +191,7 @@ class DecompositionAction {
         private final Uuid nodeUuid;
         private final Uuid uuid;
         private final Uuid sip;
+        private final String activationDriverId;
         private final PortDirection dir;
 
         Vertex(Vertex px, PortDirection csDir) {
@@ -196,15 +199,19 @@ class DecompositionAction {
             this.uuid = px.uuid;
             this.sip = px.sip;
             this.dir = csDir;
+            this.activationDriverId = px.activationDriverId;
         }
 
-        Vertex(Uuid nodeUuid, Uuid uuid, Uuid sip, PortDirection dir) {
+        Vertex(Uuid nodeUuid, Uuid uuid, Uuid sip, PortDirection dir, String activationDriverId) {
             this.sip = sip;
             this.dir = dir;
             Objects.requireNonNull(nodeUuid);
             Objects.requireNonNull(uuid);
+            Objects.requireNonNull(activationDriverId);
+
             this.nodeUuid = nodeUuid;
             this.uuid = uuid;
+            this.activationDriverId = activationDriverId;
         }
 
         Uuid getNodeUuid() {
@@ -218,6 +225,8 @@ class DecompositionAction {
         Uuid getSip() {
             return sip;
         }
+
+        public String getActivationDriverId() { return activationDriverId; }
 
         @Override
         public boolean equals(Object o) {

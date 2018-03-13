@@ -18,6 +18,7 @@ import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
 import org.opendaylight.unimgr.mef.nrp.template.TemplateConstants;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.context.Topology;
 
 /**
@@ -42,7 +43,7 @@ public class TopologyDataHandlerTest extends AbstractTestWithTopo {
         ReadOnlyTransaction tx = dataBroker.newReadOnlyTransaction();
         Topology t = new NrpDao(tx).getTopology(TapiConstants.PRESTO_SYSTEM_TOPO);
         assertNotNull(t.getNode());
-        assertTrue(t.getNode().stream().anyMatch(n -> n.getUuid().getValue().equals(TemplateConstants.DRIVER_ID)));
+        assertTrue(t.getNode().stream().allMatch(n -> n.getAugmentation(Node1.class).getActivationDriverId().equals(TemplateConstants.DRIVER_ID)));
 
     }
 

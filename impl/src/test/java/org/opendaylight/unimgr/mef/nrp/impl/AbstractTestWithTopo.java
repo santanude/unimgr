@@ -181,11 +181,11 @@ public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerT
         return uuids.map(Uuid::new);
     }
 
-    protected Node n(ReadWriteTransaction tx, boolean addSips, String node, String ... endpoints) {
-        return n(tx, addSips, node, Arrays.stream(endpoints).map(i -> new Pair(i, PortDirection.BIDIRECTIONAL)));
+    protected Node n(ReadWriteTransaction tx, boolean addSips, Uuid node, String activationDriverId, String ... endpoints) {
+        return n(tx, addSips, node.getValue(), activationDriverId, Arrays.stream(endpoints).map(i -> new Pair(i, PortDirection.BIDIRECTIONAL)));
     }
 
-    protected Node n(ReadWriteTransaction tx, boolean addSips, String node, Stream<Pair> endpoints) {
+    protected Node n(ReadWriteTransaction tx, boolean addSips, String node, String activationDriverId, Stream<Pair> endpoints) {
         List<Pair> eps = endpoints.collect(Collectors.toList());
         NrpDao nrpDao = new NrpDao(tx);
         if (addSips) {
@@ -203,7 +203,7 @@ public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerT
                     .forEach(nrpDao::addSip);
         }
 
-        return nrpDao.createNode(TapiConstants.PRESTO_SYSTEM_TOPO, node, ETH.class, eps.stream()
+        return nrpDao.createNode(TapiConstants.PRESTO_SYSTEM_TOPO, node, activationDriverId, ETH.class, eps.stream()
                 .map(e-> {
                     OwnedNodeEdgePointBuilder builder = new OwnedNodeEdgePointBuilder()
                             .setLinkPortDirection(e.getDir())
@@ -271,6 +271,10 @@ public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerT
     }
 
     protected Node n(ReadWriteTransaction tx, String node, String ... endpoints) {
-        return n(tx,true, node, endpoints);
+        return n(tx,true, new Uuid(node), node, endpoints);
+    }
+
+    protected Node n(ReadWriteTransaction tx, Uuid node, String activationDriverId, String ... endpoints) {
+        return n(tx,true, node, activationDriverId, endpoints);
     }
 }

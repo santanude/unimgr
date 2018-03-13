@@ -82,7 +82,7 @@ public class TemplateDriver implements ActivationDriverBuilder {
     }
 
     @Override
-    public Uuid getNodeUuid() {
-        return new Uuid(TemplateConstants.DRIVER_ID);
+    public String getActivationDriverId() {
+        return TemplateConstants.DRIVER_ID;
     }
 }

@@ -46,19 +46,19 @@ public class ActivationDriverMocks {
     }
 
     public static class Builder {
-        HashMap<Uuid, ActivationDriver> drivers = new HashMap<>();
+        HashMap<String , ActivationDriver> drivers = new HashMap<>();
 
         private Builder() {}
 
-        public Builder add(Uuid uuid, ActivationDriver driver) {
-            drivers.put(uuid, driver);
+        public Builder add(String id, ActivationDriver driver) {
+            drivers.put(id, driver);
             return this;
         }
 
         public ActivationDriverRepoService build() {
             List<ActivationDriverBuilder> builders = drivers.entrySet().stream().map(e -> {
                 ActivationDriverBuilder b = mock(ActivationDriverBuilder.class);
-                when(b.getNodeUuid()).thenReturn(e.getKey());
+                when(b.getActivationDriverId()).thenReturn(e.getKey());
                 when(b.driverFor(any(ActivationDriverBuilder.BuilderContext.class))).thenReturn(Optional.of(e.getValue()));
 
                 return b;

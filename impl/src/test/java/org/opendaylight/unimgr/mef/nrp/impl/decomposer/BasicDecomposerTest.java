@@ -14,7 +14,7 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -25,8 +25,8 @@ import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
 import org.opendaylight.unimgr.mef.nrp.impl.NrpInitializer;
-import org.opendaylight.unimgr.mef.nrp.impl.decomposer.BasicDecomposer;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.OperationalState;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
 import org.opendaylight.yangtools.yang.common.OperationFailedException;
 
 import javax.sound.sampled.Port;
@@ -109,6 +109,25 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n3:2")), null);
         assertNotNull(decomposed);
         assertEquals(3, decomposed.size());
+        assertEquals(3, decomposed.stream().map(subrequrest -> subrequrest.getActivationDriverId()).collect(Collectors.toSet()).size());
+    }
+
+    @Test
+    public void threeNodesTwoDriversTest() throws FailureResult, OperationFailedException {
+        //having
+        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
+        n(tx, new Uuid("n1"),"d1", "n1:1", "n1:2", "n1:3");
+        n(tx, new Uuid("n2"),"d2", "n2:1", "n2:2", "n2:3");
+        n(tx, new Uuid("n3"),"d1", "n3:1", "n3:2", "n3:3");
+        l(tx, "n1", "n1:1", "n2", "n2:1", OperationalState.ENABLED);
+        l(tx, "n2", "n2:3", "n3", "n3:3", OperationalState.ENABLED);
+        tx.submit().checkedGet();
+        //when
+        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n3:2")), null);
+        assertNotNull(decomposed);
+        System.out.println();
+        assertEquals(3, decomposed.size());
+        assertEquals(2, decomposed.stream().map(subrequrest -> subrequrest.getActivationDriverId()).collect(Collectors.toSet()).size());
     }
 
     @Test
