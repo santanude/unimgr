@@ -7,13 +7,13 @@
  */
 package org.opendaylight.unimgr.mef.nrp.common;
 
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.LayerProtocolName;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.TerminationDirection;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.TerminationState;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.transfer.cost.pac.CostCharacteristic;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.transfer.cost.pac.CostCharacteristicBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.transfer.timing.pac.LatencyCharacteristic;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.transfer.timing.pac.LatencyCharacteristicBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.LayerProtocolName;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.TerminationDirection;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.TerminationState;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.transfer.cost.pac.CostCharacteristic;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.transfer.cost.pac.CostCharacteristicBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.transfer.timing.pac.LatencyCharacteristic;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.transfer.timing.pac.LatencyCharacteristicBuilder;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,17 +22,17 @@ import java.util.List;
  * @author bartosz.michalik@amartus.com
  */
 public class TapiUtils {
-    public static org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.service._interface.point.LayerProtocol toSipPN(Class<? extends LayerProtocolName> name) {
-        org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.service._interface.point.LayerProtocolBuilder builder
-                = new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.service._interface.point.LayerProtocolBuilder();
+    public static org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.service._interface.point.LayerProtocol toSipPN(Class<? extends LayerProtocolName> name) {
+        org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.service._interface.point.LayerProtocolBuilder builder
+                = new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.service._interface.point.LayerProtocolBuilder();
 
         return builder.setLayerProtocolName(name).setLocalId(name.getSimpleName()).build();
     }
 
 
-    public static org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.edge.point.LayerProtocol toNepPN(Class<? extends LayerProtocolName> name) {
-        org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.edge.point.LayerProtocolBuilder builder
-                = new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.edge.point.LayerProtocolBuilder();
+    public static org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.LayerProtocol toNepPN(Class<? extends LayerProtocolName> name) {
+        org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.LayerProtocolBuilder builder
+                = new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.LayerProtocolBuilder();
 
         return builder
                 .setLayerProtocolName(name)
