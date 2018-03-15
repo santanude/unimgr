@@ -8,53 +8,30 @@
 
 package org.opendaylight.unimgr.mef.nrp.cisco.xr;
 
-import static org.opendaylight.unimgr.utils.CapabilitiesService.Capability.Mode.AND;
-import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.NodeCapability.NETCONF;
-import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.NodeCapability.NETCONF_CISCO_IOX_IFMGR;
-import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.NodeCapability.NETCONF_CISCO_IOX_L2VPN;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
-import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
-import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
-import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
-import org.opendaylight.controller.md.sal.binding.api.MountPoint;
-import org.opendaylight.controller.md.sal.binding.api.MountPointService;
-import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
-import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
+import org.opendaylight.controller.md.sal.binding.api.*;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TopologyManager;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
-import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.unimgr.utils.CapabilitiesService;
 import org.opendaylight.unimgr.utils.DriverConstants;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationKey;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ETH;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.LayerProtocolName;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortDirection;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortRole;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.context.attrs.ServiceInterfacePoint;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.context.attrs.ServiceInterfacePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.service._interface.point.LayerProtocolBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointKey;
@@ -71,12 +48,21 @@ import org.opendaylight.yangtools.yang.binding.KeyedInstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.opendaylight.unimgr.utils.CapabilitiesService.Capability.Mode.AND;
+import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.NodeCapability.*;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -128,7 +114,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
 
         NrpDao dao = new NrpDao(tx);
-        dao.createNode(topologyManager.getSystemTopologyId(), DriverConstants.XR_NODE, ETH.class, null);
+        dao.createNode(topologyManager.getSystemTopologyId(), DriverConstants.XR_NODE, LayerProtocolName.ETH, null);
 
         Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
             @Override
@@ -205,10 +191,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
             ServiceInterfacePoint sip = new ServiceInterfacePointBuilder()
                     .setUuid(new Uuid("sip:" + nep.getUuid().getValue()))
 //                    .setState(St)
-                    .setLayerProtocol(Collections.singletonList(new LayerProtocolBuilder()
-                            .setLocalId("eth")
-                            .setLayerProtocolName(ETH.class)
-                            .build()))
+                    .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH))
                     .build();
             dao.addSip(sip);
             nep = new OwnedNodeEdgePointBuilder(nep).setMappedServiceInterfacePoint(Collections.singletonList(sip.getUuid())).build();
@@ -266,7 +249,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                                             .setKey(new OwnedNodeEdgePointKey(tpId))
                                             .setLinkPortDirection(PortDirection.BIDIRECTIONAL)
                                             .setLinkPortRole(PortRole.SYMMETRIC)
-                                            .setLayerProtocol(Collections.singletonList(TapiUtils.toNepPN(ETH.class)))
+                                            .setLayerProtocolName(LayerProtocolName.ETH)
                                             .build();
                                 }).collect(Collectors.toList());
 

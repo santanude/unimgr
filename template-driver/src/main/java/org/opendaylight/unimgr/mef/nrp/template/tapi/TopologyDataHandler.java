@@ -30,6 +30,7 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.si
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.*;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.context.attrs.ServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.context.attrs.ServiceInterfacePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointBuilder;
 import org.slf4j.Logger;
@@ -131,7 +132,7 @@ public class TopologyDataHandler {
 
         return new ServiceInterfacePointBuilder()
                 .setUuid(new Uuid("sip" + ":" + TemplateConstants.DRIVER_ID + ":" + idx))
-                .setLayerProtocol(Collections.singletonList(TapiUtils.toSipPN(ETH.class)))
+                .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH))
                 .addAugmentation(ServiceInterfacePoint1.class, sipBuilder.build())
                 .build();
     }
@@ -140,15 +141,12 @@ public class TopologyDataHandler {
 
         return Arrays.stream(indexes).mapToObj(idx -> new OwnedNodeEdgePointBuilder()
                 .setUuid(new Uuid(TemplateConstants.DRIVER_ID + ":nep" + idx))
-                .setLayerProtocol(Collections.singletonList(TapiUtils.toNepPN(ETH.class)))
+                .setLayerProtocolName(LayerProtocolName.ETH)
                 .setLinkPortDirection(PortDirection.BIDIRECTIONAL)
                 .setLinkPortRole(PortRole.SYMMETRIC)
-                .setState(new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.StateBuilder()
-                        .setAdministrativeState(AdministrativeState.UNLOCKED)
-                        .setLifecycleState(LifecycleState.INSTALLED)
-                        .setOperationalState(OperationalState.DISABLED)
-                        .build()
-                )
+                .setAdministrativeState(AdministrativeState.UNLOCKED)
+                .setLifecycleState(LifecycleState.INSTALLED)
+                .setOperationalState(OperationalState.DISABLED)
                 .build()).collect(Collectors.toList());
     }
 

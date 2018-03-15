@@ -19,6 +19,7 @@ import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Context;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ETH;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.LayerProtocolName;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.TerminationDirection;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.Context1;
@@ -230,7 +231,7 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
         Uuid uuid = new Uuid(nepName);
         OwnedNodeEdgePointBuilder builder = new OwnedNodeEdgePointBuilder()
                 .setKey(new OwnedNodeEdgePointKey(uuid))
-                .setLayerProtocol(Collections.singletonList(TapiUtils.toNepPN(ETH.class)))
+                .setLayerProtocolName(LayerProtocolName.ETH)
                 .setUuid(uuid);
                 // TODO donaldh .setTerminationDirection(td);
 

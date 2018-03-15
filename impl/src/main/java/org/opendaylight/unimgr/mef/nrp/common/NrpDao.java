@@ -9,7 +9,6 @@ package org.opendaylight.unimgr.mef.nrp.common;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
@@ -19,11 +18,11 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Context;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ETH;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.LayerProtocolName;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ServiceInterfacePointRef;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.context.attrs.ServiceInterfacePoint;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.context.attrs.ServiceInterfacePointKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePointKey;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.Connection;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectionKey;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityService;
@@ -31,17 +30,11 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev18030
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.Context1;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointKey;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.TransferCostBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.TransferTimingBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.context.Topology;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.context.TopologyKey;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Node;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.NodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.NodeKey;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.transfer.cost.pac.CostCharacteristic;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.transfer.cost.pac.CostCharacteristicBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.transfer.timing.pac.LatencyCharacteristic;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.transfer.timing.pac.LatencyCharacteristicBuilder;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.binding.KeyedInstanceIdentifier;
 import org.slf4j.Logger;
@@ -68,7 +61,7 @@ public class NrpDao  {
         this.tx =  null;
     }
 
-    public Node createNode(String topologyId, String nodeId, Class<? extends LayerProtocolName> name, List<OwnedNodeEdgePoint> neps) {
+    public Node createNode(String topologyId, String nodeId, LayerProtocolName name, List<OwnedNodeEdgePoint> neps) {
         verifyTx();
         Uuid uuid = new Uuid(nodeId);
 
@@ -76,8 +69,6 @@ public class NrpDao  {
                 .setKey(new NodeKey(uuid))
                 .setUuid(uuid)
                 .setLayerProtocolName(Collections.singletonList(name))
-                .setTransferCost(new TransferCostBuilder().setCostCharacteristic(TapiUtils.emptyCostCharacteristic()).build())
-                .setTransferTiming(new TransferTimingBuilder().setLatencyCharacteristic(TapiUtils.emptyTransferCost()).build())
                 .setOwnedNodeEdgePoint(neps)
                 .build();
         tx.put(LogicalDatastoreType.OPERATIONAL, node(nodeId), node);
@@ -113,8 +104,8 @@ public class NrpDao  {
             if (opt.isPresent()) {
                 tx.delete(LogicalDatastoreType.OPERATIONAL,nepIdent);
                 if (removeSips) {
-                    List<Uuid> sips = opt.get().getMappedServiceInterfacePoint();
-                    removeSips(sips == null ? null : sips.stream());
+                    Stream<Uuid> sips = opt.get().getMappedServiceInterfacePoint().stream().map(sip -> sip.getServiceInterfacePointId());
+                    removeSips(sips == null ? null : sips);
                 }
             }
         } catch (ReadFailedException e) {
@@ -214,7 +205,8 @@ public class NrpDao  {
                     if(neps != null)
                     removeSips(neps.stream().flatMap(nep -> nep.getMappedServiceInterfacePoint() == null
                                                                                   ? Stream.empty()
-                                                                                  : nep.getMappedServiceInterfacePoint().stream()
+                                                                                  : nep.getMappedServiceInterfacePoint()
+                            .stream().map(ServiceInterfacePointRef::getServiceInterfacePointId)
                     ));
                 }
             } catch (ReadFailedException e) {

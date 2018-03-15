@@ -91,7 +91,7 @@ public class NrpInitializer implements TopologyManager {
         Uuid topoId = new Uuid(PRESTO_EXT_TOPO);
         LOG.debug("Adding {}", PRESTO_EXT_TOPO);
         return new TopologyBuilder()
-                .setLayerProtocolName(Collections.singletonList(ETH.class))
+                .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH))
                 .setUuid(topoId)
                 .setKey(new TopologyKey(topoId))
                 .setNode(Collections.singletonList(node("mef:presto-nrp-abstract-node")))
@@ -101,7 +101,7 @@ public class NrpInitializer implements TopologyManager {
     private Node node(String uuid) {
         Uuid uid = new Uuid(uuid);
         return new NodeBuilder()
-                .setLayerProtocolName(Collections.singletonList(ETH.class))
+                .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH))
                 .setEncapTopology(new Uuid(PRESTO_SYSTEM_TOPO))
                 .setTransferCost(new TransferCostBuilder().setCostCharacteristic(TapiUtils.emptyCostCharacteristic()).build())
                 .setTransferTiming(new TransferTimingBuilder().setLatencyCharacteristic(TapiUtils.emptyTransferCost()).build())
@@ -113,7 +113,7 @@ public class NrpInitializer implements TopologyManager {
         Uuid topoId = new Uuid(PRESTO_SYSTEM_TOPO);
         LOG.debug("Adding {}", PRESTO_SYSTEM_TOPO);
         return new TopologyBuilder()
-                .setLayerProtocolName(Collections.singletonList(ETH.class))
+                .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH))
                 .setUuid(topoId)
                 .build();
     }

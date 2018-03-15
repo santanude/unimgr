@@ -96,7 +96,7 @@ public class UnimgrExtServiceImpl implements UnimgrExtService {
             ServiceInterfacePointBuilder sipBuilder = new ServiceInterfacePointBuilder()
                     .setUuid(sipId)
                     .addAugmentation(ServiceInterfacePoint1.class, sip1)
-                    .setLayerProtocol(Collections.singletonList(TapiUtils.toSipPN(ETH.class)));
+                    .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH));
 
             nrpDao.addSip(
                 sipBuilder

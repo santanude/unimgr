@@ -236,8 +236,8 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                 .setKey(new OwnedNodeEdgePointKey(uuid))
                 .setLinkPortDirection(PortDirection.BIDIRECTIONAL)
                 .setLinkPortRole(PortRole.SYMMETRIC)
-                .setLayerProtocol(Collections.singletonList(TapiUtils.toNepPN(ETH.class)))
-                .setMappedServiceInterfacePoint(Collections.singletonList(sipUuid))
+                .setLayerProtocolName(LayerProtocolName.ETH)
+                .setMappedServiceInterfacePoint(Collections.singletonList(TapiUtils.toSipRef(sipUuid)))
                 .build();
     }
 
@@ -246,7 +246,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         return new ServiceInterfacePointBuilder()
                 .setUuid(uuid)
 //                .setKey(new ServiceInterfacePointKey(uuid))
-                .setLayerProtocol(Collections.singletonList(TapiUtils.toSipPN(ETH.class)))
+                .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH))
                 .setState(new StateBuilder().setLifecycleState(LifecycleState.INSTALLED).build())
                 .build();
     }
