@@ -28,11 +28,11 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.si
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthInniNResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthUniNResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.*;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.context.attrs.ServiceInterfacePoint;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.context.attrs.ServiceInterfacePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.MappedServiceInterfacePoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +64,7 @@ public class TopologyDataHandler {
             NrpDao nrpDao = new NrpDao(tx);
             //we are creating a list of NodeEdgePoints for the node no sips are added to the system
             List<OwnedNodeEdgePoint> someEndpoints = createSomeEndpoints(1, 2, 5, 7);
-            nrpDao.createNode(topologyManager.getSystemTopologyId(), TemplateConstants.DRIVER_ID, ETH.class, null);
+            nrpDao.createNode(topologyManager.getSystemTopologyId(), TemplateConstants.DRIVER_ID, LayerProtocolName.ETH, null);
             //add sip for one of these endpoints
 
             //create sid and add it to model
@@ -76,16 +76,24 @@ public class TopologyDataHandler {
             nrpDao.addSip(someSip3);
 
             //update an existing nep with mapping to sip
+
+            MappedServiceInterfacePoint sipRef1 =
+                    TapiUtils.toSipRef(new Uuid(someSip1.getUuid()), MappedServiceInterfacePoint.class);
+            MappedServiceInterfacePoint sipRef2 =
+                    TapiUtils.toSipRef(new Uuid(someSip2.getUuid()), MappedServiceInterfacePoint.class);
+            MappedServiceInterfacePoint sipRef3 =
+                    TapiUtils.toSipRef(new Uuid(someSip3.getUuid()), MappedServiceInterfacePoint.class);
+
             OwnedNodeEdgePoint updatedNep1 = new OwnedNodeEdgePointBuilder(someEndpoints.get(1))
-                    .setMappedServiceInterfacePoint(Collections.singletonList(someSip1.getUuid()))
+                    .setMappedServiceInterfacePoint(Collections.singletonList(sipRef1))
                     .build();
 
             OwnedNodeEdgePoint updatedNep2 = new OwnedNodeEdgePointBuilder(someEndpoints.get(2))
-                    .setMappedServiceInterfacePoint(Collections.singletonList(someSip2.getUuid()))
+                    .setMappedServiceInterfacePoint(Collections.singletonList(sipRef2))
                     .build();
 
             OwnedNodeEdgePoint updatedNep3 = new OwnedNodeEdgePointBuilder(someEndpoints.get(3))
-                    .setMappedServiceInterfacePoint(Collections.singletonList(someSip3.getUuid()))
+                    .setMappedServiceInterfacePoint(Collections.singletonList(sipRef3))
                     .build();
 
             nrpDao.updateNep(TemplateConstants.DRIVER_ID, updatedNep1);

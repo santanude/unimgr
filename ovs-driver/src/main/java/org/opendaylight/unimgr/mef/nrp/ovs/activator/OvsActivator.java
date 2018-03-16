@@ -59,7 +59,7 @@ public class OvsActivator implements ResourceActivator {
 
     private void activateEndpoint(EndPoint endPoint, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
         // Transaction - Get Open vSwitch node and its flow table
-        String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getValue());
+        String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().getValue());
         TopologyTransaction topologyTransaction = new TopologyTransaction(dataBroker);
         Node node = topologyTransaction.readNode(portName);
         Table table = OpenFlowUtils.getTable(node);
@@ -122,7 +122,7 @@ public class OvsActivator implements ResourceActivator {
         TableTransaction tableTransaction = new TableTransaction(dataBroker, openFlowNode, table);
         tableTransaction.deleteFlows(flowsToDelete, false);
 
-        String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getValue());
+        String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().getValue());
         Node node = topologyTransaction.readNode(portName);
 
         //list with endpoint + all interswitch ports
@@ -145,7 +145,7 @@ public class OvsActivator implements ResourceActivator {
 		TopologyTransaction topologyTransaction = new TopologyTransaction(dataBroker);
 	    OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction, endPoint);
 
-		String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getValue());
+		String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().getValue());
 		Node node = topologyTransaction.readNode(portName);
 
 		//list with endpoint + all interswitch ports

@@ -16,8 +16,9 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid
  * @author bartosz.michalik@amartus.com
  */
 public class Subrequrest {
-    final Uuid nodeUuid;
-    final List<EndPoint> endpoints;
+    private final Uuid nodeUuid;
+    private Uuid nepUuid;
+    private final List<EndPoint> endpoints;
 
     public Subrequrest(Uuid nodeUuid, List<EndPoint> endpoints) {
         this.nodeUuid = nodeUuid;

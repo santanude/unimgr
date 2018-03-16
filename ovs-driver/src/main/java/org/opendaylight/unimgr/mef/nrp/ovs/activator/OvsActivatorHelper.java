@@ -46,7 +46,7 @@ class OvsActivatorHelper {
     OvsActivatorHelper(TopologyTransaction topologyTransaction, EndPoint endPoint) {
         this.nodes = topologyTransaction.readNodes();
         this.endPoint = endPoint;
-        tpName = getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getValue());
+        tpName = getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().getValue());
         this.portMap = createPortMap(nodes);
     }
 

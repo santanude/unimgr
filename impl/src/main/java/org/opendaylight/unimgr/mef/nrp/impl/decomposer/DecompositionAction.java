@@ -23,13 +23,16 @@ import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.OperationalState;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortDirection;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ServiceInterfacePointRef;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.end.point.ServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Node;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.context.Topology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,18 +56,22 @@ class DecompositionAction {
         this.broker = broker;
     }
 
+    Function<ServiceInterfacePoint, Uuid> toUuid = s -> s == null ? null : s.getServiceInterfacePointId();
+
     List<Subrequrest> decompose() throws FailureResult {
         Graph<Vertex, DefaultEdge> graph = prepareData();
 
-        Set<String> missingSips = endpoints.stream().filter(e -> sipToNep.get(e.getEndpoint().getServiceInterfacePoint()) == null)
-                .map(e -> e.getEndpoint().getServiceInterfacePoint().getValue()).collect(Collectors.toSet());
+
+
+        Set<String> missingSips = endpoints.stream().filter(e -> sipToNep.get(toUuid.apply(e.getEndpoint().getServiceInterfacePoint())) == null)
+                .map(e -> toUuid.apply(e.getEndpoint().getServiceInterfacePoint()).getValue()).collect(Collectors.toSet());
         if(!missingSips.isEmpty()) {
             throw new FailureResult("Some service interface points not found in the system: " +
                     missingSips.stream().collect(Collectors.joining(",", "[", "]")));
         }
 
         List<Vertex> vertices = endpoints.stream().map(e -> {
-            Vertex v = sipToNep.get(e.getEndpoint().getServiceInterfacePoint());
+            Vertex v = sipToNep.get(toUuid.apply(e.getEndpoint().getServiceInterfacePoint()));
             if((v.dir == PortDirection.OUTPUT && e.getEndpoint().getDirection() != PortDirection.OUTPUT) ||
                (v.dir == PortDirection.INPUT && e.getEndpoint().getDirection() != PortDirection.INPUT)) {
                 throw new IllegalArgumentException("Port direction for " + e.getEndpoint().getLocalId() + " incompatible with NEP." +
@@ -156,11 +163,11 @@ class DecompositionAction {
 
             if (topo.getLink() != null) {
                 topo.getLink().stream()
-                        .filter(l -> l.getState() != null && OperationalState.ENABLED == l.getState().getOperationalState())
+                        .filter(l -> OperationalState.ENABLED == l.getOperationalState())
                         .forEach(l -> {
                             //we probably need to take link bidir/unidir into consideration as well
                     List<Vertex> vertices = l.getNodeEdgePoint().stream()
-                            .map(nep -> graph.vertexSet().stream().filter(v -> v.getUuid().equals(nep)).findFirst())
+                            .map(nep -> graph.vertexSet().stream().filter(v -> v.getUuid().equals(nep.getOwnedNodeEdgePointId())).findFirst())
                             .filter(Optional::isPresent).map(Optional::get).collect(Collectors.toList());
                     interconnectLink(graph, vertices);
                 });
@@ -179,7 +186,9 @@ class DecompositionAction {
         return n.getOwnedNodeEdgePoint().stream()
                 .filter(ep -> ep.getLinkPortDirection() != null && ep.getLinkPortDirection() != PortDirection.UNIDENTIFIEDORUNKNOWN)
                 .map(nep -> {
-            List<Uuid> sips = nep.getMappedServiceInterfacePoint();
+            List<Uuid> sips = nep.getMappedServiceInterfacePoint().stream()
+                    .map(ServiceInterfacePointRef::getServiceInterfacePointId)
+                    .collect(Collectors.toList());
             if (sips == null || sips.isEmpty()) {
                 return  new Vertex(nodeUuid, nep.getUuid(), null, nep.getLinkPortDirection());
             }

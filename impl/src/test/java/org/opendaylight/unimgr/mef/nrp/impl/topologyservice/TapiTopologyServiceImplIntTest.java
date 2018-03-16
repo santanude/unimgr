@@ -155,7 +155,7 @@ public class TapiTopologyServiceImplIntTest extends AbstractTestWithTopo {
 
         Assert.assertTrue(output.isSuccessful());
         Link link = output.getResult().getLink();
-        Set<String> nodeUuids = link.getNode().stream().map(u -> u.getValue()).collect(Collectors.toSet());
+        Set<String> nodeUuids = link.getNodeEdgePoint().stream().map(u -> u.getNodeId().getValue()).collect(Collectors.toSet());
         Assert.assertTrue(nodeUuids.contains(uuid1));
         Assert.assertTrue(nodeUuids.contains(uuid2));
     }

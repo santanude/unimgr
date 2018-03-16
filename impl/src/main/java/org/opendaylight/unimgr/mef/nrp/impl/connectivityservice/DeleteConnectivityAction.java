@@ -37,6 +37,7 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev18030
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityServiceKey;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.delete.connectivity.service.output.Service;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.delete.connectivity.service.output.ServiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -160,17 +161,27 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
 
         return systemConnectionIds.stream().map(nrpDao::getConnection)
                 .flatMap(c -> {
-                    Uuid nodeId = c.getContainerNode();
+                    //XXX [bmi] add constraints checking (eg. NPE)
+                    final Uuid nodeId = c.getConnectionEndPoint().get(0).getNodeId();
+
                     return c.getConnectionEndPoint().stream().map(cep -> {
                         Optional<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPoint> optEndPoint = Optional.empty();
+                        Uuid cepRef = cep.getConnectionEndPointId();
+                        OwnedNodeEdgePoint nep = nrpDao.getNepByCep(cep);
+
                         if (cs.getEndPoint() != null) {
-                            optEndPoint = cs.getEndPoint().stream()
-                                    .filter(endPoint1 -> endPoint1.getServiceInterfacePoint().getValue().contains(cep.getServerNodeEdgePoint().getValue()))
-                                    .findFirst();
+
+// FIXME
+//                            optEndPoint = cs.getEndPoint().stream()
+//                                    .filter(endPoint1 -> endPoint1.getServiceInterfacePoint().get().contains(cep.getServerNodeEdgePoint().getValue()))
+//                                    .findFirst();
                         }
                         org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPoint endPoint =
                                 optEndPoint.isPresent() ? optEndPoint.get() : null;
-                        EndPoint ep = new EndPoint(endPoint, null).setSystemNepUuid(cep.getServerNodeEdgePoint());
+                        //FIXME
+//                        EndPoint ep = new EndPoint(endPoint, null).setSystemNepUuid(cep.getServerNodeEdgePoint());
+
+                        EndPoint ep = new EndPoint(endPoint, null);
                         return new Pair(nodeId, ep);
                     });
                 }).collect(Collectors.toMap(p -> p.getNodeId(), p -> new LinkedList<>(Arrays.asList(p.getEndPoint())), (ol, nl) -> {

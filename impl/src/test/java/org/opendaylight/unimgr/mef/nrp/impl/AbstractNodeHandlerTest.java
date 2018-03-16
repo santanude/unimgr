@@ -18,18 +18,14 @@ import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Context;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ETH;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.LayerProtocolName;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.TerminationDirection;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.Context1;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointKey;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.context.Topology;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.context.TopologyKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.MappedServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Node;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.NodeKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 import java.util.Arrays;
@@ -141,7 +137,8 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
         //when
         tx = dataBroker.newReadWriteTransaction();
         OwnedNodeEdgePoint n11 = new OwnedNodeEdgePointBuilder(n1.getOwnedNodeEdgePoint().get(0))
-                .setMappedServiceInterfacePoint(Collections.singletonList(new Uuid("sip:n1:1")))
+                .setMappedServiceInterfacePoint(
+                        Collections.singletonList(TapiUtils.toSipRef(new Uuid("sip:n1:1"), MappedServiceInterfacePoint.class)))
                 .build();
         new NrpDao(tx).updateNep("n1", n11);
         tx.submit().checkedGet();
@@ -207,7 +204,7 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
 
     private BiConsumer<NrpDao,String> removeNep = (dao, nepId) -> dao.removeNep(testSystemNodeName,nepId,false);
     private BiConsumer<NrpDao,String> removeNode = (dao, nepId) -> dao.removeNode(testSystemNodeName,false);
-    private BiConsumer<NrpDao,String> addNode = (dao, nepId) -> dao.createNode(TapiConstants.PRESTO_SYSTEM_TOPO, testSystemNodeName, ETH.class,createTestOwnedNodeEdgePointList());
+    private BiConsumer<NrpDao,String> addNode = (dao, nepId) -> dao.createNode(TapiConstants.PRESTO_SYSTEM_TOPO, testSystemNodeName, LayerProtocolName.ETH,createTestOwnedNodeEdgePointList());
     private BiConsumer<NrpDao,OwnedNodeEdgePoint> update = (dao, nep) -> dao.updateNep(testSystemNodeName,nep);
 
     private <T extends Object> CheckedFuture<Void, TransactionCommitFailedException> performNrpDaoAction(BiConsumer<NrpDao,T> action, T attr) {
@@ -236,7 +233,8 @@ public class AbstractNodeHandlerTest extends AbstractTestWithTopo {
                 // TODO donaldh .setTerminationDirection(td);
 
         if (associateSip) {
-            builder.setMappedServiceInterfacePoint(Collections.singletonList(new Uuid(sipPrefix + nepName)));
+            MappedServiceInterfacePoint sipRef = TapiUtils.toSipRef(new Uuid(sipPrefix + nepName), MappedServiceInterfacePoint.class);
+            builder.setMappedServiceInterfacePoint(Collections.singletonList(sipRef));
         }
 
         return builder.build();

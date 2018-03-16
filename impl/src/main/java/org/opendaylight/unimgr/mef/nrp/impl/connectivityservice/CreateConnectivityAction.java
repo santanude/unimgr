@@ -18,8 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
+import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
@@ -29,30 +28,22 @@ import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.RequestValidator;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
+import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.ActivationTransaction;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.EndPoint2;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ETH;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ForwardingDirection;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.GlobalClass;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortDirection;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortRole;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.TerminationDirection;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.*;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.cep.list.ConnectionEndPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connection.ConnectionEndPoint;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connection.ConnectionEndPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connection.RouteBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connection.end.point.LayerProtocolBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.Connection;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectionBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectionKey;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityService;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityServiceBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityServiceKey;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.ConnConstraint;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.ConnConstraintBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.output.ServiceBuilder;
 import org.opendaylight.yangtools.yang.common.RpcError;
@@ -61,9 +52,6 @@ import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -136,7 +124,7 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
         decomposedRequest = service.getDecomposer().decompose(endpoints, null);
 
         if(decomposedRequest == null || decomposedRequest.isEmpty()) throw new FailureResult("Cannot define activation scheme for "
-                + endpoints.stream().map(e -> e.getEndpoint().getServiceInterfacePoint().getValue())
+                + endpoints.stream().map(e -> e.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().getValue())
                     .collect(Collectors.joining(",", "[", "]")));
 
         ActivationTransaction tx = new ActivationTransaction();
@@ -168,22 +156,24 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
 
         LOG.debug("Preparing connectivity related model for {}", uniqueStamp);
 
+        final ReadWriteTransaction tx = service.getBroker().newReadWriteTransaction();
+        NrpDao nrpDao = new NrpDao(tx);
+
         List<Connection> systemConnections = decomposedRequest.stream().map(s -> new ConnectionBuilder()
                 .setUuid(new Uuid("conn:" + s.getNodeUuid().getValue() + ":" + uniqueStamp))
 //                        .setState()
                 .setDirection(ForwardingDirection.BIDIRECTIONAL)
-                .setLayerProtocolName(ETH.class)
-                .setContainerNode(s.getNodeUuid())
-                .setConnectionEndPoint(toConnectionPoints(s.getEndpoints(), uniqueStamp))
+                .setLayerProtocolName(LayerProtocolName.ETH)
+                .setConnectionEndPoint(createConnectionPoints(s.getEndpoints(), uniqueStamp))
                 .build()).collect(Collectors.toList());
 
         Connection globalConnection = new ConnectionBuilder()
                 .setUuid(new Uuid("conn:" + TapiConstants.PRESTO_ABSTRACT_NODE + ":" + uniqueStamp))
 //                        .setState()
                 .setDirection(ForwardingDirection.BIDIRECTIONAL)
-                .setLayerProtocolName(ETH.class)
-                .setContainerNode(new Uuid(TapiConstants.PRESTO_ABSTRACT_NODE))
-                .setConnectionEndPoint(toConnectionPoints(endpoints, uniqueStamp))
+                .setLayerProtocolName(LayerProtocolName.ETH)
+//                .setContainerNode(new Uuid(TapiConstants.PRESTO_ABSTRACT_NODE))
+                .setConnectionEndPoint(createConnectionPoints(endpoints, uniqueStamp))
                 .setRoute(Collections.singletonList(new RouteBuilder()
                         .setLocalId("route")
                         .setConnectionEndPoint(systemConnections.stream()
@@ -192,14 +182,14 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
                         .build())
                 ).build();
 
-
-        ConnConstraint connConstraint = input.getConnConstraint() == null ? null : new ConnConstraintBuilder(input.getConnConstraint()).build();
+//FIXME
+//        ConnConstraint connConstraint = input.getConnConstraint() == null ? null : new ConnConstraintBuilder(input.getConnConstraint()).build();
 
         org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityService cs =
                 new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityServiceBuilder()
                 .setUuid(new Uuid(toCsId(uniqueStamp)))
 //                    .setState()
-                .setConnConstraint(connConstraint)
+//                .setConnConstraint(connConstraint) FIXME
                 .setConnection(Collections.singletonList(globalConnection.getUuid()))
                 .setEndPoint(toConnectionServiceEndpoints(endpoints, uniqueStamp))
                 .build();
@@ -242,20 +232,30 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
         ).collect(Collectors.toList());
     }
 
-    private List<ConnectionEndPoint> toConnectionPoints(List<EndPoint> endpoints, String uniqueStamp) {
-        return endpoints.stream().map(ep -> new ConnectionEndPointBuilder()
-                        .setUuid(new Uuid("cep:" + ep.getSystemNepUuid() + ":" + uniqueStamp))
-//                    .setState()
-                        .setConnectionPortDirection(PortDirection.BIDIRECTIONAL)
-                        .setConnectionPortRole(PortRole.SYMMETRIC)
-                        .setServerNodeEdgePoint(ep.getSystemNepUuid())
-                        .setLayerProtocol(Collections.singletonList(new LayerProtocolBuilder()
-                                .setLocalId(ETH.class.getSimpleName())
-                                .setTerminationDirection(TerminationDirection.BIDIRECTIONAL)
-                                .setLayerProtocolName(ETH.class).build()))
-                        .build()
-        ).collect(Collectors.toList());
+    private List<ConnectionEndPoint> createConnectionPoints(NrpDao nrpDao, List<EndPoint> endpoints, String uniqueStamp) {
 
+        nrpDao.readNep()
+
+        for(EndPoint ep : endpoints) {
+            new ConnectionEndPointBuilder()
+                    .set
+        }
+
+        //FIXME
+//        return endpoints.stream().map(ep -> new ConnectionEndPointBuilder()
+
+//                        .setUuid(new Uuid("cep:" + ep.getSystemNepUuid() + ":" + uniqueStamp))
+//                    .setState()
+//                        .setConnectionPortDirection(PortDirection.BIDIRECTIONAL)
+//                        .setConnectionPortRole(PortRole.SYMMETRIC)
+//                        .setServerNodeEdgePoint(ep.getSystemNepUuid())
+//                        .setLayerProtocol(Collections.singletonList(new LayerProtocolBuilder()
+//                                .setLocalId(ETH.class.getSimpleName())
+//                                .setTerminationDirection(TerminationDirection.BIDIRECTIONAL)
+//                                .setLayerProtocolName(ETH.class).build()))
+//                        .build()
+//        ).collect(Collectors.toList());
+        return Collections.emptyList();
 
     }
 }

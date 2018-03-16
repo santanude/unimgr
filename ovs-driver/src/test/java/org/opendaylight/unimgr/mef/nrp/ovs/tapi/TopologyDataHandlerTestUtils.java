@@ -166,7 +166,7 @@ public class TopologyDataHandlerTestUtils {
         return DataStoreTestUtils.read(getNodeIid(),dataBroker);
     }
 
-    protected List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.context.attrs.ServiceInterfacePoint> readSips() {
+    protected List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePoint> readSips() {
         ReadWriteTransaction readWriteTransaction = dataBroker.newReadWriteTransaction();
         try {
             Optional<Context> opt = readWriteTransaction.read(LogicalDatastoreType.OPERATIONAL, InstanceIdentifier.create(Context.class)).checkedGet();
