@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
@@ -25,6 +26,7 @@ import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.ActivationTransaction;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ServiceInterfacePointRef;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.Context1;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceInput;
@@ -117,13 +119,14 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
     }
 
     private void removeConnectivity() throws TransactionCommitFailedException {
-        WriteTransaction tx = service.getBroker().newWriteOnlyTransaction();
+        ReadWriteTransaction tx = service.getBroker().newReadWriteTransaction();
+        NrpDao nrpDao = new NrpDao(tx);
         InstanceIdentifier<Context1> conCtx = NrpDao.ctx().augmentation(Context1.class);
         LOG.debug("Removing connectivity service {}", serviceId.getValue());
         tx.delete(LogicalDatastoreType.OPERATIONAL, conCtx.child(ConnectivityService.class, new ConnectivityServiceKey(serviceId)));
         connectionIds.forEach(csId -> {
             LOG.debug("Removing connection {}", csId.getValue());
-            tx.delete(LogicalDatastoreType.OPERATIONAL, conCtx.child(Connection.class, new ConnectionKey(csId)));
+            nrpDao.removeConnection(csId);
         });
         //TODO should be transactional with operations on deactivation
         tx.submit().checkedGet();
@@ -166,25 +169,25 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
 
                     return c.getConnectionEndPoint().stream().map(cep -> {
                         Optional<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPoint> optEndPoint = Optional.empty();
-                        Uuid cepRef = cep.getConnectionEndPointId();
+
                         OwnedNodeEdgePoint nep = nrpDao.getNepByCep(cep);
 
                         if (cs.getEndPoint() != null) {
 
-// FIXME
-//                            optEndPoint = cs.getEndPoint().stream()
-//                                    .filter(endPoint1 -> endPoint1.getServiceInterfacePoint().get().contains(cep.getServerNodeEdgePoint().getValue()))
-//                                    .findFirst();
+                            optEndPoint = cs.getEndPoint().stream()
+                                    .filter(csEp -> {
+                                        Uuid csSip = csEp.getServiceInterfacePoint().getServiceInterfacePointId();
+                                        return nep.getMappedServiceInterfacePoint().stream()
+                                                .map(ServiceInterfacePointRef::getServiceInterfacePointId).anyMatch(mSip -> mSip.equals(csSip));
+                                    })
+                                    .findFirst();
                         }
                         org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPoint endPoint =
-                                optEndPoint.isPresent() ? optEndPoint.get() : null;
-                        //FIXME
-//                        EndPoint ep = new EndPoint(endPoint, null).setSystemNepUuid(cep.getServerNodeEdgePoint());
-
-                        EndPoint ep = new EndPoint(endPoint, null);
+                                optEndPoint.orElse(null);
+                        EndPoint ep = new EndPoint(endPoint, null).setSystemNepUuid(nep.getUuid());
                         return new Pair(nodeId, ep);
                     });
-                }).collect(Collectors.toMap(p -> p.getNodeId(), p -> new LinkedList<>(Arrays.asList(p.getEndPoint())), (ol, nl) -> {
+                }).collect(Collectors.toMap(Pair::getNodeId, p -> new LinkedList<>(Arrays.asList(p.getEndPoint())), (ol, nl) -> {
                     ol.addAll(nl);
                     return ol;
                 }));

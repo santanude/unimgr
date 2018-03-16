@@ -49,6 +49,7 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev18030
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 
@@ -95,7 +96,9 @@ public class TapiConnectivityServiceImplTest {
 
         tx = mock(ReadWriteTransaction.class);
         when(tx.submit()).thenReturn(mock(CheckedFuture.class));
+
         DataBroker broker = mock(DataBroker.class);
+        when(broker.newReadWriteTransaction()).thenReturn(tx);
 
 
         when(broker.newWriteOnlyTransaction()).thenReturn(tx);
@@ -135,35 +138,6 @@ public class TapiConnectivityServiceImplTest {
     }
 
     @Test
-    public void sucessfullTwoDrivers() throws ExecutionException, InterruptedException, ResourceActivatorException, TransactionCommitFailedException {
-        //having
-        CreateConnectivityServiceInput input = input(5);
-
-
-        configureDecomposerAnswer(eps -> {
-            Subrequrest s1 = new Subrequrest(uuid1, Arrays.asList(eps.get(0), eps.get(1), eps.get(2)));
-            Subrequrest s3 = new Subrequrest(uuid3, Arrays.asList(eps.get(3), eps.get(4)));
-
-            return Arrays.asList(s1, s3);
-        });
-
-        //when
-        RpcResult<CreateConnectivityServiceOutput> result = this.connectivityService.createConnectivityService(input).get();
-        //then
-        assertTrue(result.isSuccessful());
-        verify(ad1).activate();
-        verify(ad3).activate();
-        verify(ad1).commit();
-        verify(ad3).commit();
-        verifyZeroInteractions(ad2);
-        //3x Connection (2 x system + 1 external) + ConnectivityService
-        verify(tx,times(4)).put(eq(LogicalDatastoreType.OPERATIONAL), any(InstanceIdentifier.class), any());
-
-
-    }
-
-
-    @Test
     public void failTwoDriversOneFailing() throws ExecutionException, InterruptedException, ResourceActivatorException, TransactionCommitFailedException {
         //having
         CreateConnectivityServiceInput input = input(4);
@@ -194,6 +168,7 @@ public class TapiConnectivityServiceImplTest {
             when(decomposer.decompose(any(), any(Constraints.class)))
                 .thenAnswer(a -> {
                     List<org.opendaylight.unimgr.mef.nrp.api.EndPoint> eps = a.getArgumentAt(0, List.class);
+                    eps.forEach(e -> e.setSystemNepUuid(new Uuid("xxx")));
                     return resp.apply(eps);
                 });
         } catch (FailureResult f) {

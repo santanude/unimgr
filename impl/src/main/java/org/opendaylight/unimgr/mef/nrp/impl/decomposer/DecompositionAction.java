@@ -114,8 +114,9 @@ class DecompositionAction {
     }
 
     private EndPoint toEndPoint(Vertex v) {
-        EndPoint ep = endpoints.stream().filter(e -> e.getEndpoint().getServiceInterfacePoint().equals(v.getSip())).findFirst()
+        EndPoint ep = endpoints.stream().filter(e -> e.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().equals(v.getSip())).findFirst()
                 .orElse(new EndPoint(null, null));
+        Objects.requireNonNull(v.getUuid());
         ep.setSystemNepUuid(v.getUuid());
         return ep;
     }

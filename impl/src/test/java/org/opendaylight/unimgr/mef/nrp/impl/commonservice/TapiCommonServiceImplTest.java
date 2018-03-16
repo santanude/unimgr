@@ -12,7 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.ServiceInterfacePoint1;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.Sip1;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.Sip2;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.GetServiceInterfacePointDetailsInput;
@@ -20,8 +19,6 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.GetS
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.GetServiceInterfacePointDetailsOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.GetServiceInterfacePointListOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.get.service._interface.point.list.output.Sip;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.GetTopologyListOutput;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.get.topology.list.output.Topology;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 
 import java.util.List;

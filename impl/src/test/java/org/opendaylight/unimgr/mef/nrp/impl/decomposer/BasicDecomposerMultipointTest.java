@@ -57,6 +57,8 @@ public class BasicDecomposerMultipointTest extends AbstractTestWithTopo {
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n1:2"), ep("n1:4")), null);
 
         assertEquals(1, decomposed.size());
+        assertEquals(3, decomposed.stream()
+                .flatMap(s -> s.getEndpoints().stream()).filter(e -> e.getAttrs() != null).count());
     }
 
     @Test
@@ -98,5 +100,7 @@ public class BasicDecomposerMultipointTest extends AbstractTestWithTopo {
         assertEquals(Stream.of(2,3).collect(Collectors.toSet()), decomposed.stream().map(s -> s.getEndpoints().size()).collect(Collectors.toSet()));
         List<String> uuids = decomposed.stream().map(s -> s.getNodeUuid().getValue()).collect(Collectors.toList());
         Assert.assertThat(uuids, CoreMatchers.not(CoreMatchers.hasItems("n3", "n4")));
+        assertEquals(3, decomposed.stream()
+                .flatMap(s -> s.getEndpoints().stream()).filter(e -> e.getAttrs() != null).count());
     }
 }

@@ -7,9 +7,12 @@
  */
 package org.opendaylight.unimgr.mef.nrp.common;
 
+import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.*;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.end.point.ServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.end.point.ServiceInterfacePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.topology.constraint.IncludeNodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.NodeRef;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.MappedServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.MappedServiceInterfacePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.transfer.cost.pac.CostCharacteristic;
@@ -47,5 +50,18 @@ public class TapiUtils {
                 .setCostValue("0")
                 .build();
         return Collections.singletonList(cost);
+    }
+
+    public static NodeRef toNodeRef(Uuid topoUuid, Uuid nodeUuid) {
+        return new IncludeNodeBuilder()
+                .setTopologyId(topoUuid)
+                .setNodeId(nodeUuid)
+                .build();
+    }
+
+    public static NodeRef toNodeRef(Uuid nodeUuid) {
+        String topo = TapiConstants.PRESTO_ABSTRACT_NODE.equals(nodeUuid.getValue()) ?
+                TapiConstants.PRESTO_EXT_TOPO : TapiConstants.PRESTO_SYSTEM_TOPO;
+        return toNodeRef(new Uuid(topo), nodeUuid);
     }
 }
