@@ -19,10 +19,10 @@ public interface ActivationDriverRepoService {
 
     /**
      * Get driver by universal id.
-     * @param uuid driver uuid
+     * @param activationDriverId driver id
      * @return activation driver
      * @throws ActivationDriverAmbiguousException when multiple drivers declare they can configure port
      * @throws ActivationDriverNotFoundException when no driver found for port
      */
-    Optional<ActivationDriver> getDriver(Uuid uuid);
+    Optional<ActivationDriver> getDriver(String activationDriverId);
 }

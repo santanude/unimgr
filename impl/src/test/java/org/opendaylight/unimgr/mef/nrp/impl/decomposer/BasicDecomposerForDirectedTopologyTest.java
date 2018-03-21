@@ -50,9 +50,9 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
     @Test
     public void twoNodesTestDirection() throws FailureResult, OperationFailedException {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        n(tx, true, "n1", Stream.of(pI("n1:1"), pO("n1:2")));
-        n(tx, true, "n2", Stream.of(pO("n2:1"), pI("n2:2")));
-        n(tx, true, "n3", Stream.of(pI("n3:1")));
+        n(tx, true, "n1","d1", Stream.of(pI("n1:1"), pO("n1:2")));
+        n(tx, true, "n2", "d2", Stream.of(pO("n2:1"), pI("n2:2")));
+        n(tx, true, "n3", "d3", Stream.of(pI("n3:1")));
         l(tx, "n1", "n1:1", "n2", "n2:1", OperationalState.ENABLED, ForwardingDirection.BIDIRECTIONAL);
         tx.submit().checkedGet();
         //when
@@ -155,9 +155,9 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
      */
     private  void threeNodesTopo() {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        n(tx, true, "n1", Stream.of(pI("n1:1"), pO("n1:2"), pI("n1:3")));
-        n(tx, true, "n2", Stream.of(pO("n2:1"), pI("n2:2")));
-        n(tx, true, "n3", Stream.of(pO("n3:1"), pO("n3:2"), pI("n3:3")));
+        n(tx, true, "n1", "d1", Stream.of(pI("n1:1"), pO("n1:2"), pI("n1:3")));
+        n(tx, true, "n2", "d2", Stream.of(pO("n2:1"), pI("n2:2")));
+        n(tx, true, "n3", "d3",Stream.of(pO("n3:1"), pO("n3:2"), pI("n3:3")));
         l(tx, "n1", "n1:3", "n2", "n2:1", OperationalState.ENABLED, ForwardingDirection.BIDIRECTIONAL);
         l(tx, "n2", "n2:2", "n3", "n3:1", OperationalState.ENABLED, ForwardingDirection.BIDIRECTIONAL);
         try {
@@ -178,10 +178,10 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
      */
     private  void fourNodesTopo() {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        n(tx, true, "n1", Stream.of(pB("n1:1"), pB("n1:2"), pI("n1:3"), pO("n1:4"), pO("n1:5")));
-        n(tx, true, "n2", Stream.of(pB("n2:1"), pB("n2:2"), pO("n2:3"), pI("n2:4"), pI("n2:5")));
-        n(tx, true, "n3", Stream.of(pB("n3:1"), pB("n3:2"), pO("n3:3"), pO("n3:4"), pI("n3:5")));
-        n(tx, true, "n4", Stream.of(pB("n4:1"), pB("n4:2"), pI("n4:3"), pI("n4:4"), pO("n4:5")));
+        n(tx, true, "n1", "d1",Stream.of(pB("n1:1"), pB("n1:2"), pI("n1:3"), pO("n1:4"), pO("n1:5")));
+        n(tx, true, "n2", "d2", Stream.of(pB("n2:1"), pB("n2:2"), pO("n2:3"), pI("n2:4"), pI("n2:5")));
+        n(tx, true, "n3", "d3", Stream.of(pB("n3:1"), pB("n3:2"), pO("n3:3"), pO("n3:4"), pI("n3:5")));
+        n(tx, true, "n4", "d4", Stream.of(pB("n4:1"), pB("n4:2"), pI("n4:3"), pI("n4:4"), pO("n4:5")));
         l(tx, "n1", "n1:5", "n2", "n2:5", OperationalState.ENABLED, ForwardingDirection.UNIDIRECTIONAL);
         l(tx, "n1", "n1:4", "n4", "n4:4", OperationalState.ENABLED, ForwardingDirection.UNIDIRECTIONAL);
         l(tx, "n2", "n2:3", "n4", "n4:3", OperationalState.ENABLED, ForwardingDirection.UNIDIRECTIONAL);
@@ -206,11 +206,11 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
      */
     private  void fiveNodesTopo() {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        n(tx, true, "n1", Stream.of(pI("n1:1"), pB("n1:2"), pI("n1:3"), pO("n1:4")));
-        n(tx, true, "n2", Stream.of(pI("n2:1"), pB("n2:2"), pO("n2:3"), pI("n2:4")));
-        n(tx, true, "n3", Stream.of(pO("n3:1"), pB("n3:2"), pO("n3:3"), pI("n3:4")));
-        n(tx, true, "n4", Stream.of(pO("n4:1"), pI("n4:2"), pB("n4:3"), pB("n4:4")));
-        n(tx, true, "n5", Stream.of(pI("n5:1"), pB("n5:2"), pB("n5:3"), pO("n5:4")));
+        n(tx, true, "n1", "d1", Stream.of(pI("n1:1"), pB("n1:2"), pI("n1:3"), pO("n1:4")));
+        n(tx, true, "n2", "d2", Stream.of(pI("n2:1"), pB("n2:2"), pO("n2:3"), pI("n2:4")));
+        n(tx, true, "n3", "d3", Stream.of(pO("n3:1"), pB("n3:2"), pO("n3:3"), pI("n3:4")));
+        n(tx, true, "n4", "d4", Stream.of(pO("n4:1"), pI("n4:2"), pB("n4:3"), pB("n4:4")));
+        n(tx, true, "n5", "d5", Stream.of(pI("n5:1"), pB("n5:2"), pB("n5:3"), pO("n5:4")));
         l(tx, "n2", "n2:3", "n3", "n3:4", OperationalState.ENABLED, ForwardingDirection.BIDIRECTIONAL);
         l(tx, "n3", "n3:1", "n1", "n1:1", OperationalState.ENABLED, ForwardingDirection.BIDIRECTIONAL);
         l(tx, "n3", "n3:3", "n5", "n5:1", OperationalState.ENABLED, ForwardingDirection.BIDIRECTIONAL);

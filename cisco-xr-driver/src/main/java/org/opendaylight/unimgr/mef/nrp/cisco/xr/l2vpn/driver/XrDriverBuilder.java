@@ -151,7 +151,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
     }
 
     @Override
-    public Uuid getNodeUuid() {
-        return new Uuid(DriverConstants.XR_NODE);
+    public String getActivationDriverId() {
+        return DriverConstants.XR_NODE;
     }
 }

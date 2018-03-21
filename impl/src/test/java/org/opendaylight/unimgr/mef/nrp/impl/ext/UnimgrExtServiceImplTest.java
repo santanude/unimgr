@@ -58,7 +58,7 @@ public class UnimgrExtServiceImplTest extends AbstractTestWithTopo {
 
         //having
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        n(tx, false, nodeId, nodeId + ":1", nodeId + ":2", nodeId + ":3");
+        n(tx, false, new Uuid(nodeId), "d:"+nodeId, nodeId + ":1", nodeId + ":2", nodeId + ":3");
         tx.submit().checkedGet();
 
         AddSipInput input = input(nodeId + ":1", SipType.enni);
@@ -78,7 +78,7 @@ public class UnimgrExtServiceImplTest extends AbstractTestWithTopo {
 
         //having
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-        n(tx, true, nodeId, nodeId + ":1", nodeId + ":2", nodeId + ":3");
+        n(tx, true, new Uuid(nodeId), "d:"+nodeId, nodeId + ":1", nodeId + ":2", nodeId + ":3");
         tx.submit().checkedGet();
 
         AddSipInput input = input(nodeId + ":1");

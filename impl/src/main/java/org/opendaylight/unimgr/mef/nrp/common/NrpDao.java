@@ -18,6 +18,8 @@ import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1Builder;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Context;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.ETH;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.LayerProtocolName;
@@ -69,6 +71,10 @@ public class NrpDao  {
     }
 
     public Node createNode(String topologyId, String nodeId, Class<? extends LayerProtocolName> name, List<OwnedNodeEdgePoint> neps) {
+       return createNode(topologyId, nodeId, nodeId, name, neps);
+    }
+
+    public Node createNode(String topologyId, String nodeId, String activationDriverId, Class<? extends LayerProtocolName> name, List<OwnedNodeEdgePoint> neps) {
         verifyTx();
         Uuid uuid = new Uuid(nodeId);
 
@@ -79,6 +85,7 @@ public class NrpDao  {
                 .setTransferCost(new TransferCostBuilder().setCostCharacteristic(TapiUtils.emptyCostCharacteristic()).build())
                 .setTransferTiming(new TransferTimingBuilder().setLatencyCharacteristic(TapiUtils.emptyTransferCost()).build())
                 .setOwnedNodeEdgePoint(neps)
+                .addAugmentation(Node1.class, new Node1Builder().setActivationDriverId(activationDriverId).build())
                 .build();
         tx.put(LogicalDatastoreType.OPERATIONAL, node(nodeId), node);
         return node;
@@ -156,6 +163,11 @@ public class NrpDao  {
 
     public Node getNode(String uuidTopo, String uuidNode) throws ReadFailedException {
         Optional<Node> topology = rtx.read(LogicalDatastoreType.OPERATIONAL, node(new Uuid(uuidTopo), new Uuid(uuidNode))).checkedGet();
+        return topology.orNull();
+    }
+
+    public Node getNode(Uuid uuidNode) throws ReadFailedException {
+        Optional<Node> topology = rtx.read(LogicalDatastoreType.OPERATIONAL, node(uuidNode)).checkedGet();
         return topology.orNull();
     }
 
@@ -278,5 +290,9 @@ public class NrpDao  {
             LOG.warn("reading connectivity service failed", e);
             return null;
         }
+    }
+
+    public String getActivationDriverId(Uuid nodeUuid) throws ReadFailedException {
+        return getNode(nodeUuid).getAugmentation(Node1.class).getActivationDriverId();
     }
 }

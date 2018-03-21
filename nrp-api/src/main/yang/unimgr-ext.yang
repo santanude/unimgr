@@ -46,4 +46,11 @@ module unimgr-ext {
             }
         }
     }
+
+    augment "/tapi-common:context/tapi-topology:topology/tapi-topology:node" {
+        leaf activation-driver-id {
+            type string;
+        }
+    }
+
 }

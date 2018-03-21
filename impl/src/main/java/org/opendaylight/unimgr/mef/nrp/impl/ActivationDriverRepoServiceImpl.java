@@ -69,10 +69,10 @@ public class ActivationDriverRepoServiceImpl implements ActivationDriverRepoServ
     }
 
     @Override
-    public Optional<ActivationDriver> getDriver(Uuid uuid) {
+    public Optional<ActivationDriver> getDriver(String activationDriverId) {
         ActivationDriverBuilder builder = builders.stream()
-                .filter(db -> db.getNodeUuid().equals(uuid))
-                .findFirst().orElseThrow(() -> new ActivationDriverNotFoundException(MessageFormat.format("No driver with id {0} registered", uuid)));
+                .filter(db -> db.getActivationDriverId().equals(activationDriverId))
+                .findFirst().orElseThrow(() -> new ActivationDriverNotFoundException(MessageFormat.format("No driver with id {0} registered", activationDriverId)));
         return builder.driverFor(new ActivationDriverBuilder.BuilderContext());
 
     }

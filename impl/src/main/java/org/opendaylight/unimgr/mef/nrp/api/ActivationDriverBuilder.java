@@ -28,7 +28,7 @@ public interface ActivationDriverBuilder {
      */
     Optional<ActivationDriver> driverFor(BuilderContext context);
 
-    Uuid getNodeUuid();
+    String getActivationDriverId();
 
     /**
      * Blackboard pattern that allows for passing the context information between

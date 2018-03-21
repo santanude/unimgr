@@ -18,10 +18,16 @@ import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev17
 public class Subrequrest {
     final Uuid nodeUuid;
     final List<EndPoint> endpoints;
+    final String activationDriverId;
 
-    public Subrequrest(Uuid nodeUuid, List<EndPoint> endpoints) {
+    public Subrequrest(Uuid nodeUuid, List<EndPoint> endpoints,String activationDriverId) {
         this.nodeUuid = nodeUuid;
         this.endpoints = endpoints;
+        this.activationDriverId = activationDriverId;
+    }
+
+    public String getActivationDriverId() {
+        return activationDriverId;
     }
 
     public Uuid getNodeUuid() {

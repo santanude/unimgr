@@ -22,13 +22,13 @@ import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.ActivationTransaction;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.EndPoint7;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.UpdateConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.UpdateConnectivityServiceOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.UpdateConnectivityServiceOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.context.ConnectivityService;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.update.connectivity.service.output.ServiceBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.Node;
+import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Node;
 import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.context.Topology;
 import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -104,7 +104,7 @@ public class UpdateConnectivityAction implements Callable<RpcResult<UpdateConnec
 	private ActivationTransaction prepareTransaction(NrpDao nrpDao, String serviceId) throws FailureResult {
 		ActivationTransaction tx = new ActivationTransaction();
 
-		Optional<Uuid> nodeUuid = getNodeUuid(nrpDao);
+		Optional<String> nodeUuid = getActivationDriverId(nrpDao);
 		if (nodeUuid.isPresent()) {
 			Optional<ActivationDriver> driver = service.getDriverRepo().getDriver(nodeUuid.get());
 			if (!driver.isPresent()) {
@@ -117,8 +117,8 @@ public class UpdateConnectivityAction implements Callable<RpcResult<UpdateConnec
 
 	}
 
-	private Optional<Uuid> getNodeUuid(NrpDao nrpDao) throws FailureResult {
-		Optional<Uuid> result = Optional.empty();
+	private Optional<String> getActivationDriverId(NrpDao nrpDao) throws FailureResult {
+		Optional<String> result = Optional.empty();
 		try {
 			Topology prestoTopo = nrpDao.getTopology(TapiConstants.PRESTO_SYSTEM_TOPO);
 			if (prestoTopo.getNode() == null) {
@@ -127,7 +127,7 @@ public class UpdateConnectivityAction implements Callable<RpcResult<UpdateConnec
 			for (Node node : prestoTopo.getNode()) {
 				if (node.getOwnedNodeEdgePoint().stream().filter(nep -> nep.getMappedServiceInterfacePoint() != null).flatMap(nep -> nep.getMappedServiceInterfacePoint().stream())
 						.anyMatch(sipUuid -> sipUuid.equals(endpoint.getEndpoint().getServiceInterfacePoint()))) {
-					return Optional.of(node.getUuid());
+					return Optional.of(node.getAugmentation(Node1.class).getActivationDriverId());
 				}
 			}
 		} catch (ReadFailedException e) {
