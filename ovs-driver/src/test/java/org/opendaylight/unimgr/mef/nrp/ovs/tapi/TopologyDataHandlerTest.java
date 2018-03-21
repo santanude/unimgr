@@ -132,8 +132,10 @@ public class TopologyDataHandlerTest extends AbstractDataBrokerTest{
 
     private BiFunction<Node, String, Boolean> checkNep = (node,nepName) ->
             node.getOwnedNodeEdgePoint().stream()
-                    .anyMatch(ownedNep -> ownedNep.getMappedServiceInterfacePoint().contains(new Uuid(sip_prefix + ovs_nep_prefix + nepName))
-                                && ownedNep.getUuid().getValue().equals(ovs_nep_prefix + nepName)
+                    .filter(ownedNep -> ownedNep.getUuid().getValue().equals(ovs_nep_prefix + nepName))
+                    .flatMap(ownedNep -> ownedNep.getMappedServiceInterfacePoint().stream())
+                    .anyMatch(sipRef ->
+                        sipRef.getServiceInterfacePointId().equals(new Uuid(sip_prefix + ovs_nep_prefix + nepName))
                     );
 
     private void checkNeps(Node node,String ... neps) {
