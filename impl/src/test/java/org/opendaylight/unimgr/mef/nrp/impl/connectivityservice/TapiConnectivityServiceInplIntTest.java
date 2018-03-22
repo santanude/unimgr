@@ -151,8 +151,11 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
         }
 
         if(ep.getAugmentation(EndPoint1.class) != null) return ep.getAugmentation(EndPoint1.class).getNrpCarrierEthConnectivityEndPointResource();
+        if(ep.getAugmentation(EndPoint3.class) != null) return ep.getAugmentation(EndPoint3.class).getNrpCarrierEthConnectivityEndPointResource();
         if(ep.getAugmentation(EndPoint4.class) != null) return ep.getAugmentation(EndPoint4.class).getNrpCarrierEthConnectivityEndPointResource();
-        if(ep.getAugmentation(EndPoint9.class) != null) return ep.getAugmentation(EndPoint9.class).getNrpCarrierEthConnectivityEndPointResource();
+        if(ep.getAugmentation(EndPoint5.class) != null) return ep.getAugmentation(EndPoint5.class).getNrpCarrierEthConnectivityEndPointResource();
+        if(ep.getAugmentation(EndPoint6.class) != null) return ep.getAugmentation(EndPoint5.class).getNrpCarrierEthConnectivityEndPointResource();
+        if(ep.getAugmentation(EndPoint8.class) != null) return ep.getAugmentation(EndPoint8.class).getNrpCarrierEthConnectivityEndPointResource();
 
         return null;
     }

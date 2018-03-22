@@ -28,13 +28,13 @@ public class GetConnectionDetailsAction implements Callable<RpcResult<GetConnect
     private final TapiConnectivityServiceImpl service;
     private final GetConnectionDetailsInput input;
 
-    public GetConnectionDetailsAction(TapiConnectivityServiceImpl service, GetConnectionDetailsInput input) {
+    GetConnectionDetailsAction(TapiConnectivityServiceImpl service, GetConnectionDetailsInput input) {
         this.service = service;
         this.input = input;
     }
 
     @Override
-    public RpcResult<GetConnectionDetailsOutput> call() throws Exception {
+    public RpcResult<GetConnectionDetailsOutput> call() {
 
         try {
             NrpDao nrpDao = new NrpDao(service.getBroker().newReadOnlyTransaction());

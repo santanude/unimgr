@@ -19,7 +19,6 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
@@ -34,7 +33,6 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev18030
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connection.Route;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.Connection;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectionKey;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityService;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityServiceKey;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.delete.connectivity.service.output.Service;
@@ -66,7 +64,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
     }
 
     @Override
-    public RpcResult<DeleteConnectivityServiceOutput> call() throws Exception {
+    public RpcResult<DeleteConnectivityServiceOutput> call() {
         serviceId = new Uuid(input.getServiceIdOrName());
         NrpDao nrpDao = new NrpDao(service.getBroker().newReadOnlyTransaction());
 
@@ -78,7 +76,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
                     .withError(RpcError.ErrorType.APPLICATION, MessageFormat.format("Service {0} does not exist", input.getServiceIdOrName()))
                     .build();
         }
-        Map<Uuid, LinkedList<EndPoint>> data = null;
+        Map<Uuid, LinkedList<EndPoint>> data;
         try {
             data = prepareData(cs, nrpDao);
         } catch (Exception e) {

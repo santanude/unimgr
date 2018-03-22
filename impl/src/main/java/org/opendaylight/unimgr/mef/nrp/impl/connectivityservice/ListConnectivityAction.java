@@ -26,14 +26,14 @@ public class ListConnectivityAction implements Callable<RpcResult<GetConnectivit
 
     private final TapiConnectivityServiceImpl service;
 
-    public ListConnectivityAction(TapiConnectivityServiceImpl service) {
+    ListConnectivityAction(TapiConnectivityServiceImpl service) {
         Objects.requireNonNull(service);
         this.service = service;
     }
 
     @Override
-    public RpcResult<GetConnectivityServiceListOutput> call() throws Exception {
-        List<Service> services = new ArrayList<Service>();
+    public RpcResult<GetConnectivityServiceListOutput> call() {
+        List<Service> services = new ArrayList<>();
 
         NrpDao nrpDao = new NrpDao(service.getBroker().newReadOnlyTransaction());
         List<ConnectivityService> connectivityServices = nrpDao.getConnectivityServiceList();

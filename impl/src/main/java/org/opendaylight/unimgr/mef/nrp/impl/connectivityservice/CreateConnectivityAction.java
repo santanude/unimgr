@@ -65,7 +65,7 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
     private List<Subrequrest> decomposedRequest;
     private List<EndPoint> endpoints;
 
-    public CreateConnectivityAction(TapiConnectivityServiceImpl tapiConnectivityService, CreateConnectivityServiceInput input) {
+    CreateConnectivityAction(TapiConnectivityServiceImpl tapiConnectivityService, CreateConnectivityServiceInput input) {
         Objects.requireNonNull(tapiConnectivityService);
         Objects.requireNonNull(input);
         this.service = tapiConnectivityService;
@@ -73,7 +73,7 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
     }
 
     @Override
-    public RpcResult<CreateConnectivityServiceOutput> call() throws Exception {
+    public RpcResult<CreateConnectivityServiceOutput> call() {
         LOG.debug("running CreateConnectivityService task");
 
         try {
@@ -201,9 +201,8 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
                 .setEndPoint(toConnectivityServiceEps(endpoints, uniqueStamp))
                 .build();
 
-        systemConnections.forEach(c -> {
-            tx.put(LogicalDatastoreType.OPERATIONAL, TapiConnectivityServiceImpl.connectivityCtx.child(Connection.class, new ConnectionKey(c.getUuid())), c);
-        });
+        systemConnections.forEach(c -> tx.put(LogicalDatastoreType.OPERATIONAL, TapiConnectivityServiceImpl
+                .connectivityCtx.child(Connection.class, new ConnectionKey(c.getUuid())), c));
         tx.put(LogicalDatastoreType.OPERATIONAL,
                 TapiConnectivityServiceImpl.connectivityCtx.child(org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityService.class,
                         new ConnectivityServiceKey(cs.getUuid())), cs);
@@ -227,7 +226,7 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
         return new ConnectivityServiceBuilder(cs).build();
     }
 
-    private List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPoint> toConnectivityServiceEps(List<EndPoint> endpoints, String uniqueStamp) {
+    private List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPoint> toConnectivityServiceEps(List<EndPoint> endpoints, String _uniqueStamp) {
         return endpoints.stream().map(ep -> new EndPointBuilder()
                 .setLocalId("sep:" + Integer.toString(ep.getSystemNepUuid().getValue().hashCode(), 16))
                 .setServiceInterfacePoint(ep.getEndpoint().getServiceInterfacePoint())
@@ -287,9 +286,6 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
             cepRefBuilder.setConnectionEndPointId(new Uuid("cep:" + ep.getSystemNepUuid().getValue() + ":" + uniqueStamp));
             if(csp != null) {
                 populateData(builder, csp);
-                org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.cep.list.ConnectionEndPoint cep = populateData(builder, csp)
-
-                        .build();
             }
             builder.setUuid(cepRefBuilder.getConnectionEndPointId());
             builder.setKey(null);

@@ -27,14 +27,14 @@ public class GetConnectivityDetailsAction implements Callable<RpcResult<GetConne
     private final TapiConnectivityServiceImpl service;
     private final GetConnectivityServiceDetailsInput input;
 
-    public GetConnectivityDetailsAction(TapiConnectivityServiceImpl service, GetConnectivityServiceDetailsInput input) {
+    GetConnectivityDetailsAction(TapiConnectivityServiceImpl service, GetConnectivityServiceDetailsInput input) {
         Objects.requireNonNull(service);
         this.service = service;
         this.input = input;
     }
 
     @Override
-    public RpcResult<GetConnectivityServiceDetailsOutput> call() throws Exception {
+    public RpcResult<GetConnectivityServiceDetailsOutput> call() {
 
         try {
             if (input.getServiceIdOrName() == null) {
