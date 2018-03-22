@@ -147,8 +147,12 @@ public class OpenFlowUtils {
     public static List<Flow> getExistingFlowsWithoutLLDP(Table table) {
         return table.getFlow().stream().map(x -> new FlowBuilder(x).build()).
                 filter(flow -> {
-                    if (flow.getMatch().getEthernetMatch() == null) return true;
-                    if (flow.getMatch().getEthernetMatch().getEthernetType().getType().getValue().equals(Long.valueOf(EtherTypes.LLDP.intValue()))) return false;
+                    try {
+                        if (flow.getMatch().getEthernetMatch().getEthernetType().getType().getValue().equals(Long.valueOf(EtherTypes.LLDP.intValue())))
+                            return false;
+                    }catch (NullPointerException npe){
+                        return true;
+                    }
                     return true;
                 }).
                 collect(Collectors.toList());
