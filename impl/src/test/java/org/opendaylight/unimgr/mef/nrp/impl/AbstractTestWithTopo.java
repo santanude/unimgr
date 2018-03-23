@@ -19,18 +19,18 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev171221.NaturalNumber;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev171221.PositiveInteger;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev171221.VlanId;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev171221.carrier.eth.connectivity.end.point.resource.CeVlanIdListAndUntag;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev171221.carrier.eth.connectivity.end.point.resource.CeVlanIdListAndUntagBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev171221.vlan.id.list.and.untag.VlanIdBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.EndPoint2Builder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.NrpConnectivityServiceEndPointAttrs;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.ServiceInterfacePoint1;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.ServiceInterfacePoint1Builder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResourceBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthInniNResourceBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev180321.NaturalNumber;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev180321.PositiveInteger;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev180321.VlanId;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.carrier.eth.connectivity.end.point.resource.CeVlanIdListAndUntag;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.carrier.eth.connectivity.end.point.resource.CeVlanIdListAndUntagBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.vlan.id.list.and.untag.VlanIdBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.EndPoint2Builder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.NrpConnectivityServiceEndPointAttrs;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.ServiceInterfacePoint1;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.ServiceInterfacePoint1Builder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResourceBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.sip.attrs.NrpCarrierEthInniNResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.*;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ConnectivityServiceEndPoint;
@@ -101,7 +101,7 @@ public abstract class AbstractTestWithTopo extends AbstractConcurrentDataBrokerT
     }
 
     CeVlanIdListAndUntag toVlanList(long... vlans) {
-        List<org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev171221.vlan.id.list.and.untag.VlanId> vlanList = Arrays.stream(vlans).mapToObj(vlan -> new VlanIdBuilder().setVlanId(new PositiveInteger(vlan)).build())
+        List<org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.vlan.id.list.and.untag.VlanId> vlanList = Arrays.stream(vlans).mapToObj(vlan -> new VlanIdBuilder().setVlanId(new PositiveInteger(vlan)).build())
                 .collect(Collectors.toList());
         return new CeVlanIdListAndUntagBuilder().setVlanId(vlanList).build();
 
