@@ -9,12 +9,9 @@
 package org.opendaylight.unimgr.mef.nrp.impl.connectivityservice;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -30,7 +27,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverRepoService;
@@ -40,16 +36,16 @@ import org.opendaylight.unimgr.mef.nrp.api.RequestDecomposer;
 import org.opendaylight.unimgr.mef.nrp.api.RequestValidator;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
+import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.unimgr.mef.nrp.impl.ConnectivityServiceIdResourcePool;
 import org.opendaylight.unimgr.utils.ActivationDriverMocks;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.PortRole;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.CreateConnectivityServiceInput;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.CreateConnectivityServiceInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.CreateConnectivityServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.create.connectivity.service.input.EndPoint;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.create.connectivity.service.input.EndPointBuilder;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortRole;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceInput;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceOutput;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPointBuilder;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 
 import com.google.common.util.concurrent.CheckedFuture;
@@ -99,6 +95,7 @@ public class TapiConnectivityServiceImplTest {
         tx = mock(ReadWriteTransaction.class);
         when(tx.submit()).thenReturn(mock(CheckedFuture.class));
         DataBroker broker = mock(DataBroker.class);
+        when(broker.newReadWriteTransaction()).thenReturn(tx);
 
 
         when(broker.newWriteOnlyTransaction()).thenReturn(tx);
@@ -138,35 +135,6 @@ public class TapiConnectivityServiceImplTest {
     }
 
     @Test
-    public void sucessfullTwoDrivers() throws ExecutionException, InterruptedException, ResourceActivatorException, TransactionCommitFailedException {
-        //having
-        CreateConnectivityServiceInput input = input(5);
-
-
-        configureDecomposerAnswer(eps -> {
-            Subrequrest s1 = new Subrequrest(uuid1, Arrays.asList(eps.get(0), eps.get(1), eps.get(2)),activationDriverId1);
-            Subrequrest s3 = new Subrequrest(uuid3, Arrays.asList(eps.get(3), eps.get(4)),activationDriverId3);
-
-            return Arrays.asList(s1, s3);
-        });
-
-        //when
-        RpcResult<CreateConnectivityServiceOutput> result = this.connectivityService.createConnectivityService(input).get();
-        //then
-        assertTrue(result.isSuccessful());
-        verify(ad1).activate();
-        verify(ad3).activate();
-        verify(ad1).commit();
-        verify(ad3).commit();
-        verifyZeroInteractions(ad2);
-        //3x Connection (2 x system + 1 external) + ConnectivityService
-        verify(tx,times(4)).put(eq(LogicalDatastoreType.OPERATIONAL), any(InstanceIdentifier.class), any());
-
-
-    }
-
-
-    @Test
     public void failTwoDriversOneFailing() throws ExecutionException, InterruptedException, ResourceActivatorException, TransactionCommitFailedException {
         //having
         CreateConnectivityServiceInput input = input(4);
@@ -197,6 +165,7 @@ public class TapiConnectivityServiceImplTest {
             when(decomposer.decompose(any(), any(Constraints.class)))
                 .thenAnswer(a -> {
                     List<org.opendaylight.unimgr.mef.nrp.api.EndPoint> eps = a.getArgumentAt(0, List.class);
+                    eps.forEach(e -> e.setNepRef(TapiUtils.toSysNepRef(new Uuid("node-id"), new Uuid("nep-id"))));
                     return resp.apply(eps);
                 });
         } catch (FailureResult f) {
@@ -212,7 +181,7 @@ public class TapiConnectivityServiceImplTest {
                 .build();
     }
 
-    private org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.create.connectivity.service.input.EndPoint ep(String id) {
+    private org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint ep(String id) {
         return new EndPointBuilder()
                 .setLocalId(id)
                 .setRole(PortRole.SYMMETRIC)

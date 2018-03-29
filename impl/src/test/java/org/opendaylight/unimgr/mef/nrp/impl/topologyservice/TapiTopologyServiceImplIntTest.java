@@ -15,10 +15,10 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFaile
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
 import org.opendaylight.unimgr.mef.nrp.impl.topologytervice.TapiTopologyServiceImpl;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.OperationalState;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.*;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.get.link.details.output.Link;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.get.topology.list.output.Topology;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.OperationalState;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.*;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.get.link.details.output.Link;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.get.topology.list.output.Topology;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 
 import java.util.List;
@@ -144,7 +144,7 @@ public class TapiTopologyServiceImplIntTest extends AbstractTestWithTopo {
         String linkId = uuid1 + "-" + uuid2;
         n(tx, uuid1, uuid1 + ":1", uuid1 + ":2", uuid1 + ":3");
         n(tx, uuid2, uuid2 + ":1", uuid2 + ":2", uuid2 + ":3");
-        org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Link l = l(tx, uuid1, uuid1 + ":1", uuid2, uuid2 + ":1", OperationalState.ENABLED);
+        org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Link l = l(tx, uuid1, uuid1 + ":1", uuid2, uuid2 + ":1", OperationalState.ENABLED);
         tx.submit().checkedGet();
 
         RpcResult<GetLinkDetailsOutput> output = tapiTopologyService
@@ -155,7 +155,7 @@ public class TapiTopologyServiceImplIntTest extends AbstractTestWithTopo {
 
         Assert.assertTrue(output.isSuccessful());
         Link link = output.getResult().getLink();
-        Set<String> nodeUuids = link.getNode().stream().map(u -> u.getValue()).collect(Collectors.toSet());
+        Set<String> nodeUuids = link.getNodeEdgePoint().stream().map(u -> u.getNodeId().getValue()).collect(Collectors.toSet());
         Assert.assertTrue(nodeUuids.contains(uuid1));
         Assert.assertTrue(nodeUuids.contains(uuid2));
     }

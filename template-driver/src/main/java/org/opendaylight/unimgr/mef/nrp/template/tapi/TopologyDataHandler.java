@@ -19,26 +19,29 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.api.TopologyManager;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.unimgr.mef.nrp.template.TemplateConstants;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev171221.NaturalNumber;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.ServiceInterfacePoint1;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.ServiceInterfacePoint1Builder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthEnniNResourceBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthInniNResourceBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.nrp.sip.attrs.NrpCarrierEthUniNResourceBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.*;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePoint;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.link.StateBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePoint;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Link;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.LinkBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.LinkKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev180321.NaturalNumber;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.ServiceInterfacePoint1;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.ServiceInterfacePoint1Builder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.sip.attrs.NrpCarrierEthEnniNResourceBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.sip.attrs.NrpCarrierEthInniNResourceBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.sip.attrs.NrpCarrierEthUniNResourceBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.*;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.link.NodeEdgePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.link.NodeEdgePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.MappedServiceInterfacePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Link;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.LinkBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.LinkKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +74,8 @@ public class TopologyDataHandler {
             // MD-SAL but you can use tx.put tx.merge etc. by yourself if you prefere to
             NrpDao nrpDao = new NrpDao(tx);
 
-            Node node1 = nrpDao.createNode(topologyManager.getSystemTopologyId(), "node-id-1",TemplateConstants.DRIVER_ID, ETH.class, null);
-            Node node2 = nrpDao.createNode(topologyManager.getSystemTopologyId(), "node-id-2",TemplateConstants.DRIVER_ID, ETH.class, null);
+            Node node1 = nrpDao.createNode(topologyManager.getSystemTopologyId(), "node-id-1",TemplateConstants.DRIVER_ID, LayerProtocolName.ETH, null);
+            Node node2 = nrpDao.createNode(topologyManager.getSystemTopologyId(), "node-id-2",TemplateConstants.DRIVER_ID, LayerProtocolName.ETH, null);
 
             //we are creating a list of NodeEdgePoints for the nodes no sips are added to the system
             List<OwnedNodeEdgePoint> node1Endpoints = createSomeEndpoints(node1.getUuid().getValue(), 1, 2, 5, 7);
@@ -91,16 +94,24 @@ public class TopologyDataHandler {
             nrpDao.addSip(someSip3);
 
             //update an existing nep with mapping to sip
+
+            MappedServiceInterfacePoint sipRef1 =
+                    TapiUtils.toSipRef(new Uuid(someSip1.getUuid()), MappedServiceInterfacePoint.class);
+            MappedServiceInterfacePoint sipRef2 =
+                    TapiUtils.toSipRef(new Uuid(someSip2.getUuid()), MappedServiceInterfacePoint.class);
+            MappedServiceInterfacePoint sipRef3 =
+                    TapiUtils.toSipRef(new Uuid(someSip3.getUuid()), MappedServiceInterfacePoint.class);
+
             OwnedNodeEdgePoint updatedNep1 = new OwnedNodeEdgePointBuilder(node1Endpoints.get(1))
-                    .setMappedServiceInterfacePoint(Collections.singletonList(someSip1.getUuid()))
+                    .setMappedServiceInterfacePoint(Collections.singletonList(sipRef1))
                     .build();
 
             OwnedNodeEdgePoint updatedNep2 = new OwnedNodeEdgePointBuilder(node1Endpoints.get(2))
-                    .setMappedServiceInterfacePoint(Collections.singletonList(someSip2.getUuid()))
+                    .setMappedServiceInterfacePoint(Collections.singletonList(sipRef2))
                     .build();
 
             OwnedNodeEdgePoint updatedNep3 = new OwnedNodeEdgePointBuilder(node2Endpoints.get(3))
-                    .setMappedServiceInterfacePoint(Collections.singletonList(someSip3.getUuid()))
+                    .setMappedServiceInterfacePoint(Collections.singletonList(sipRef3))
                     .build();
 
             nrpDao.updateNep(node1.getUuid().getValue(), updatedNep1);
@@ -147,7 +158,7 @@ public class TopologyDataHandler {
 
         return new ServiceInterfacePointBuilder()
                 .setUuid(new Uuid("sip" + ":" + TemplateConstants.DRIVER_ID + ":" + idx))
-                .setLayerProtocol(Collections.singletonList(TapiUtils.toSipPN(ETH.class)))
+                .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH))
                 .addAugmentation(ServiceInterfacePoint1.class, sipBuilder.build())
                 .build();
     }
@@ -156,28 +167,38 @@ public class TopologyDataHandler {
 
         return Arrays.stream(indexes).mapToObj(idx -> new OwnedNodeEdgePointBuilder()
                 .setUuid(new Uuid(nodeId + ":nep" + idx))
-                .setLayerProtocol(Collections.singletonList(TapiUtils.toNepPN(ETH.class)))
+                .setLayerProtocolName(LayerProtocolName.ETH)
                 .setLinkPortDirection(PortDirection.BIDIRECTIONAL)
                 .setLinkPortRole(PortRole.SYMMETRIC)
-                .setState(new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.edge.point.StateBuilder()
-                        .setAdministrativeState(AdministrativeState.UNLOCKED)
-                        .setLifecycleState(LifecycleState.INSTALLED)
-                        .setOperationalState(OperationalState.DISABLED)
-                        .build()
-                )
+                .setAdministrativeState(AdministrativeState.UNLOCKED)
+                .setLifecycleState(LifecycleState.INSTALLED)
+                .setOperationalState(OperationalState.DISABLED)
                 .build()).collect(Collectors.toList());
     }
 
     private void createLink(ReadWriteTransaction tx, Node n1, OwnedNodeEdgePoint onep1, Node n2, OwnedNodeEdgePoint onep2){
         Uuid uuid = new Uuid(onep1.getUuid().getValue()+onep2.getUuid().getValue());
+
+
+        NodeEdgePointBuilder builder = new NodeEdgePointBuilder().setTopologyId(new Uuid(TapiConstants.PRESTO_SYSTEM_TOPO));
+
+        NodeEdgePoint nep1 = builder
+                .setNodeId(n1.getUuid())
+                .setOwnedNodeEdgePointId(onep1.getUuid())
+                .build();
+        NodeEdgePoint nep2 = builder
+                .setNodeId(n2.getUuid())
+                .setOwnedNodeEdgePointId(onep2.getUuid())
+                .build();
+
+
         Link link = new LinkBuilder()
                 .setUuid(uuid)
                 .setKey(new LinkKey(uuid))
                 .setDirection(ForwardingDirection.BIDIRECTIONAL)
-                .setLayerProtocolName(Collections.singletonList(ETH.class))
-                .setNode(Stream.of(n1.getUuid(),n2.getUuid()).collect(Collectors.toList()))
-                .setNodeEdgePoint(Stream.of(onep1.getUuid(),onep2.getUuid()).collect(Collectors.toList()))
-                .setState(new StateBuilder().setOperationalState(OperationalState.ENABLED).build())
+                .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH))
+                .setNodeEdgePoint(Stream.of(nep1,nep2).collect(Collectors.toList()))
+                .setOperationalState(OperationalState.ENABLED)
                 .build();
 
         tx.put(LogicalDatastoreType.OPERATIONAL, NrpDao.topo(PRESTO_SYSTEM_TOPO).child(Link.class, new LinkKey(uuid)), link);

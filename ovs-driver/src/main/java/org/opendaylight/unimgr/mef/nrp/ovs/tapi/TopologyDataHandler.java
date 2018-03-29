@@ -34,13 +34,13 @@ import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TopologyTransaction;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.*;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePoint;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.context.attrs.ServiceInterfacePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.service._interface.point.StateBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePoint;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.node.OwnedNodeEdgePointKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.*;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.MappedServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.ovsdb.rev150105.InterfaceTypeInternal;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.ovsdb.rev150105.OvsdbTerminationPointAugmentation;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
@@ -94,7 +94,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
 
         NrpDao dao = new NrpDao(tx);
-        dao.createNode(topologyManager.getSystemTopologyId(), OVS_NODE, ETH.class, null);
+        dao.createNode(topologyManager.getSystemTopologyId(), OVS_NODE, LayerProtocolName.ETH, null);
 
         Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
             @Override
@@ -236,8 +236,8 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                 .setKey(new OwnedNodeEdgePointKey(uuid))
                 .setLinkPortDirection(PortDirection.BIDIRECTIONAL)
                 .setLinkPortRole(PortRole.SYMMETRIC)
-                .setLayerProtocol(Collections.singletonList(TapiUtils.toNepPN(ETH.class)))
-                .setMappedServiceInterfacePoint(Collections.singletonList(sipUuid))
+                .setLayerProtocolName(LayerProtocolName.ETH)
+                .setMappedServiceInterfacePoint(Collections.singletonList(TapiUtils.toSipRef(sipUuid, MappedServiceInterfacePoint.class)))
                 .build();
     }
 
@@ -246,8 +246,8 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         return new ServiceInterfacePointBuilder()
                 .setUuid(uuid)
 //                .setKey(new ServiceInterfacePointKey(uuid))
-                .setLayerProtocol(Collections.singletonList(TapiUtils.toSipPN(ETH.class)))
-                .setState(new StateBuilder().setLifecycleState(LifecycleState.INSTALLED).build())
+                .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH))
+                .setLifecycleState(LifecycleState.INSTALLED)
                 .build();
     }
 

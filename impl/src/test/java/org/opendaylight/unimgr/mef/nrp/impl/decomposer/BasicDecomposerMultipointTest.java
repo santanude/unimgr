@@ -19,7 +19,7 @@ import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
 import org.opendaylight.unimgr.mef.nrp.impl.NrpInitializer;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.OperationalState;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.OperationalState;
 import org.opendaylight.yangtools.yang.common.OperationFailedException;
 
 import java.util.Arrays;
@@ -57,6 +57,8 @@ public class BasicDecomposerMultipointTest extends AbstractTestWithTopo {
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n1:2"), ep("n1:4")), null);
 
         assertEquals(1, decomposed.size());
+        assertEquals(3, decomposed.stream()
+                .flatMap(s -> s.getEndpoints().stream()).filter(e -> e.getAttrs() != null).count());
     }
 
     @Test
@@ -98,5 +100,7 @@ public class BasicDecomposerMultipointTest extends AbstractTestWithTopo {
         assertEquals(Stream.of(2,3).collect(Collectors.toSet()), decomposed.stream().map(s -> s.getEndpoints().size()).collect(Collectors.toSet()));
         List<String> uuids = decomposed.stream().map(s -> s.getNodeUuid().getValue()).collect(Collectors.toList());
         Assert.assertThat(uuids, CoreMatchers.not(CoreMatchers.hasItems("n3", "n4")));
+        assertEquals(3, decomposed.stream()
+                .flatMap(s -> s.getEndpoints().stream()).filter(e -> e.getAttrs() != null).count());
     }
 }

@@ -13,13 +13,17 @@ import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
-import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.*;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.get.link.details.output.LinkBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Link;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.LinkKey;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.OwnedNodeEdgePoint1;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.*;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.get.link.details.output.LinkBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.get.node.details.output.NodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.get.topology.details.output.TopologyBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Link;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.LinkKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Node;
 import org.opendaylight.yangtools.yang.binding.KeyedInstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -73,8 +77,8 @@ public class TapiTopologyServiceImpl implements TapiTopologyService, AutoCloseab
             Node node = nrpDao.getNode(input.getTopologyIdOrName(), input.getNodeIdOrName());
             if(node == null) return RpcResultBuilder.<GetNodeDetailsOutput>failed().withError(RpcError.ErrorType.APPLICATION,
                     String.format("No node for id: %s in topology %s", input.getNodeIdOrName(), input.getTopologyIdOrName())).build();
-
-            GetNodeDetailsOutput output = new GetNodeDetailsOutputBuilder().setNode(new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.get.node.details.output.NodeBuilder(node).build()).build();
+            rewriteNode(node);
+            GetNodeDetailsOutput output = new GetNodeDetailsOutputBuilder().setNode(new NodeBuilder(node).build()).build();
             return RpcResultBuilder.success(output).build();
         });
     }
@@ -117,9 +121,10 @@ public class TapiTopologyServiceImpl implements TapiTopologyService, AutoCloseab
 
                 out = RpcResultBuilder.success(
                         new GetTopologyListOutputBuilder()
-                                .setTopology(topologies.stream().map(t -> new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.get.topology.list.output.TopologyBuilder(t)
-                                        .setNode(getNodes(t))
-                                        .build()).collect(Collectors.toList()))
+                                .setTopology(topologies.stream().map(t ->
+                                        new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.get.topology.list.output.TopologyBuilder(rewriteTopology(t))
+                                                .build()
+                                ).collect(Collectors.toList()))
                 ).build();
             }
         } catch (ReadFailedException e) {
@@ -137,26 +142,43 @@ public class TapiTopologyServiceImpl implements TapiTopologyService, AutoCloseab
     public Future<RpcResult<GetTopologyDetailsOutput>> getTopologyDetails(GetTopologyDetailsInput input) {
         return executor.submit(() -> {
             NrpDao nrpDao = new NrpDao(broker.newReadOnlyTransaction());
-            org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.context.Topology topo = nrpDao.getTopology(input.getTopologyIdOrName());
+            Topology topo = nrpDao.getTopology(input.getTopologyIdOrName());
 
             if (topo == null)
                 return RpcResultBuilder.<GetTopologyDetailsOutput>failed().withError(RpcError.ErrorType.APPLICATION, String.format("No topology for id: %s", input.getTopologyIdOrName())).build();
 
             GetTopologyDetailsOutput result = new GetTopologyDetailsOutputBuilder()
-                    .setTopology(new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.get.topology.details.output.TopologyBuilder(topo)
-                            .setNode(getNodes(topo))
-                            .build())
+                    .setTopology(new TopologyBuilder(rewriteTopology(topo)).build())
                     .build();
             return RpcResultBuilder.success(result).build();
         });
+    }
+
+    private Node rewriteNode(Node node) {
+        assert node != null;
+        if(node.getOwnedNodeEdgePoint() == null) return node;
+        org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.NodeBuilder builder = new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.NodeBuilder(node);
+
+        List<OwnedNodeEdgePoint> neps = node.getOwnedNodeEdgePoint().stream()
+                .map(ep -> new OwnedNodeEdgePointBuilder(ep).removeAugmentation(OwnedNodeEdgePoint1.class).build())
+                .collect(Collectors.toList());
+
+        builder.setOwnedNodeEdgePoint(neps);
+
+        return builder.build();
+    }
+
+    private Topology rewriteTopology(Topology topo) {
+        assert topo != null;
+        if(topo.getNode() == null) return topo;
+        return new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.context.TopologyBuilder(topo)
+                .setNode(topo.getNode().stream().map(this::rewriteNode).collect(Collectors.toList()))
+        .build();
     }
 
     public void setBroker(DataBroker broker) {
         this.broker = broker;
     }
 
-    private List<Node> getNodes(org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.Topology topology){
-        return topology.getNode().stream().map(node -> new org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.NodeBuilder(node).removeAugmentation(Node1.class).build()).collect(Collectors.toList());
-    }
 
 }

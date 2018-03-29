@@ -18,9 +18,9 @@ import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
 import org.opendaylight.unimgr.mef.nrp.impl.NrpInitializer;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.ForwardingDirection;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.OperationalState;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.PortDirection;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ForwardingDirection;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.OperationalState;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortDirection;
 import org.opendaylight.yangtools.yang.common.OperationFailedException;
 
 import java.util.Arrays;
@@ -69,6 +69,8 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2", PortDirection.OUTPUT), ep("n3:3", PortDirection.INPUT)), null);
         assertNotNull(decomposed);
         assertEquals(3, decomposed.size());
+        assertEquals(2, decomposed.stream()
+                .flatMap(s -> s.getEndpoints().stream()).filter(e -> e.getAttrs() != null).count());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -89,6 +91,8 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n2:2"), ep("n3:2")), null);
         assertNotNull(decomposed);
         assertEquals(3, decomposed.size());
+        assertEquals(2, decomposed.stream()
+                .flatMap(s -> s.getEndpoints().stream()).filter(e -> e.getAttrs() != null).count());
     }
 
 
@@ -134,6 +138,8 @@ public class BasicDecomposerForDirectedTopologyTest extends AbstractTestWithTopo
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:2"), ep("n5:3")), null);
         assertNotNull(decomposed);
         assertEquals(5, decomposed.size());
+        assertEquals(2, decomposed.stream()
+                .flatMap(s -> s.getEndpoints().stream()).filter(e -> e.getAttrs() != null).count());
     }
 
     @Test

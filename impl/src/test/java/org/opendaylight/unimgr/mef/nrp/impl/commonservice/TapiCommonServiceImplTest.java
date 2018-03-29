@@ -12,16 +12,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.ServiceInterfacePoint1;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.Sip1;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.Sip2;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.GetServiceInterfacePointDetailsInput;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.GetServiceInterfacePointDetailsInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.GetServiceInterfacePointDetailsOutput;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.GetServiceInterfacePointListOutput;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.get.service._interface.point.list.output.Sip;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.GetTopologyListOutput;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.get.topology.list.output.Topology;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.Sip1;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.Sip2;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.GetServiceInterfacePointDetailsInput;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.GetServiceInterfacePointDetailsInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.GetServiceInterfacePointDetailsOutput;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.GetServiceInterfacePointListOutput;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.get.service._interface.point.list.output.Sip;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 
 import java.util.List;
@@ -76,7 +73,7 @@ public class TapiCommonServiceImplTest extends AbstractTestWithTopo {
 
         Assert.assertTrue(output.isSuccessful());
 
-        org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.get.service._interface.point.details.output.Sip sip = output.getResult().getSip();
+        org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.get.service._interface.point.details.output.Sip sip = output.getResult().getSip();
 
         Assert.assertNotNull(sip.getAugmentation(Sip1.class));
     }

@@ -103,7 +103,7 @@ public class InterfaceHelperTest {
     public void testBuildSingleMtuL2() {
         //given
         String interfaceNameValue = "GigabitEthernet0/0/1";
-        CiscoIosXrString owner = new CiscoIosXrString("test");
+        CiscoIosXrString owner = new CiscoIosXrString("testAddCeps");
         long mtuValue = 1522L;
         InterfaceName interfaceName = new InterfaceName(interfaceNameValue);
         Optional<Mtus> mtus = Optional.of(MtuUtils.generateMtus(mtuValue, owner));

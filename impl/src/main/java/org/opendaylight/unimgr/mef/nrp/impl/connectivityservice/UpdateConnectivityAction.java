@@ -21,15 +21,15 @@ import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.ActivationTransaction;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.EndPoint7;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.EndPoint7;
 import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.UpdateConnectivityServiceInput;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.UpdateConnectivityServiceOutput;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.UpdateConnectivityServiceOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.connectivity.context.ConnectivityService;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.connectivity.rev171113.update.connectivity.service.output.ServiceBuilder;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.Node;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.topology.rev171113.topology.context.Topology;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceInput;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceOutput;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityService;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.update.connectivity.service.output.ServiceBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.context.Topology;
 import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -38,101 +38,101 @@ import org.slf4j.LoggerFactory;
 
 public class UpdateConnectivityAction implements Callable<RpcResult<UpdateConnectivityServiceOutput>> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(UpdateConnectivityServiceOutput.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UpdateConnectivityServiceOutput.class);
 
-	private TapiConnectivityServiceImpl service;
-	private final UpdateConnectivityServiceInput input;
-	private EndPoint endpoint;
+    private TapiConnectivityServiceImpl service;
+    private final UpdateConnectivityServiceInput input;
+    private EndPoint endpoint;
 
-	public UpdateConnectivityAction(TapiConnectivityServiceImpl tapiConnectivityService,
-			UpdateConnectivityServiceInput input) {
+    UpdateConnectivityAction(TapiConnectivityServiceImpl tapiConnectivityService,
+                             UpdateConnectivityServiceInput input) {
 
-		Objects.requireNonNull(tapiConnectivityService);
-		Objects.requireNonNull(input);
-		this.service = tapiConnectivityService;
-		this.input = input;
-	}
+        Objects.requireNonNull(tapiConnectivityService);
+        Objects.requireNonNull(input);
+        this.service = tapiConnectivityService;
+        this.input = input;
+    }
 
-	@Override
-	public RpcResult<UpdateConnectivityServiceOutput> call() throws Exception {
+    @Override
+    public RpcResult<UpdateConnectivityServiceOutput> call() {
 
-		LOG.debug("running UpdateConnectivityService task");
+        LOG.debug("running UpdateConnectivityService task");
 
-		NrpDao nrpDao = new NrpDao(service.getBroker().newReadOnlyTransaction());
-		try {
-			// TODO validate input
-			// RequestValidator.ValidationResult validationResult =
-			// validateInput();
-			// if (!validationResult.isValid()) {
-			// RpcResultBuilder<UpdateConnectivityServiceOutput> res =
-			// RpcResultBuilder.failed();
-			// validationResult.getProblems().forEach(p ->
-			// res.withError(RpcError.ErrorType.APPLICATION, p));
-			// return res.build();
-			//
-			// }
+        NrpDao nrpDao = new NrpDao(service.getBroker().newReadOnlyTransaction());
+        try {
+            // TODO validate input
+            // RequestValidator.ValidationResult validationResult =
+            // validateInput();
+            // if (!validationResult.isValid()) {
+            // RpcResultBuilder<UpdateConnectivityServiceOutput> res =
+            // RpcResultBuilder.failed();
+            // validationResult.getProblems().forEach(p ->
+            // res.withError(RpcError.ErrorType.APPLICATION, p));
+            // return res.build();
+            //
+            // }
 
-			endpoint = new EndPoint(input.getEndPoint(), input.getEndPoint().getAugmentation(EndPoint7.class));
+            endpoint = new EndPoint(input.getEndPoint(), input.getEndPoint().getAugmentation(EndPoint7.class));
 
-			String serviceId = input.getServiceIdOrName();
+            String serviceId = input.getServiceIdOrName();
 
-			ActivationTransaction tx = prepareTransaction(nrpDao, serviceId);
-			if (tx != null) {
-				ActivationTransaction.Result txResult = tx.update();
-				if (txResult.isSuccessful()) {
-					LOG.info("ConnectivityService construct updated successfully, request = {} ", input);
+            ActivationTransaction tx = prepareTransaction(nrpDao, serviceId);
+            if (tx != null) {
+                ActivationTransaction.Result txResult = tx.update();
+                if (txResult.isSuccessful()) {
+                    LOG.info("ConnectivityService construct updated successfully, request = {} ", input);
 
-					ConnectivityService service = nrpDao.getConnectivityService(serviceId);
-					UpdateConnectivityServiceOutput result = new UpdateConnectivityServiceOutputBuilder()
-							.setService(new ServiceBuilder(service).build()).build();
-					return RpcResultBuilder.success(result).build();
-				} else {
-					LOG.warn("UpdateConnectivityService failed, reason = {}, request = {}", txResult.getMessage(),
-							input);
-				}
-			}
-			throw new IllegalStateException("no transaction created for update connectivity request");
+                    ConnectivityService service = nrpDao.getConnectivityService(serviceId);
+                    UpdateConnectivityServiceOutput result = new UpdateConnectivityServiceOutputBuilder()
+                            .setService(new ServiceBuilder(service).build()).build();
+                    return RpcResultBuilder.success(result).build();
+                } else {
+                    LOG.warn("UpdateConnectivityService failed, reason = {}, request = {}", txResult.getMessage(),
+                            input);
+                }
+            }
+            throw new IllegalStateException("no transaction created for update connectivity request");
 
-		} catch (Exception e) {
-			LOG.warn("Exception in update connectivity service", e);
-			return RpcResultBuilder.<UpdateConnectivityServiceOutput>failed()
-					.withError(ErrorType.APPLICATION, e.getMessage()).build();
-		}
+        } catch (Exception e) {
+            LOG.warn("Exception in update connectivity service", e);
+            return RpcResultBuilder.<UpdateConnectivityServiceOutput>failed()
+                    .withError(ErrorType.APPLICATION, e.getMessage()).build();
+        }
 
-	}
+    }
 
-	private ActivationTransaction prepareTransaction(NrpDao nrpDao, String serviceId) throws FailureResult {
-		ActivationTransaction tx = new ActivationTransaction();
+    private ActivationTransaction prepareTransaction(NrpDao nrpDao, String serviceId) throws FailureResult {
+        ActivationTransaction tx = new ActivationTransaction();
 
-		Optional<String> nodeUuid = getActivationDriverId(nrpDao);
-		if (nodeUuid.isPresent()) {
-			Optional<ActivationDriver> driver = service.getDriverRepo().getDriver(nodeUuid.get());
-			if (!driver.isPresent()) {
-				throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", nodeUuid.get()));
-			}
-			driver.get().initialize(Arrays.asList(endpoint), serviceId, null);
-			tx.addDriver(driver.get());
-		}
-		return tx;
+        Optional<String> nodeUuid = getActivationDriverId(nrpDao);
+        if (nodeUuid.isPresent()) {
+            Optional<ActivationDriver> driver = service.getDriverRepo().getDriver(nodeUuid.get());
+            if (!driver.isPresent()) {
+                throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", nodeUuid.get()));
+            }
+            driver.get().initialize(Arrays.asList(endpoint), serviceId, null);
+            tx.addDriver(driver.get());
+        }
+        return tx;
 
-	}
+    }
 
-	private Optional<String> getActivationDriverId(NrpDao nrpDao) throws FailureResult {
-		Optional<String> result = Optional.empty();
-		try {
-			Topology prestoTopo = nrpDao.getTopology(TapiConstants.PRESTO_SYSTEM_TOPO);
-			if (prestoTopo.getNode() == null) {
-				throw new FailureResult("There are no nodes in {0} topology", TapiConstants.PRESTO_SYSTEM_TOPO);
-			}
-			for (Node node : prestoTopo.getNode()) {
-				if (node.getOwnedNodeEdgePoint().stream().filter(nep -> nep.getMappedServiceInterfacePoint() != null).flatMap(nep -> nep.getMappedServiceInterfacePoint().stream())
-						.anyMatch(sipUuid -> sipUuid.equals(endpoint.getEndpoint().getServiceInterfacePoint()))) {
-					return Optional.of(node.getAugmentation(Node1.class).getActivationDriverId());
-				}
-			}
-		} catch (ReadFailedException e) {
-			throw new FailureResult("Cannot read {0} topology", TapiConstants.PRESTO_SYSTEM_TOPO);
-		}
-		return result;
-	}
+    private Optional<String> getActivationDriverId(NrpDao nrpDao) throws FailureResult {
+        Optional<String> result = Optional.empty();
+        try {
+            Topology prestoTopo = nrpDao.getTopology(TapiConstants.PRESTO_SYSTEM_TOPO);
+            if (prestoTopo.getNode() == null) {
+                throw new FailureResult("There are no nodes in {0} topology", TapiConstants.PRESTO_SYSTEM_TOPO);
+            }
+            for (Node node : prestoTopo.getNode()) {
+                if (node.getOwnedNodeEdgePoint().stream().filter(nep -> nep.getMappedServiceInterfacePoint() != null).flatMap(nep -> nep.getMappedServiceInterfacePoint().stream())
+                        .anyMatch(sipUuid -> sipUuid.equals(endpoint.getEndpoint().getServiceInterfacePoint()))) {
+                    return Optional.of(node.getAugmentation(Node1.class).getActivationDriverId());
+                }
+            }
+        } catch (ReadFailedException e) {
+            throw new FailureResult("Cannot read {0} topology", TapiConstants.PRESTO_SYSTEM_TOPO);
+        }
+        return result;
+    }
 }

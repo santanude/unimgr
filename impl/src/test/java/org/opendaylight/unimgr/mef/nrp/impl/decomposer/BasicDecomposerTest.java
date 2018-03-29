@@ -25,8 +25,9 @@ import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.impl.AbstractTestWithTopo;
 import org.opendaylight.unimgr.mef.nrp.impl.NrpInitializer;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.OperationalState;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
+import org.opendaylight.unimgr.mef.nrp.impl.decomposer.BasicDecomposer;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.OperationalState;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yangtools.yang.common.OperationFailedException;
 
 import javax.sound.sampled.Port;
@@ -65,6 +66,32 @@ public class BasicDecomposerTest extends AbstractTestWithTopo {
         List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n1:2")), null);
 
         assertEquals(1, decomposed.size());
+    }
+
+    @Test
+    public void singleNodeTestSameEndpoint() throws FailureResult, OperationFailedException {
+        //having
+        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
+        n(tx, "n1", "n1:1", "n1:2", "n1:3");
+        n(tx, "n2", "n2:1", "n2:2", "n2:3");
+        tx.submit().checkedGet();
+        //when
+        List<Subrequrest> decomposed = decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n1:1")), null);
+
+        assertNull(decomposed);
+
+    }
+
+    @Test
+    public void nonExistingEndpoint() throws FailureResult, OperationFailedException {
+        expected.expect(FailureResult.class);
+        //having
+        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
+        n(tx, "n1", "n1:1", "n1:2", "n1:3");
+        n(tx, "n2", "n2:1", "n2:2", "n2:3");
+        tx.submit().checkedGet();
+        //when
+        decomposer.decompose(Arrays.asList(ep("n1:1"), ep("n3:1")), null);
     }
 
     @Test

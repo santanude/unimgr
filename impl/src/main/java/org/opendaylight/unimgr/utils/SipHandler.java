@@ -7,7 +7,8 @@
  */
 package org.opendaylight.unimgr.utils;
 
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ServiceInterfacePointRef;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 
 /**
  * @author marek.ryznar@amartus.com
@@ -24,7 +25,7 @@ public class SipHandler {
         return sipTab[sipTab.length - 1];
     }
 
-    public static boolean isTheSameDevice(Uuid sip1, Uuid sip2) {
-        return getDeviceName(sip1).equals(getDeviceName(sip2));
+    public static boolean isTheSameDevice(ServiceInterfacePointRef sip1, ServiceInterfacePointRef sip2) {
+        return getDeviceName(sip1.getServiceInterfacePointId()).equals(getDeviceName(sip2.getServiceInterfacePointId()));
     }
 }

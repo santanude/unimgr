@@ -16,9 +16,9 @@ module nrp-interface {
         MEF NRM Classes
         MEF-Types Enumerations
         MEF-Common Classes";
-    revision 2017-12-21 {
-        description "MEF NRP 1.0.beta";
-        reference "ONF-TR-527, ONF-TR-512, ONF-TR-531, RFC 6020 and RFC 6087";
+    revision 2018-03-21 {
+        description "MEF NRP R2";
+        reference "MEF 60, ONF-TR-527, ONF-TR-512, ONF-TR-531, RFC 6020 and RFC 6087";
     }
     augment "/tapi-connectivity:create-connectivity-service/tapi-connectivity:input" {
         uses nrp-connectivity-service-attrs;
@@ -59,26 +59,16 @@ module nrp-interface {
         description "none";
     }
 
+    /*
     augment "/tapi-connectivity:create-connectivity-service/tapi-connectivity:input/tapi-connectivity:end-point" {
         uses nrp-sip-attrs;
         description "none";
-    }
-    augment "/tapi-connectivity:create-connectivity-service/tapi-connectivity:output/tapi-connectivity:service/tapi-connectivity:end-point" {
-        uses nrp-sip-attrs;
-        description "none";
-    }
+    }*/
     augment "/tapi-connectivity:update-connectivity-service/tapi-connectivity:output/tapi-connectivity:service" {
         uses nrp-connectivity-service-attrs;
         description "none";
     }
-    augment "/tapi-connectivity:update-connectivity-service/tapi-connectivity:input/tapi-connectivity:end-point" {
-        uses nrp-sip-attrs;
-        description "none";
-    }
-    augment "/tapi-connectivity:update-connectivity-service/tapi-connectivity:output/tapi-connectivity:service/tapi-connectivity:end-point" {
-        uses nrp-sip-attrs;
-        description "none";
-    }
+
     augment "/tapi-connectivity:update-connectivity-service/tapi-connectivity:input" {
         uses nrp-connectivity-service-attrs;
         description "none";
@@ -88,6 +78,30 @@ module nrp-interface {
         description "none";
     }
     augment "/tapi-connectivity:update-connectivity-service/tapi-connectivity:output/tapi-connectivity:service/tapi-connectivity:end-point" {
+        uses nrp-connectivity-service-end-point-attrs;
+        description "none";
+    }
+    augment "/tapi-connectivity:delete-connectivity-service/tapi-connectivity:output/tapi-connectivity:service" {
+        uses nrp-connectivity-service-attrs;
+        description "none";
+    }
+    augment "/tapi-connectivity:delete-connectivity-service/tapi-connectivity:output/tapi-connectivity:service/tapi-connectivity:end-point" {
+        uses nrp-connectivity-service-end-point-attrs;
+        description "none";
+    }
+    augment "/tapi-connectivity:get-connectivity-service-list/tapi-connectivity:output/tapi-connectivity:service" {
+        uses nrp-connectivity-service-attrs;
+        description "none";
+    }
+    augment "/tapi-connectivity:get-connectivity-service-list/tapi-connectivity:output/tapi-connectivity:service/tapi-connectivity:end-point" {
+        uses nrp-connectivity-service-end-point-attrs;
+        description "none";
+    }
+    augment "/tapi-connectivity:get-connectivity-service-details/tapi-connectivity:output/tapi-connectivity:service" {
+        uses nrp-connectivity-service-attrs;
+        description "none";
+    }
+    augment "/tapi-connectivity:get-connectivity-service-details/tapi-connectivity:output/tapi-connectivity:service/tapi-connectivity:end-point" {
         uses nrp-connectivity-service-end-point-attrs;
         description "none";
     }

@@ -10,6 +10,7 @@ package org.opendaylight.unimgr.mef.nrp.template.driver;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
@@ -17,8 +18,7 @@ import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
 import org.opendaylight.unimgr.mef.nrp.template.TemplateConstants;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev171221.NrpConnectivityServiceAttrs;
-import org.opendaylight.yang.gen.v1.urn.onf.params.xml.ns.yang.tapi.common.rev171113.Uuid;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.NrpConnectivityServiceAttrs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +38,7 @@ public class TemplateDriver implements ActivationDriverBuilder {
         // 3a. if activation/deactivation fails for any driver rollback is called
         return Optional.of(new ActivationDriver() {
 
+            public List<EndPoint> endpoints;
             public String serviceId;
 
             @Override
@@ -53,6 +54,9 @@ public class TemplateDriver implements ActivationDriverBuilder {
             @Override
             public void initialize(List<EndPoint> endPoints, String serviceId, NrpConnectivityServiceAttrs context) {
                 this.serviceId = serviceId;
+                this.endpoints = endPoints;
+
+                LOG.info("Driver initialized with: " + epsInfo());
             }
 
             @Override
@@ -77,6 +81,12 @@ public class TemplateDriver implements ActivationDriverBuilder {
                 //if you would like to make your driver first on the list
 
                 return 0;
+            }
+
+            private String epsInfo() {
+                return endpoints.stream().map(e -> e.getNepRef().getNodeId().getValue() + ":"
+                        + e.getNepRef().getOwnedNodeEdgePointId().getValue())
+                        .collect(Collectors.joining(",", "[", "]"));
             }
         });
     }
