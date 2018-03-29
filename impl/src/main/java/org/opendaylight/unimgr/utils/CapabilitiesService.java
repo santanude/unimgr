@@ -10,12 +10,8 @@ package org.opendaylight.unimgr.utils;
 
 import com.google.common.base.Optional;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.ovsdb.rev150105.OvsdbBridgeAugmentation;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.function.BiFunction;
 
 
@@ -36,13 +32,6 @@ public class CapabilitiesService {
 
     public static class NodeContext implements Context<Node> {
         public enum NodeCapability implements Capability<Node> {
-            NETCONF((dbBroker, node) -> node.getAugmentation(NetconfNode.class) != null),
-            NETCONF_CISCO_IOX_L2VPN((dbBroker, node) ->
-                    checkForNetconfCapability(node,NetconfConstants.CAPABILITY_IOX_L2VPN)),
-            NETCONF_CISCO_IOX_IFMGR((dbBroker, node) ->
-                    checkForNetconfCapability(node,NetconfConstants.CAPABILITY_IOX_IFMGR)),
-            NETCONF_CISCO_IOX_POLICYMGR((dbBroker, node) ->
-                    checkForNetconfCapability(node,NetconfConstants.CAPABILITY_IOX_ASR9K_POLICYMGR)),
             OVSDB((dbBroker,node) -> node.getAugmentation(OvsdbBridgeAugmentation.class) != null);
 
             private BiFunction<DataBroker, Node, Boolean> condition;
@@ -54,25 +43,6 @@ public class CapabilitiesService {
             @Override
             public BiFunction<DataBroker, Node, Boolean> getCondition() {
                 return condition;
-            }
-
-            private static boolean checkForNetconfCapability(Node node, String netconf_capability) {
-                NetconfNode netconf = node.getAugmentation(NetconfNode.class);
-                if (netconf == null) {
-                    return false;
-                }
-                if (netconf.getAvailableCapabilities() == null) {
-                    return false;
-                }
-                if (netconf.getAvailableCapabilities().getAvailableCapability() == null) {
-                    return false;
-                }
-
-                return netconf
-                        .getAvailableCapabilities()
-                        .getAvailableCapability()
-                        .stream()
-                        .anyMatch(capability -> capability.getCapability().equals(netconf_capability));
             }
         }
 
@@ -113,9 +83,7 @@ public class CapabilitiesService {
         }
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(CapabilitiesService.class);
-
-    private DataBroker dataBroker;
+    protected DataBroker dataBroker;
 
     public CapabilitiesService(DataBroker dataBroker) {
         this.dataBroker = dataBroker;

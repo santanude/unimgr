@@ -66,7 +66,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         </plugins>
     </build>
 
+
+
     <dependencies>
+
+        <dependency>
+            <groupId>org.opendaylight.unimgr</groupId>
+            <artifactId>unimgr-nrp-tapi-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>unimgr-api</artifactId>
@@ -155,11 +164,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.unimgr</groupId>
-            <artifactId>unimgr-nrp-tapi-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

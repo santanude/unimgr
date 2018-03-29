@@ -5,18 +5,22 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.common;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.common;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
-import org.opendaylight.unimgr.utils.SipHandler;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.SipHandler;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.carrier.eth.connectivity.end.point.resource.EgressBwpFlow;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.carrier.eth.connectivity.end.point.resource.IngressBwpFlow;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResource;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TpId;
+
+
 
 /**
  * Class representing port (replacement for FcPort).
@@ -28,12 +32,15 @@ public class ServicePort {
     private static final Pattern interface_name_pattern = Pattern.compile(pattern);
     private static final String default_interface_name = "GigabitEthernet";
 
+    private IngressBwpFlow ingressBwpFlow;
+    private EgressBwpFlow egressBwpFlow;
+
     //netconf topology
-    private TopologyId topoId;
+    private final TopologyId topoId;
     //represents device ie dev-68 in netconf topology
-    private NodeId nodeId;
+    private final  NodeId nodeId;
     //defines port
-    private TpId tpId;
+    private final TpId tpId;
     //defines cTag VLAN ID
     private Long vlanId = null;
 
@@ -47,25 +54,15 @@ public class ServicePort {
         return topoId;
     }
 
-    public void setTopology(TopologyId topoId) {
-        this.topoId = topoId;
-    }
 
     public NodeId getNode() {
         return nodeId;
-    }
-
-    public void setNode(NodeId nodeId) {
-        this.nodeId = nodeId;
     }
 
     public TpId getTp() {
         return tpId;
     }
 
-    public void setTp(TpId tpId) {
-        this.tpId = tpId;
-    }
 
     public Long getVlanId() {
         return vlanId;
@@ -85,7 +82,7 @@ public class ServicePort {
         TpId tpId = new TpId(SipHandler.getPortName(sip));
         ServicePort servicePort = new ServicePort(topologyId,nodeId,tpId);
         if (hasVlan(endPoint)) {
-            servicePort.setVlanId(Long.valueOf(getVlan(endPoint)));
+            servicePort.setVlanId((long) getVlan(endPoint));
         }
         return servicePort;
     }
@@ -115,5 +112,21 @@ public class ServicePort {
         TpId tpId = this.getTp();
         Matcher matcher = interface_name_pattern.matcher(tpId.getValue());
         return matcher.find() ? matcher.group() : default_interface_name;
+    }
+
+    public IngressBwpFlow getIngressBwpFlow() {
+        return ingressBwpFlow;
+    }
+
+    public void setIngressBwpFlow(IngressBwpFlow ingressBwpFlow) {
+        this.ingressBwpFlow = ingressBwpFlow;
+    }
+
+    public EgressBwpFlow getEgressBwpFlow() {
+        return egressBwpFlow;
+    }
+
+    public void setEgressBwpFlow(EgressBwpFlow egressBwpFlow) {
+        this.egressBwpFlow = egressBwpFlow;
     }
 }

@@ -57,6 +57,30 @@
       <artifactId>unimgr-cisco-xr-driver</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+    <!-- netconf dependencies -->
+    <dependency>
+      <groupId>org.opendaylight.netconf</groupId>
+      <artifactId>odl-netconf-connector</artifactId>
+      <version>${netconf.version}</version>
+      <type>xml</type>
+      <classifier>features</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.netconf</groupId>
+      <artifactId>odl-netconf-connector-ssh</artifactId>
+      <version>${netconf.version}</version>
+      <type>xml</type>
+      <classifier>features</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.netconf</groupId>
+      <artifactId>odl-netconf-tcp</artifactId>
+      <version>${netconf.version}</version>
+      <type>xml</type>
+      <classifier>features</classifier>
+    </dependency>
+
   </dependencies>
   <build>
     <plugins>

@@ -24,10 +24,8 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnLocalConnectActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnP2pConnectActivator;
-import org.opendaylight.unimgr.utils.DriverConstants;
-import org.opendaylight.unimgr.utils.SipHandler;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.SipHandler;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.NrpConnectivityServiceAttrs;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +33,9 @@ import org.slf4j.LoggerFactory;
  * @author marek.ryznar@amartus.com
  */
 public class XrDriverBuilder implements ActivationDriverBuilder {
+
+    public static final String XR_NODE = "xr-node";
+
     private static final Logger LOG = LoggerFactory.getLogger(XrDriverBuilder.class);
     private DataBroker dataBroker;
     private MountPointService mountPointService;
@@ -152,6 +153,6 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
     @Override
     public String getActivationDriverId() {
-        return DriverConstants.XR_NODE;
+        return XR_NODE;
     }
 }

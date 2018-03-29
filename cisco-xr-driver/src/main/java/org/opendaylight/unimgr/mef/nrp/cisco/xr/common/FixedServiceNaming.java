@@ -6,7 +6,9 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.opendaylight.unimgr.mef.nrp.common;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.common;
+
+import org.opendaylight.unimgr.mef.nrp.common.ServiceNaming;
 
 /**
  * This is a placeholder class for implementing service naming when activating and deactivating MEF services.

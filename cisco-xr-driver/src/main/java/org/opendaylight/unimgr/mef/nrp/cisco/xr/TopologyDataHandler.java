@@ -20,10 +20,10 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TopologyManager;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesService;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.driver.XrDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
-import org.opendaylight.unimgr.utils.CapabilitiesService;
-import org.opendaylight.unimgr.utils.DriverConstants;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationKey;
@@ -63,8 +63,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesService.NodeCapability.*;
 import static org.opendaylight.unimgr.utils.CapabilitiesService.Capability.Mode.AND;
-import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.NodeCapability.*;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -96,7 +96,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
 
     private ListenerRegistration<TopologyDataHandler> registration;
-    private CapabilitiesService capabilitiesService;
+    private XrCapabilitiesService capabilitiesService;
 
 
     public TopologyDataHandler(TopologyManager topologyManager, DataBroker dataBroker, MountPointService mountService) {
@@ -108,7 +108,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     public void init() {
-        LOG.debug("initializing topology handler for {}", DriverConstants.XR_NODE);
+        LOG.debug("initializing topology handler for {}", XrDriverBuilder.XR_NODE);
         initializeWithRetrial(MAX_RETRIALS);
     }
 
@@ -116,13 +116,13 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
 
         NrpDao dao = new NrpDao(tx);
-        dao.createNode(topologyManager.getSystemTopologyId(), DriverConstants.XR_NODE, LayerProtocolName.ETH, null);
+        dao.createNode(topologyManager.getSystemTopologyId(), XrDriverBuilder.XR_NODE, LayerProtocolName.ETH, null);
 
         Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
             @Override
             public void onSuccess(@Nullable Void result) {
-                LOG.info("Node {} created", DriverConstants.XR_NODE);
-                capabilitiesService = new CapabilitiesService(dataBroker);
+                LOG.info("Node {} created", XrDriverBuilder.XR_NODE);
+                capabilitiesService = new XrCapabilitiesService(dataBroker);
                 registerNetconfTreeListener();
             }
 
@@ -133,7 +133,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                         TimeUnit.MILLISECONDS.sleep(500);
                     } catch (InterruptedException _e) { }
                     if(retrialCouter != MAX_RETRIALS) {
-                        LOG.debug("Retrying initialization of {} for {} time", DriverConstants.XR_NODE, MAX_RETRIALS - retrialCouter + 1);
+                        LOG.debug("Retrying initialization of {} for {} time", XrDriverBuilder.XR_NODE, MAX_RETRIALS - retrialCouter + 1);
                     }
                     initializeWithRetrial(retrialCouter - 1);
                 } else {
@@ -198,8 +198,8 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
             dao.addSip(sip);
             MappedServiceInterfacePoint sipRef = TapiUtils.toSipRef(sip.getUuid(), MappedServiceInterfacePoint.class);
             nep = new OwnedNodeEdgePointBuilder(nep).setMappedServiceInterfacePoint(Collections.singletonList(sipRef)).build();
-            LOG.trace("Adding nep {} to {} node", nep.getUuid(), DriverConstants.XR_NODE);
-            dao.updateNep(DriverConstants.XR_NODE, nep);
+            LOG.trace("Adding nep {} to {} node", nep.getUuid(), XrDriverBuilder.XR_NODE);
+            dao.updateNep(XrDriverBuilder.XR_NODE, nep);
         });
 
         Futures.addCallback(topoTx.submit(), new FutureCallback<Void>() {

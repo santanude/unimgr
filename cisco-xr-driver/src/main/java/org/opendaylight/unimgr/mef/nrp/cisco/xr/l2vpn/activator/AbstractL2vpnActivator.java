@@ -14,10 +14,10 @@ import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.qos.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
-import org.opendaylight.unimgr.mef.nrp.common.MountPointHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
@@ -41,7 +41,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static org.opendaylight.unimgr.mef.nrp.common.ServicePort.toServicePort;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort.toServicePort;
+
 
 /**
  * Abstarct activator of VPLS-based L2 VPN on IOS-XR devices. It is responsible for handling activation and deactivation
@@ -72,7 +73,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         ServicePort neighbor = null;
         for (EndPoint endPoint: endPoints) {
             if (port==null) {
-                port = new ServicePort(toServicePort(endPoint, NETCONF_TOPOLODY_NAME));
+                port = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
                 NrpCarrierEthConnectivityEndPointResource attrs = endPoint.getAttrs() == null ? null : endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
                 if(attrs != null) {
                     port.setEgressBwpFlow(attrs.getEgressBwpFlow());
@@ -80,7 +81,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
                 }
             } else {
-                neighbor = new ServicePort(toServicePort(endPoint, NETCONF_TOPOLODY_NAME));
+                neighbor = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
             }
         }
 
@@ -97,7 +98,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     public void deactivate(List<EndPoint> endPoints, String serviceId) throws TransactionCommitFailedException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
-        ServicePort port = new ServicePort(toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME));
+        ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
 
         InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
         InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port);

@@ -231,42 +231,5 @@ public class MdsalUtilsTest {
         verify(transaction).close();
     }
 
-    @Test
-    public void testReadTerminationPoint() throws ReadFailedException {
-        //given
-        TerminationPoint expectedTp = mock(TerminationPoint.class);
 
-
-        TopologyId topologyId = new TopologyId("topology-netconf");
-
-
-        ConnectivityServiceEndPoint cep = new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPointBuilder()
-                .setServiceInterfacePoint(TapiUtils.toSipRef(new Uuid("sip:r1:tp1"), ServiceInterfacePoint.class))
-                .setDirection(PortDirection.BIDIRECTIONAL)
-                .build();
-        EndPoint ep = new EndPoint(cep, null);
-
-
-        DataBroker dataBroker = mock(DataBroker.class);
-        ReadOnlyTransaction transaction = mock(ReadOnlyTransaction.class);
-        Optional<TerminationPoint> optionalDataObject = mock(Optional.class);
-        CheckedFuture<Optional<TerminationPoint>, ReadFailedException> future = mock(CheckedFuture.class);
-
-        when(dataBroker.newReadOnlyTransaction()).thenReturn(transaction);
-        when(transaction.read(any(LogicalDatastoreType.class), any(InstanceIdentifier.class))).thenReturn(future);
-        when(future.checkedGet()).thenReturn(optionalDataObject);
-        when(optionalDataObject.isPresent()).thenReturn(true);
-        when(optionalDataObject.get()).thenReturn(expectedTp);
-
-        //when
-        Optional<TerminationPoint> actualTpOptional = MdsalUtils.readTerminationPoint(dataBroker, LogicalDatastoreType.CONFIGURATION, topologyId, ep);
-
-        //then
-        assertNotNull(actualTpOptional);
-        assertTrue(actualTpOptional.isPresent());
-        assertEquals(expectedTp, actualTpOptional.get());
-
-        verify(transaction).read(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
-        verify(transaction).close();
-    }
 }
