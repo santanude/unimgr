@@ -22,6 +22,9 @@ import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
 import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1Builder;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node2;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node2Builder;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.context.topology.node.ServiceVlanMap;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Context;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.LayerProtocolName;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ServiceInterfacePointRef;
@@ -79,19 +82,29 @@ public class NrpDao  {
     }
 
     public Node createNode(String topologyId, String nodeId, String activationDriverId, LayerProtocolName name, List<OwnedNodeEdgePoint> neps) {
+        return createNode(topologyId, nodeId, activationDriverId, name, neps,null);
+    }
+
+    public Node createNode(String topologyId, String nodeId, String activationDriverId, LayerProtocolName name, List<OwnedNodeEdgePoint> neps, List<ServiceVlanMap> serviceVlanMapList) {
         verifyTx();
         assert tx != null;
         Uuid uuid = new Uuid(nodeId);
 
-        Node node = new NodeBuilder()
+        NodeBuilder nb = new NodeBuilder()
                 .setKey(new NodeKey(uuid))
                 .setUuid(uuid)
                 .setLayerProtocolName(Collections.singletonList(name))
                 .setOwnedNodeEdgePoint(neps)
-                .addAugmentation(Node1.class, new Node1Builder().setActivationDriverId(activationDriverId).build())
-                .build();
-        tx.put(LogicalDatastoreType.OPERATIONAL, node(new Uuid(topologyId), new Uuid(nodeId)), node);
+                .addAugmentation(Node1.class, new Node1Builder().setActivationDriverId(activationDriverId).build());
+
+        Node node = serviceVlanMapList == null ? nb.build() : nb.addAugmentation(Node2.class, new Node2Builder().setServiceVlanMap(serviceVlanMapList).build()).build();
+        tx.put(LogicalDatastoreType.OPERATIONAL, node(nodeId), node);
         return node;
+    }
+
+    public void updateNode(Node node) {
+        verifyTx();
+        tx.put(LogicalDatastoreType.OPERATIONAL, node(node.getUuid()), node);
     }
 
     private void verifyTx() {

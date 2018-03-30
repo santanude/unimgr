@@ -11,6 +11,9 @@ module unimgr-ext {
     import nrp-interface {
         prefix nrp-interface;
     }
+    import mef-common-types {
+        prefix mef-common-types;
+    }
 
     revision 2017-05-31 {
         description "Unimgr SIP extensions";
@@ -53,4 +56,15 @@ module unimgr-ext {
         }
     }
 
+    augment "/tapi-common:context/tapi-topology:topology/tapi-topology:node" {
+        list service-vlan-map {
+            key "service-id";
+            leaf service-id {
+                type string;
+            }
+            leaf vlan-id {
+                type mef-common-types:positive-integer;
+            }
+        }
+    }
 }

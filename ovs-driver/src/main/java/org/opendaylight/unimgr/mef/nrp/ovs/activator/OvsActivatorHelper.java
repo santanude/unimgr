@@ -63,8 +63,7 @@ class OvsActivatorHelper {
                 //for now we support only one CE VLAN
                 return attr.getCeVlanIdListAndUntag().getVlanId().get(0).getVlanId().getValue().intValue();
             } else {
-                LOG.warn(String.format(CTAG_VLAN_ID_NOT_SET_ERROR_MESSAGE, tpName));
-                throw new VlanNotSetException(String.format(CTAG_VLAN_ID_NOT_SET_ERROR_MESSAGE, tpName));
+                return -1; //port-base service
             }
         } else {
             String className = NrpCarrierEthConnectivityEndPointResource.class.toString();

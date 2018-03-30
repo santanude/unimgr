@@ -13,6 +13,8 @@ import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node2;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.OwnedNodeEdgePoint1;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.*;
@@ -180,5 +182,7 @@ public class TapiTopologyServiceImpl implements TapiTopologyService, AutoCloseab
         this.broker = broker;
     }
 
-
+    private List<Node> getNodes(org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.Topology topology){
+        return topology.getNode().stream().map(node -> new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.NodeBuilder(node).removeAugmentation(Node1.class).removeAugmentation(Node2.class).build()).collect(Collectors.toList());
+    }
 }
