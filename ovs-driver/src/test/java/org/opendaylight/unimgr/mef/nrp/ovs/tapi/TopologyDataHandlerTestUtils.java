@@ -57,7 +57,7 @@ public class TopologyDataHandlerTestUtils {
 
     private final DataBroker dataBroker;
 
-    protected TopologyDataHandlerTestUtils(DataBroker dataBroker) {
+    public TopologyDataHandlerTestUtils(DataBroker dataBroker) {
         this.dataBroker = dataBroker;
     }
 
@@ -153,7 +153,7 @@ public class TopologyDataHandlerTestUtils {
         return flowCapableNodeConnectorBuilder.build();
     }
 
-    protected void createPrestoSystemTopology() {
+    public void createPrestoSystemTopology() {
         NrpInitializer nrpInitializer = new NrpInitializer(dataBroker);
         try {
             nrpInitializer.init();

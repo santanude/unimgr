@@ -7,7 +7,9 @@
  */
 package org.opendaylight.unimgr.mef.nrp.ovs.activator;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
@@ -36,9 +38,9 @@ class OvsActivatorHelper {
     private String tpName;
     private BiMap<String, String> portMap;
 
-    private static final String CTAG_VLAN_ID_NOT_SET_ERROR_MESSAGE = "C-Tag VLAN Id not set for End Point '%s'.";
     private static final String INGRESS_BWP_FLOW_NOT_SET_ERROR_MESSAGE = "Ingress bwp flow is not set for End Point '%s'.";
     private static final String ATTRS_NOT_SET_ERROR_MESSAGE = "End Point '%s' does not have '%s' set.";
+    private static final String VLANS_DIFFERENT_ERROR_MESSAFE = "External VLANs defined on end points has to be the same or not defined. Current values %s";
 
 
     private static final Logger LOG = LoggerFactory.getLogger(OvsActivatorHelper.class);
@@ -50,10 +52,14 @@ class OvsActivatorHelper {
         this.portMap = createPortMap(nodes);
     }
 
+    private OvsActivatorHelper(EndPoint endPoint) {
+        this.endPoint = endPoint;
+    }
+
     /**
-     * Returns VLAN Id of the service
+     * Returns VLAN Id of the endPoint
      *
-     * @return Integer with VLAN Id
+     * @return int with VLAN Id
      */
     int getCeVlanId() throws ResourceNotAvailableException {
 
@@ -161,5 +167,19 @@ class OvsActivatorHelper {
 
     protected boolean isIBwpConfigured() {
         return getIngressBwpFlow() != null;
+    }
+
+    public static void validateExternalVLANs(List<EndPoint> endPoints) throws ResourceNotAvailableException {
+        final Set<Integer> vlans = new HashSet<>();
+        endPoints.stream().forEach(endPoint -> {
+            try {
+                int vid = new OvsActivatorHelper(endPoint).getCeVlanId();
+                if(vid >= 0) vlans.add(vid);
+            } catch (ResourceNotAvailableException e) {
+                e.printStackTrace();
+            }
+
+        });
+        if (vlans.size()>1) throw new ResourceNotAvailableException(String.format(VLANS_DIFFERENT_ERROR_MESSAFE,vlans.toString()));
     }
 }

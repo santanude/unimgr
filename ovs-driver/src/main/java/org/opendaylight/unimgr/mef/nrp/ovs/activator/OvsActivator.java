@@ -52,23 +52,15 @@ public class OvsActivator implements ResourceActivator {
      */
     @Override
     public void activate(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
-        VlanUtils vlanUtils = getVlanUtils(endPoints.iterator().next());
+        OvsActivatorHelper.validateExternalVLANs(endPoints);
+
+        VlanUtils vlanUtils = new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue());
 
         for (EndPoint endPoint:endPoints) {
             activateEndpoint(endPoint, serviceName, vlanUtils);
         }
 
     }
-
-    private VlanUtils getVlanUtils(EndPoint endPoint) throws ResourceNotAvailableException {
-
-        org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Node node = null;
-        //TODO id of system node (presto-nrp-topology-system) will be stored directly in SIP
-        String nodeId = endPoint.getEndpoint().getLocalId();
-
-        return new VlanUtils(dataBroker, nodeId);
-    }
-
 
     private void activateEndpoint(EndPoint endPoint, String serviceName, VlanUtils vlanUtils) throws ResourceNotAvailableException, TransactionCommitFailedException {
         // Transaction - Get Open vSwitch node and its flow table
@@ -117,7 +109,7 @@ public class OvsActivator implements ResourceActivator {
         for (EndPoint endPoint:endPoints) {
         	deactivateEndpoint(endPoint, serviceName);
         }
-        getVlanUtils(endPoints.iterator().next()).releaseServiceVlan(serviceName);
+        new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue()).releaseServiceVlan(serviceName);
 
     }
 
@@ -149,6 +141,7 @@ public class OvsActivator implements ResourceActivator {
     }
 
 	public void update(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
+        OvsActivatorHelper.validateExternalVLANs(endPoints);
         for (EndPoint endPoint:endPoints) {
             updateEndpoint(endPoint, serviceName);
         }
@@ -182,7 +175,7 @@ public class OvsActivator implements ResourceActivator {
 		//modify flow with new queue number
 		 Table table = OpenFlowUtils.getTable(node);
         TableTransaction tableTransaction = new TableTransaction(dataBroker, node, table);
-		tableTransaction.writeFlow(OpenFlowUtils.createVlanIngressFlow(ovsActivatorHelper.getOpenFlowPortName(), getVlanUtils(endPoint).getVlanID(serviceName) , ovsActivatorHelper.getCeVlanId(),
+		tableTransaction.writeFlow(OpenFlowUtils.createVlanIngressFlow(ovsActivatorHelper.getOpenFlowPortName(), new VlanUtils(dataBroker, endPoint.getNepRef().getNodeId().getValue()).getVlanID(serviceName) , ovsActivatorHelper.getCeVlanId(),
 				serviceName, topologyTransaction.readInterswitchLinks(node), queueNumber));
 	}
 

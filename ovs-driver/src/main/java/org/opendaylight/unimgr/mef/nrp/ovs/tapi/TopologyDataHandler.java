@@ -91,7 +91,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
         NrpDao dao = new NrpDao(tx);
 
-        dao.createNode(topologyManager.getSystemTopologyId(), OVS_NODE, OVS_DRIVER_ID, LayerProtocolName.ETH, null);
+        dao.createNode(topologyManager.getSystemTopologyId(), OVS_NODE, OVS_DRIVER_ID, LayerProtocolName.ETH, null, new ArrayList<>());
 
         Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
             @Override

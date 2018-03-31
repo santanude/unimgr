@@ -61,7 +61,7 @@ public class VlanUtils {
             throw new ResourceNotAvailableException(MessageFormat.format("Node {} not found", nodeId));
         }
 
-        node.getAugmentation(Node2.class).getServiceVlanMap().stream().forEach(serviceVlanMap -> usedVlans.add(serviceVlanMap.getVlanId().getValue().intValue()));
+        node.getAugmentation(Node2.class).getServiceVlanMap().forEach(serviceVlanMap -> usedVlans.add(serviceVlanMap.getVlanId().getValue().intValue()));
     }
 
     /**

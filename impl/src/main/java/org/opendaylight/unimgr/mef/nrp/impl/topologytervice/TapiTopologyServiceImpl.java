@@ -165,7 +165,7 @@ public class TapiTopologyServiceImpl implements TapiTopologyService, AutoCloseab
                 .map(ep -> new OwnedNodeEdgePointBuilder(ep).removeAugmentation(OwnedNodeEdgePoint1.class).build())
                 .collect(Collectors.toList());
 
-        builder.setOwnedNodeEdgePoint(neps);
+        builder.setOwnedNodeEdgePoint(neps).removeAugmentation(Node1.class).removeAugmentation(Node2.class);
 
         return builder.build();
     }
@@ -182,7 +182,4 @@ public class TapiTopologyServiceImpl implements TapiTopologyService, AutoCloseab
         this.broker = broker;
     }
 
-    private List<Node> getNodes(org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.Topology topology){
-        return topology.getNode().stream().map(node -> new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.NodeBuilder(node).removeAugmentation(Node1.class).removeAugmentation(Node2.class).build()).collect(Collectors.toList());
-    }
 }
