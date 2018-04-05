@@ -22,7 +22,7 @@ import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.impl.ActivationTransaction;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.EndPoint7;
-import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.NodeAdiAugmentation;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceOutputBuilder;
@@ -127,7 +127,7 @@ public class UpdateConnectivityAction implements Callable<RpcResult<UpdateConnec
             for (Node node : prestoTopo.getNode()) {
                 if (node.getOwnedNodeEdgePoint().stream().filter(nep -> nep.getMappedServiceInterfacePoint() != null).flatMap(nep -> nep.getMappedServiceInterfacePoint().stream())
                         .anyMatch(sipUuid -> sipUuid.equals(endpoint.getEndpoint().getServiceInterfacePoint()))) {
-                    return Optional.of(node.getAugmentation(Node1.class).getActivationDriverId());
+                    return Optional.of(node.getAugmentation(NodeAdiAugmentation.class).getActivationDriverId());
                 }
             }
         } catch (ReadFailedException e) {

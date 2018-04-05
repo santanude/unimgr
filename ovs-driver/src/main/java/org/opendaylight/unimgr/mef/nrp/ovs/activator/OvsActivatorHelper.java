@@ -7,13 +7,12 @@
  */
 package org.opendaylight.unimgr.mef.nrp.ovs.activator;
 
-import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
-import org.opendaylight.unimgr.mef.nrp.ovs.exception.VlanNotSetException;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TopologyTransaction;
 import org.opendaylight.unimgr.utils.NullAwareDatastoreGetter;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.carrier.eth.connectivity.end.point.resource.IngressBwpFlow;
@@ -26,6 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+
+import static java.util.stream.Collectors.toSet;
 
 /**
  * Helper class for OvsDriver activation.
@@ -61,40 +62,21 @@ class OvsActivatorHelper {
      *
      * @return int with VLAN Id
      */
-    int getCeVlanId() throws ResourceNotAvailableException {
+    Optional<Integer> getCeVlanId() throws ResourceNotAvailableException {
 
         if ( (endPoint.getAttrs() != null) && (endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource() != null) ) {
             NrpCarrierEthConnectivityEndPointResource attr = endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
             if ( (attr.getCeVlanIdListAndUntag()!=null) && !(attr.getCeVlanIdListAndUntag().getVlanId().isEmpty()) ) {
                 //for now we support only one CE VLAN
-                return attr.getCeVlanIdListAndUntag().getVlanId().get(0).getVlanId().getValue().intValue();
+                return Optional.of(attr.getCeVlanIdListAndUntag().getVlanId().get(0).getVlanId().getValue().intValue());
             } else {
-                return -1; //port-base service
+                return Optional.empty(); //port-base service
             }
         } else {
             String className = NrpCarrierEthConnectivityEndPointResource.class.toString();
             LOG.warn(String.format(ATTRS_NOT_SET_ERROR_MESSAGE, tpName, className));
             throw new ResourceNotAvailableException(String.format(ATTRS_NOT_SET_ERROR_MESSAGE, tpName, className));
         }
-    }
-
-    /**
-     * Returns VLAN Id to be used internally in OvSwitch network
-     *
-     * @return Integer with VLAN Id
-     */
-    int getInternalVlanId() throws ResourceNotAvailableException {
-
-        return getCeVlanId();
-//		VlanUtils vlanUtils = new VlanUtils(nodes);
-//		Disable VLAN pool, refactor in the future
-//        if (vlanUtils.isVlanInUse(serviceVlanId)) {
-//            LOG.debug("VLAN ID = '" + serviceVlanId + "' already in use.");
-//            return vlanUtils.generateVlanID();
-//        } else {
-//            LOG.debug("VLAN ID = '" + serviceVlanId + "' not in use.");
-//            return serviceVlanId;
-//        }
     }
 
     /**
@@ -170,16 +152,14 @@ class OvsActivatorHelper {
     }
 
     public static void validateExternalVLANs(List<EndPoint> endPoints) throws ResourceNotAvailableException {
-        final Set<Integer> vlans = new HashSet<>();
-        endPoints.stream().forEach(endPoint -> {
+        Set<Optional> vlans = endPoints.stream().map(endPoint -> {
             try {
-                int vid = new OvsActivatorHelper(endPoint).getCeVlanId();
-                if(vid >= 0) vlans.add(vid);
+                return new OvsActivatorHelper(endPoint).getCeVlanId();
             } catch (ResourceNotAvailableException e) {
-                e.printStackTrace();
+                return Optional.empty();
             }
-
-        });
-        if (vlans.size()>1) throw new ResourceNotAvailableException(String.format(VLANS_DIFFERENT_ERROR_MESSAFE,vlans.toString()));
+        }).filter(i -> i.isPresent()).collect(toSet());
+        if (vlans.size() > 1)
+            throw new ResourceNotAvailableException(String.format(VLANS_DIFFERENT_ERROR_MESSAFE, vlans.toString()));
     }
 }

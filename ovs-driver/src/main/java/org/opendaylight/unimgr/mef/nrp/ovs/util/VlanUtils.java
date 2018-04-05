@@ -16,10 +16,10 @@ import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
 import org.opendaylight.unimgr.mef.nrp.ovs.exception.VlanPoolExhaustedException;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev180321.PositiveInteger;
-import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node2Builder;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.NodeSvmAugmentationBuilder;
 import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.context.topology.node.ServiceVlanMapBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Node;
-import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node2;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.NodeSvmAugmentation;
 import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.context.topology.node.ServiceVlanMap;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.NodeBuilder;
@@ -55,13 +55,13 @@ public class VlanUtils {
         this.dataBroker = dataBroker;
         try {
             node = new NrpDao(dataBroker.newReadOnlyTransaction()).getNode(new Uuid(nodeId));
-            if (node == null) throw new ReadFailedException(null);
+            if (node == null) throw new ResourceNotAvailableException(MessageFormat.format("Node {} not found", nodeId));
         } catch (ReadFailedException e) {
             LOG.warn("Node {} not found", nodeId);
             throw new ResourceNotAvailableException(MessageFormat.format("Node {} not found", nodeId));
         }
 
-        node.getAugmentation(Node2.class).getServiceVlanMap().forEach(serviceVlanMap -> usedVlans.add(serviceVlanMap.getVlanId().getValue().intValue()));
+        node.getAugmentation(NodeSvmAugmentation.class).getServiceVlanMap().forEach(serviceVlanMap -> usedVlans.add(serviceVlanMap.getVlanId().getValue().intValue()));
     }
 
     /**
@@ -69,7 +69,7 @@ public class VlanUtils {
      * @param serviceName
      */
     public Integer getVlanID(String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
-        Optional<ServiceVlanMap> o = node.getAugmentation(Node2.class).getServiceVlanMap().stream().filter(serviceVlanMap -> serviceVlanMap.getServiceId().equals(serviceName)).findFirst();
+        Optional<ServiceVlanMap> o = node.getAugmentation(NodeSvmAugmentation.class).getServiceVlanMap().stream().filter(serviceVlanMap -> serviceVlanMap.getServiceId().equals(serviceName)).findFirst();
         return o.isPresent()? o.get().getVlanId().getValue().intValue() : generateVid(serviceName);
     }
 
@@ -83,9 +83,9 @@ public class VlanUtils {
     }
 
     private Integer updateNodeNewServiceVLAN(String serviceName, Integer vlanId) {
-        List<ServiceVlanMap> list = node.getAugmentation(Node2.class).getServiceVlanMap();
+        List<ServiceVlanMap> list = node.getAugmentation(NodeSvmAugmentation.class).getServiceVlanMap();
         list.add(new ServiceVlanMapBuilder().setServiceId(serviceName).setVlanId(PositiveInteger.getDefaultInstance(vlanId.toString())).build());
-        node = new NodeBuilder(node).addAugmentation(Node2.class ,new Node2Builder().setServiceVlanMap(list).build()).build();
+        node = new NodeBuilder(node).addAugmentation(NodeSvmAugmentation.class ,new NodeSvmAugmentationBuilder().setServiceVlanMap(list).build()).build();
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
         new NrpDao(tx).updateNode(node);
         tx.submit();
@@ -93,9 +93,9 @@ public class VlanUtils {
     }
 
     public void releaseServiceVlan(String serviceName) {
-        List<ServiceVlanMap> list = node.getAugmentation(Node2.class).getServiceVlanMap();
+        List<ServiceVlanMap> list = node.getAugmentation(NodeSvmAugmentation.class).getServiceVlanMap();
         list.removeIf(serviceVlanMap -> serviceVlanMap.getServiceId().equals(serviceName));
-        node = new NodeBuilder(node).addAugmentation(Node2.class ,new Node2Builder().setServiceVlanMap(list).build()).build();
+        node = new NodeBuilder(node).addAugmentation(NodeSvmAugmentation.class ,new NodeSvmAugmentationBuilder().setServiceVlanMap(list).build()).build();
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
         new NrpDao(tx).updateNode(node);
         tx.submit();

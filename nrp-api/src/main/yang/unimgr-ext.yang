@@ -14,7 +14,9 @@ module unimgr-ext {
     import mef-common-types {
         prefix mef-common-types;
     }
-
+    import yang-ext {
+        prefix "ext";
+    }
     revision 2017-05-31 {
         description "Unimgr SIP extensions";
     }
@@ -54,6 +56,7 @@ module unimgr-ext {
         leaf activation-driver-id {
             type string;
         }
+        ext:augment-identifier "node-adi-augmentation";
     }
 
     augment "/tapi-common:context/tapi-topology:topology/tapi-topology:node" {
@@ -66,5 +69,6 @@ module unimgr-ext {
                 type mef-common-types:positive-integer;
             }
         }
+        ext:augment-identifier "node-svm-augmentation";
     }
 }
