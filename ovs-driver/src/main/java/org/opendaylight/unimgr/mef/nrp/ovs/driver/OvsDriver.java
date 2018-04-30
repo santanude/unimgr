@@ -86,6 +86,6 @@ public class OvsDriver implements ActivationDriverBuilder {
 
     @Override
     public String getActivationDriverId() {
-        return TopologyDataHandler.getOvsNode();
+        return TopologyDataHandler.getDriverId();
     }
 }

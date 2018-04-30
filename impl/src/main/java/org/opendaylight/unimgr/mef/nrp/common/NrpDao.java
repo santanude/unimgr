@@ -20,8 +20,11 @@ import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
-import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
-import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1Builder;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.NodeAdiAugmentation;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.NodeAdiAugmentationBuilder;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.NodeSvmAugmentation;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.NodeSvmAugmentationBuilder;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.context.topology.node.ServiceVlanMap;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Context;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.LayerProtocolName;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ServiceInterfacePointRef;
@@ -79,19 +82,36 @@ public class NrpDao  {
     }
 
     public Node createNode(String topologyId, String nodeId, String activationDriverId, LayerProtocolName name, List<OwnedNodeEdgePoint> neps) {
+        return createNode(topologyId, nodeId, activationDriverId, name, neps,null);
+    }
+
+    public Node createNode(String topologyId, String nodeId, String activationDriverId, LayerProtocolName name, List<OwnedNodeEdgePoint> neps, List<ServiceVlanMap> serviceVlanMapList) {
         verifyTx();
         assert tx != null;
         Uuid uuid = new Uuid(nodeId);
 
-        Node node = new NodeBuilder()
+        NodeBuilder nb = new NodeBuilder()
                 .setKey(new NodeKey(uuid))
                 .setUuid(uuid)
                 .setLayerProtocolName(Collections.singletonList(name))
                 .setOwnedNodeEdgePoint(neps)
-                .addAugmentation(Node1.class, new Node1Builder().setActivationDriverId(activationDriverId).build())
-                .build();
-        tx.put(LogicalDatastoreType.OPERATIONAL, node(new Uuid(topologyId), new Uuid(nodeId)), node);
+                .addAugmentation(NodeAdiAugmentation.class, new NodeAdiAugmentationBuilder().setActivationDriverId(activationDriverId).build());
+
+        Node node = serviceVlanMapList == null ? nb.build() : nb.addAugmentation(NodeSvmAugmentation.class, new NodeSvmAugmentationBuilder().setServiceVlanMap(serviceVlanMapList).build()).build();
+        tx.put(LogicalDatastoreType.OPERATIONAL, node(nodeId), node);
         return node;
+    }
+
+    /**
+     * Update node or add if it does not exist.
+     * @param Node node to update
+     * <p>
+     * Note: Please bare in mind that all external changes between reading/modyfying the node given as parameter and writing it are silently lost
+     * </p>
+     */
+    public void updateNode(Node node) {
+        verifyTx();
+        tx.put(LogicalDatastoreType.OPERATIONAL, node(node.getUuid()), node);
     }
 
     private void verifyTx() {
@@ -361,7 +381,7 @@ public class NrpDao  {
     }
 
     public String getActivationDriverId(Uuid nodeUuid) throws ReadFailedException {
-        return getNode(nodeUuid).getAugmentation(Node1.class).getActivationDriverId();
+        return getNode(nodeUuid).getAugmentation(NodeAdiAugmentation.class).getActivationDriverId();
     }
 
     public void removeConnection(Uuid connectionId) {

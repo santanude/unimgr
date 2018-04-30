@@ -7,12 +7,7 @@
  */
 package org.opendaylight.unimgr.mef.nrp.ovs.tapi;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -66,6 +61,7 @@ import com.google.common.util.concurrent.Futures;
 public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     private static final Logger LOG = LoggerFactory.getLogger(TopologyDataHandler.class);
     private static final String OVS_NODE = "ovs-node";
+    private static final String OVS_DRIVER_ID = "ovs-driver";
     private static final String DELIMETER = ":";
     private static final InstanceIdentifier<Topology> OVSDB_TOPO_IID = InstanceIdentifier
             .create(NetworkTopology.class)
@@ -94,7 +90,8 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
 
         NrpDao dao = new NrpDao(tx);
-        dao.createNode(topologyManager.getSystemTopologyId(), OVS_NODE, LayerProtocolName.ETH, null);
+
+        dao.createNode(topologyManager.getSystemTopologyId(), OVS_NODE, OVS_DRIVER_ID, LayerProtocolName.ETH, null, new ArrayList<>());
 
         Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
             @Override
@@ -289,8 +286,8 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         return false;
     }
 
-    public static String getOvsNode() {
-        return OVS_NODE;
+    public static String getDriverId() {
+        return OVS_DRIVER_ID;
     }
 
 }

@@ -7,6 +7,7 @@
  */
 package org.opendaylight.unimgr.mef.nrp.ovs.activator;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TableTransaction;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TopologyTransaction;
 import org.opendaylight.unimgr.mef.nrp.ovs.util.OpenFlowUtils;
 import org.opendaylight.unimgr.mef.nrp.ovs.util.OvsdbUtils;
+import org.opendaylight.unimgr.mef.nrp.ovs.util.VlanUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
@@ -50,14 +52,17 @@ public class OvsActivator implements ResourceActivator {
      */
     @Override
     public void activate(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
+        OvsActivatorHelper.validateExternalVLANs(endPoints);
+
+        VlanUtils vlanUtils = new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue());
+
         for (EndPoint endPoint:endPoints) {
-            activateEndpoint(endPoint, serviceName);
+            activateEndpoint(endPoint, serviceName, vlanUtils);
         }
 
     }
 
-
-    private void activateEndpoint(EndPoint endPoint, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
+    private void activateEndpoint(EndPoint endPoint, String serviceName, VlanUtils vlanUtils) throws ResourceNotAvailableException, TransactionCommitFailedException {
         // Transaction - Get Open vSwitch node and its flow table
         String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().getValue());
         TopologyTransaction topologyTransaction = new TopologyTransaction(dataBroker);
@@ -77,8 +82,7 @@ public class OvsActivator implements ResourceActivator {
         OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction, endPoint);
         String openFlowPortName = ovsActivatorHelper.getOpenFlowPortName();
         long queueNumber = queueNumberGenerator.getAndIncrement();
-        int internalVlanId = ovsActivatorHelper.getInternalVlanId();
-        flowsToWrite.addAll(OpenFlowUtils.getVlanFlows(openFlowPortName, internalVlanId, interswitchLinks, serviceName, queueNumber));
+        flowsToWrite.addAll(OpenFlowUtils.getVlanFlows(openFlowPortName, vlanUtils.getVlanID(serviceName), ovsActivatorHelper.getCeVlanId(),interswitchLinks, serviceName, queueNumber));
 
         // Transaction - Add flows related to service to table and remove unnecessary flows
         TableTransaction tableTransaction = new TableTransaction(dataBroker, node, table);
@@ -105,6 +109,8 @@ public class OvsActivator implements ResourceActivator {
         for (EndPoint endPoint:endPoints) {
         	deactivateEndpoint(endPoint, serviceName);
         }
+        new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue()).releaseServiceVlan(serviceName);
+
     }
 
     private void deactivateEndpoint(EndPoint endPoint, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
@@ -135,6 +141,7 @@ public class OvsActivator implements ResourceActivator {
     }
 
 	public void update(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
+        OvsActivatorHelper.validateExternalVLANs(endPoints);
         for (EndPoint endPoint:endPoints) {
             updateEndpoint(endPoint, serviceName);
         }
@@ -168,7 +175,7 @@ public class OvsActivator implements ResourceActivator {
 		//modify flow with new queue number
 		 Table table = OpenFlowUtils.getTable(node);
         TableTransaction tableTransaction = new TableTransaction(dataBroker, node, table);
-		tableTransaction.writeFlow(OpenFlowUtils.createVlanIngressFlow(ovsActivatorHelper.getOpenFlowPortName(), ovsActivatorHelper.getInternalVlanId(),
+		tableTransaction.writeFlow(OpenFlowUtils.createVlanIngressFlow(ovsActivatorHelper.getOpenFlowPortName(), new VlanUtils(dataBroker, endPoint.getNepRef().getNodeId().getValue()).getVlanID(serviceName) , ovsActivatorHelper.getCeVlanId(),
 				serviceName, topologyTransaction.readInterswitchLinks(node), queueNumber));
 	}
 

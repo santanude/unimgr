@@ -22,7 +22,7 @@ import org.opendaylight.unimgr.mef.nrp.api.Subrequrest;
 import org.opendaylight.unimgr.mef.nrp.api.TapiConstants;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
-import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.Node1;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.NodeAdiAugmentation;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.OperationalState;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortDirection;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ServiceInterfacePointRef;
@@ -184,7 +184,7 @@ class DecompositionAction {
 
     private Stream<Vertex> nodeToGraph(Node n) {
         Uuid nodeUuid = n.getUuid();
-        String activationDriverId = n.getAugmentation(Node1.class).getActivationDriverId();
+        String activationDriverId = n.getAugmentation(NodeAdiAugmentation.class).getActivationDriverId();
 
 
         return n.getOwnedNodeEdgePoint().stream()

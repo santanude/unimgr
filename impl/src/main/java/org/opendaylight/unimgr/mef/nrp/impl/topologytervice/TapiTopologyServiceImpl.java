@@ -13,6 +13,8 @@ import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.NodeAdiAugmentation;
+import org.opendaylight.yang.gen.v1.urn.odl.unimgr.yang.unimgr.ext.rev170531.NodeSvmAugmentation;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.OwnedNodeEdgePoint1;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.*;
@@ -163,7 +165,7 @@ public class TapiTopologyServiceImpl implements TapiTopologyService, AutoCloseab
                 .map(ep -> new OwnedNodeEdgePointBuilder(ep).removeAugmentation(OwnedNodeEdgePoint1.class).build())
                 .collect(Collectors.toList());
 
-        builder.setOwnedNodeEdgePoint(neps);
+        builder.setOwnedNodeEdgePoint(neps).removeAugmentation(NodeAdiAugmentation.class).removeAugmentation(NodeSvmAugmentation.class);
 
         return builder.build();
     }
@@ -179,6 +181,5 @@ public class TapiTopologyServiceImpl implements TapiTopologyService, AutoCloseab
     public void setBroker(DataBroker broker) {
         this.broker = broker;
     }
-
 
 }

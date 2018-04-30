@@ -8,10 +8,11 @@
 package org.opendaylight.unimgr.mef.nrp.ovs.activator;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
-import org.opendaylight.unimgr.mef.nrp.ovs.exception.VlanNotSetException;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TopologyTransaction;
 import org.opendaylight.unimgr.utils.NullAwareDatastoreGetter;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.carrier.eth.connectivity.end.point.resource.IngressBwpFlow;
@@ -25,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
+import static java.util.stream.Collectors.toSet;
+
 /**
  * Helper class for OvsDriver activation.
  *
@@ -36,9 +39,9 @@ class OvsActivatorHelper {
     private String tpName;
     private BiMap<String, String> portMap;
 
-    private static final String CTAG_VLAN_ID_NOT_SET_ERROR_MESSAGE = "C-Tag VLAN Id not set for End Point '%s'.";
     private static final String INGRESS_BWP_FLOW_NOT_SET_ERROR_MESSAGE = "Ingress bwp flow is not set for End Point '%s'.";
     private static final String ATTRS_NOT_SET_ERROR_MESSAGE = "End Point '%s' does not have '%s' set.";
+    private static final String VLANS_DIFFERENT_ERROR_MESSAFE = "External VLANs defined on end points has to be the same or not defined. Current values %s";
 
 
     private static final Logger LOG = LoggerFactory.getLogger(OvsActivatorHelper.class);
@@ -50,46 +53,30 @@ class OvsActivatorHelper {
         this.portMap = createPortMap(nodes);
     }
 
+    private OvsActivatorHelper(EndPoint endPoint) {
+        this.endPoint = endPoint;
+    }
+
     /**
-     * Returns VLAN Id of the service
+     * Returns VLAN Id of the endPoint
      *
-     * @return Integer with VLAN Id
+     * @return int with VLAN Id
      */
-    int getCeVlanId() throws ResourceNotAvailableException {
+    Optional<Integer> getCeVlanId() throws ResourceNotAvailableException {
 
         if ( (endPoint.getAttrs() != null) && (endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource() != null) ) {
             NrpCarrierEthConnectivityEndPointResource attr = endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
             if ( (attr.getCeVlanIdListAndUntag()!=null) && !(attr.getCeVlanIdListAndUntag().getVlanId().isEmpty()) ) {
                 //for now we support only one CE VLAN
-                return attr.getCeVlanIdListAndUntag().getVlanId().get(0).getVlanId().getValue().intValue();
+                return Optional.of(attr.getCeVlanIdListAndUntag().getVlanId().get(0).getVlanId().getValue().intValue());
             } else {
-                LOG.warn(String.format(CTAG_VLAN_ID_NOT_SET_ERROR_MESSAGE, tpName));
-                throw new VlanNotSetException(String.format(CTAG_VLAN_ID_NOT_SET_ERROR_MESSAGE, tpName));
+                return Optional.empty(); //port-base service
             }
         } else {
             String className = NrpCarrierEthConnectivityEndPointResource.class.toString();
             LOG.warn(String.format(ATTRS_NOT_SET_ERROR_MESSAGE, tpName, className));
             throw new ResourceNotAvailableException(String.format(ATTRS_NOT_SET_ERROR_MESSAGE, tpName, className));
         }
-    }
-
-    /**
-     * Returns VLAN Id to be used internally in OvSwitch network
-     *
-     * @return Integer with VLAN Id
-     */
-    int getInternalVlanId() throws ResourceNotAvailableException {
-
-        return getCeVlanId();
-//		VlanUtils vlanUtils = new VlanUtils(nodes);
-//		Disable VLAN pool, refactor in the future
-//        if (vlanUtils.isVlanInUse(serviceVlanId)) {
-//            LOG.debug("VLAN ID = '" + serviceVlanId + "' already in use.");
-//            return vlanUtils.generateVlanID();
-//        } else {
-//            LOG.debug("VLAN ID = '" + serviceVlanId + "' not in use.");
-//            return serviceVlanId;
-//        }
     }
 
     /**
@@ -162,5 +149,17 @@ class OvsActivatorHelper {
 
     protected boolean isIBwpConfigured() {
         return getIngressBwpFlow() != null;
+    }
+
+    public static void validateExternalVLANs(List<EndPoint> endPoints) throws ResourceNotAvailableException {
+        Set<Optional> vlans = endPoints.stream().map(endPoint -> {
+            try {
+                return new OvsActivatorHelper(endPoint).getCeVlanId();
+            } catch (ResourceNotAvailableException e) {
+                return Optional.empty();
+            }
+        }).filter(i -> i.isPresent()).collect(toSet());
+        if (vlans.size() > 1)
+            throw new ResourceNotAvailableException(String.format(VLANS_DIFFERENT_ERROR_MESSAFE, vlans.toString()));
     }
 }
