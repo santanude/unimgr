@@ -177,7 +177,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
 
                         OwnedNodeEdgePoint nep = nrpDao.getNepByCep(cep);
 
-                        if (cs.getEndPoint() != null) {
+                        if (cs.getEndPoint() != null && nep.getMappedServiceInterfacePoint() != null) {
 
                             optEndPoint = cs.getEndPoint().stream()
                                     .filter(csEp -> {

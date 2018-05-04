@@ -104,7 +104,7 @@ public class NrpDao  {
 
     /**
      * Update node or add if it does not exist.
-     * @param Node node to update
+     * @param node to be updated (or added)
      * <p>
      * Note: Please bare in mind that all external changes between reading/modyfying the node given as parameter and writing it are silently lost
      * </p>

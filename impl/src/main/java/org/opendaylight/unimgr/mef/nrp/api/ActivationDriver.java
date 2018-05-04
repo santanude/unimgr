@@ -47,15 +47,15 @@ public interface ActivationDriver {
 
     /**
      * Performs the activation action.
-     * @throws TransactionCommitFailedException
-     * @throws ResourceActivatorException
+     * @throws TransactionCommitFailedException transaction commit failed
+     * @throws ResourceActivatorException activation problem
      */
     void activate() throws TransactionCommitFailedException, ResourceActivatorException;
 
     /**
      * Performs the update action.
-     * @throws TransactionCommitFailedException
-     * @throws ResourceActivatorException
+     * @throws TransactionCommitFailedException transaction commit failed
+     * @throws ResourceActivatorException activation problem
      */
     default void update() throws TransactionCommitFailedException, ResourceActivatorException {
         deactivate();
@@ -64,8 +64,8 @@ public interface ActivationDriver {
 
     /**
      * Performs the deactivation action.
-     * @throws TransactionCommitFailedException
-     * @throws ResourceActivatorException
+     * @throws TransactionCommitFailedException transaction commit failed
+     * @throws ResourceActivatorException activation problem
      */
     void deactivate() throws TransactionCommitFailedException, ResourceActivatorException;
 

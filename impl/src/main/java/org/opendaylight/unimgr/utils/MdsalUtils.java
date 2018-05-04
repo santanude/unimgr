@@ -139,6 +139,7 @@ public class MdsalUtils {
      * @param dataBroker The instance of the data broker to create transactions.
      * @param genericNode The instance identifier of a generic node
      * @param store The dataStore where to send and submit the delete call.
+     * @return <code>true</code> if success
      */
     public static boolean deleteNode(DataBroker dataBroker,
                                   InstanceIdentifier<?> genericNode,

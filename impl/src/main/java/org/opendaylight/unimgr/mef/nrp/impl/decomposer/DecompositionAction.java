@@ -188,20 +188,24 @@ class DecompositionAction {
 
 
         return n.getOwnedNodeEdgePoint().stream()
-                .filter(ep -> ep.getLinkPortDirection() != null && ep.getLinkPortDirection() != PortDirection.UNIDENTIFIEDORUNKNOWN)
-                .map(nep -> {
-            List<Uuid> sips = nep.getMappedServiceInterfacePoint().stream()
-                    .map(ServiceInterfacePointRef::getServiceInterfacePointId)
-                    .collect(Collectors.toList());
-            if (sips == null || sips.isEmpty()) {
-                return  new Vertex(nodeUuid, nep.getUuid(), null, nep.getLinkPortDirection(),activationDriverId);
-            }
-            if (sips.size() > 1) {
-                LOG.warn("NodeEdgePoint {} have multiple ServiceInterfacePoint mapped, selecting first one", nep.getUuid());
-            }
-            return new Vertex(nodeUuid, nep.getUuid(), sips.get(0), nep.getLinkPortDirection(),activationDriverId);
+            .filter(ep -> ep.getLinkPortDirection() != null && ep.getLinkPortDirection() != PortDirection.UNIDENTIFIEDORUNKNOWN)
+            .map(nep -> {
+                List<Uuid> sips = Collections.emptyList();
+                if(nep.getMappedServiceInterfacePoint() != null) {
+                    sips = nep.getMappedServiceInterfacePoint().stream()
+                        .map(ServiceInterfacePointRef::getServiceInterfacePointId)
+                        .collect(Collectors.toList());
+                }
 
-        });
+                if (sips.isEmpty()) {
+                    return  new Vertex(nodeUuid, nep.getUuid(), null, nep.getLinkPortDirection(),activationDriverId);
+                }
+                if (sips.size() > 1) {
+                    LOG.warn("NodeEdgePoint {} have multiple ServiceInterfacePoint mapped, selecting first one", nep.getUuid());
+                }
+                return new Vertex(nodeUuid, nep.getUuid(), sips.get(0), nep.getLinkPortDirection(),activationDriverId);
+
+            });
     }
 
     class Vertex implements Comparable<Vertex> {

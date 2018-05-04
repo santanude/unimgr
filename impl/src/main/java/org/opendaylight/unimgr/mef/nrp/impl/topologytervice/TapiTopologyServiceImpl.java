@@ -79,7 +79,7 @@ public class TapiTopologyServiceImpl implements TapiTopologyService, AutoCloseab
             Node node = nrpDao.getNode(input.getTopologyIdOrName(), input.getNodeIdOrName());
             if(node == null) return RpcResultBuilder.<GetNodeDetailsOutput>failed().withError(RpcError.ErrorType.APPLICATION,
                     String.format("No node for id: %s in topology %s", input.getNodeIdOrName(), input.getTopologyIdOrName())).build();
-            rewriteNode(node);
+            node = rewriteNode(node);
             GetNodeDetailsOutput output = new GetNodeDetailsOutputBuilder().setNode(new NodeBuilder(node).build()).build();
             return RpcResultBuilder.success(output).build();
         });
