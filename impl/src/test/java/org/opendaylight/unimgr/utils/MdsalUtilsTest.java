@@ -86,29 +86,6 @@ public class MdsalUtilsTest {
         root.addAppender(mockAppender);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Test
-    public void testDeleteNode() throws Exception {
-        InstanceIdentifier<Node> genericNode = InstanceIdentifier
-                                                   .create(NetworkTopology.class)
-                                                   .child(Topology.class,
-                                                           new TopologyKey(UNI_TOPOLOGY_ID))
-                                                   .child(Node.class);
-        when(dataBroker.newWriteOnlyTransaction()).thenReturn(transaction);
-        doNothing().when(transaction).delete(any(LogicalDatastoreType.class),
-                                             any(InstanceIdentifier.class));
-        when(transaction.submit()).thenReturn(checkedFuture);
-        assertEquals(true, MdsalUtils.deleteNode(dataBroker, genericNode, LogicalDatastoreType.CONFIGURATION));
-        verify(transaction).delete(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
-        verify(transaction).submit();
-        verify(mockAppender).doAppend(argThat(new ArgumentMatcher() {
-            @Override
-            public boolean matches(final Object argument) {
-                return ((LoggingEvent)argument).getFormattedMessage().contains("Received a request to delete node");
-            }
-            }));
-    }
-
     @SuppressWarnings("unchecked")
     @Test
     public void testRead() throws ReadFailedException {
@@ -128,49 +105,6 @@ public class MdsalUtilsTest {
         verify(transaction).close();
         assertNotNull(expectedNode);
         assertEquals(expectedNode, nd);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testReadLink() throws ReadFailedException {
-        LinkId linkId = new LinkId("evc://7011db35-f44b-4aab-90f6-d89088caf9d8");
-        InstanceIdentifier<?> nodeIid = InstanceIdentifier
-                .create(NetworkTopology.class)
-                .child(Topology.class,
-                        new TopologyKey(EVC_TOPOLOGY_ID))
-                .child(Link.class,
-                        new LinkKey(linkId));
-        ReadOnlyTransaction transaction = mock(ReadOnlyTransaction.class);
-        when(dataBroker.newReadOnlyTransaction()).thenReturn(transaction);
-        CheckedFuture<Optional<Link>, ReadFailedException> linkFuture = mock(CheckedFuture.class);
-        Optional<Link> optLink = mock(Optional.class);
-        when(transaction.read(any(LogicalDatastoreType.class), any(InstanceIdentifier.class))).thenReturn(linkFuture);
-        when(linkFuture.checkedGet()).thenReturn(optLink);
-        Optional<Link> expectedOpt = MdsalUtils.readLink(dataBroker, LogicalDatastoreType.CONFIGURATION, nodeIid);
-        verify(transaction).read(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
-        assertNotNull(expectedOpt);
-        assertEquals(expectedOpt, optLink);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testReadNode() throws ReadFailedException {
-        InstanceIdentifier<?> nodeIid = InstanceIdentifier
-                                            .create(NetworkTopology.class)
-                                            .child(Topology.class,
-                                                    new TopologyKey(UNI_TOPOLOGY_ID))
-                                            .child(Node.class,
-                                                    new NodeKey(OVSDB_NODE_ID));
-        ReadOnlyTransaction transaction = mock(ReadOnlyTransaction.class);
-        when(dataBroker.newReadOnlyTransaction()).thenReturn(transaction);
-        CheckedFuture<Optional<Node>, ReadFailedException> nodeFuture = mock(CheckedFuture.class);
-        Optional<Node> optNode = mock(Optional.class);
-        when(transaction.read(any(LogicalDatastoreType.class), any(InstanceIdentifier.class))).thenReturn(nodeFuture);
-        when(nodeFuture.checkedGet()).thenReturn(optNode);
-        Optional<Node> expectedOpt = MdsalUtils.readNode(dataBroker, LogicalDatastoreType.CONFIGURATION, nodeIid);
-        verify(transaction).read(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
-        assertNotNull(expectedOpt);
-        assertEquals(expectedOpt, optNode);
     }
 
     @Test
