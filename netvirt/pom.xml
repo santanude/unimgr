@@ -58,11 +58,6 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>unimgr-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>unimgr-impl</artifactId>
       <version>${project.version}</version>
     </dependency>

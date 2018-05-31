@@ -70,13 +70,6 @@
     </dependency>
     <dependency>
       <groupId>org.opendaylight.unimgr</groupId>
-      <artifactId>odl-unimgr-api</artifactId>
-      <version>${project.version}</version>
-      <type>xml</type>
-      <classifier>features</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.unimgr</groupId>
       <artifactId>unimgr-impl</artifactId>
       <version>${project.version}</version>
       <exclusions>
