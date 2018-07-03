@@ -11,7 +11,9 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -21,10 +23,14 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.legato.dao.EVCDao;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev180321.PositiveInteger;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.MefServices;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.CarrierEthernet;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.SubscriberServices;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.SubscriberServicesBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.Evc;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.EvcKey;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.EndPoint;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.EvcIdType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.VlanIdType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.carrier.eth.connectivity.end.point.resource.CeVlanIdListAndUntagBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.vlan.id.list.and.untag.VlanId;
@@ -58,6 +64,7 @@ import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * @author santanu.de@xoriant.com
@@ -388,21 +395,37 @@ public class LegatoUtils {
     public static boolean updateEvcInOperationalDB(Evc evc,
             InstanceIdentifier<SubscriberServices> nodeIdentifier, DataBroker dataBroker) {
         LOG.info("Received a request to add node {}", nodeIdentifier);
-
         boolean result = false;
+        final WriteTransaction transaction = dataBroker.newWriteOnlyTransaction();
+        
+        Optional<Evc> optionalEvc = LegatoUtils.readEvc(
+                dataBroker,
+                LogicalDatastoreType.OPERATIONAL,
+                InstanceIdentifier
+                        .create(MefServices.class)
+                        .child(CarrierEthernet.class)
+                        .child(SubscriberServices.class)
+                        .child(Evc.class,
+                                new EvcKey(new EvcIdType(evc.getEvcId()))));
 
         List<Evc> evcList = new ArrayList<Evc>();
         evcList.add(evc);
 
-        final WriteTransaction transaction = dataBroker.newWriteOnlyTransaction();
-        transaction.put(LogicalDatastoreType.OPERATIONAL, nodeIdentifier,
+        // if EVC Id present in operational DB
+        if (optionalEvc.isPresent()) {
+            transaction.put(LogicalDatastoreType.OPERATIONAL, nodeIdentifier,
                 new SubscriberServicesBuilder().setEvc(evcList).build());
+        }
+        else {
+            transaction.merge(LogicalDatastoreType.OPERATIONAL, nodeIdentifier,
+                    new SubscriberServicesBuilder().setEvc(evcList).build());
+        }
 
         try {
             transaction.submit().checkedGet();
             result = true;
         } catch (org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException e) {
-            LOG.error("Unable to add node in OperationalDB() ", nodeIdentifier, e);
+            LOG.error("Unable to update node in OperationalDB() ", nodeIdentifier, e);
         }
         return result;
 
