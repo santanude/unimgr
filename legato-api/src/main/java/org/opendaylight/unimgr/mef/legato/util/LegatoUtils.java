@@ -11,7 +11,9 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -21,10 +23,14 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.legato.dao.EVCDao;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.types.rev180321.PositiveInteger;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.MefServices;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.CarrierEthernet;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.SubscriberServices;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.SubscriberServicesBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.Evc;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.EvcKey;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.EndPoint;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.EvcIdType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.VlanIdType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.carrier.eth.connectivity.end.point.resource.CeVlanIdListAndUntagBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.vlan.id.list.and.untag.VlanId;
@@ -68,28 +74,32 @@ public class LegatoUtils {
     private static final Logger LOG = LoggerFactory.getLogger(LegatoUtils.class);
 
     public static EVCDao parseNodes(Evc evc) {
-        List<String> uniList = new ArrayList<String>();
+        List<String> uniIdList = new ArrayList<String>();
+        List<String> vlanIdList;
+        Map<String, Object> uniVlanList = new HashMap<String, Object>();
         String vlanId;
         EVCDao evcDao = new EVCDao();
 
         assert evc != null;
-        uniList = new ArrayList<String>();
         assert evc.getEndPoints().getEndPoint() != null && evc.getEndPoints().getEndPoint().size() > 0;
         for (EndPoint endPoint : evc.getEndPoints().getEndPoint()) {
             vlanId = "0";
+            vlanIdList = new ArrayList<String>();
             assert endPoint.getCeVlans().getCeVlan() != null;
             for (VlanIdType vlanIdType : endPoint.getCeVlans().getCeVlan()) {
                 vlanId = vlanIdType.getValue().toString();
             }
-
-            uniList.add(endPoint.getUniId().getValue().toString() + "#" + vlanId);
+            vlanIdList.add(vlanId);
+            uniVlanList.put(endPoint.getUniId().getValue().toString(), vlanIdList);
+            uniIdList.add(endPoint.getUniId().getValue().toString());
         }
 
         evcDao.setEvcId(evc.getEvcId().getValue());
         evcDao.setMaxFrameSize((evc.getMaxFrameSize().getValue() != null) ? evc.getMaxFrameSize().getValue() : 0);
         evcDao.setConnectionType((evc.getConnectionType().getName() != null) ? evc.getConnectionType().getName() : "");
         evcDao.setSvcType(evc.getSvcType().getName());
-        evcDao.setUniList(uniList);
+        evcDao.setUniIdList(uniIdList);
+        evcDao.setUniVlanList(uniVlanList);
         return evcDao;
     }
 
@@ -122,7 +132,7 @@ public class LegatoUtils {
                 new NrpCarrierEthConnectivityEndPointResourceBuilder();
 
         CeVlanIdListAndUntagBuilder ceVlanIdListAndUntagBuilder = new CeVlanIdListAndUntagBuilder();
-        List<VlanId> vlanList = new ArrayList<>();
+        List<VlanId> vlanList = new ArrayList<VlanId>();
         if (Integer.parseInt(vlanId) > 0) {
             VlanIdBuilder vlanIdBuilder = new VlanIdBuilder().setVlanId(new PositiveInteger(Long.parseLong(vlanId)));
             vlanList.add(vlanIdBuilder.build());
@@ -140,12 +150,11 @@ public class LegatoUtils {
                 .setMaxFrameSize(new PositiveInteger(Long.parseLong(maxFrameSize))).build();
     }
 
-    public static CreateConnectivityServiceInput buildCreateConnectivityServiceInput(EVCDao evcDao) {
+    public static CreateConnectivityServiceInput buildCreateConnectivityServiceInput(EVCDao evcDao, String vlanId) {
 
         CreateConnectivityServiceInputBuilder createConnServiceInputBuilder =
                 new CreateConnectivityServiceInputBuilder();
         List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint> endpointList;
-        List<String> uniList = evcDao.getUniList();
         boolean isExclusive = false;
 
         // if svc-type = epl/eplan then set is_exclusive flag as true
@@ -171,14 +180,15 @@ public class LegatoUtils {
 
 
         // build end points
-        assert uniList != null && uniList.size() > 0;
-        endpointList = buildCreateEndpoints(uniList, LayerProtocolName.ETH);
+        assert evcDao.getUniIdList() != null && evcDao.getUniIdList().size() > 0;
+        endpointList = buildCreateEndpoints(evcDao.getUniIdList(), LayerProtocolName.ETH, vlanId);
 
         createConnServiceInputBuilder.setEndPoint(endpointList);
 
         createConnServiceInputBuilder.addAugmentation(CreateConnectivityServiceInput1.class,
                 LegatoUtils.buildCreateConServiceAugmentation(evcDao.getMaxFrameSize().toString()));
 
+       // LOG.info(" PAYLAOD for Presto " +  createConnServiceInputBuilder.build());
         return createConnServiceInputBuilder.build();
     }
 
@@ -222,30 +232,25 @@ public class LegatoUtils {
     }
 
     private static List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint> buildCreateEndpoints(
-            List<String> uniList, LayerProtocolName layerProtocolName) {
+            List<String> uniIdList, LayerProtocolName layerProtocolName, String vlanId) {
         List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint> endpointList =
                 new ArrayList<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint>();
 
         EndPointBuilder endPointBuilder;
-        String[] uniArr;
 
-        for (String uniStr : uniList) {
-            uniArr = uniStr.split("#");
-
+        for (String uniId : uniIdList) {
             ServiceInterfacePoint sipRef = new ServiceInterfacePointBuilder()
-                    .setServiceInterfacePointId(new Uuid(uniArr[0])).build();
+                    .setServiceInterfacePointId(new Uuid(uniId)).build();
 
             endPointBuilder = new EndPointBuilder().setRole(PortRole.SYMMETRIC)
-                    .setLocalId("e:" + uniArr[0]).setServiceInterfacePoint(sipRef)
+                    .setLocalId("e:" + uniId).setServiceInterfacePoint(sipRef)
                     .setDirection(PortDirection.BIDIRECTIONAL)
                     .setLayerProtocolName(layerProtocolName).addAugmentation(EndPoint2.class,
-                            LegatoUtils.buildCreateEthConnectivityEndPointAugmentation(uniArr[1]));
+                            LegatoUtils.buildCreateEthConnectivityEndPointAugmentation(vlanId));
 
             endpointList.add(endPointBuilder.build());
         }
-
         endPointBuilder = null;
-        uniArr = null;
 
         return endpointList;
     }
@@ -388,24 +393,60 @@ public class LegatoUtils {
     public static boolean updateEvcInOperationalDB(Evc evc,
             InstanceIdentifier<SubscriberServices> nodeIdentifier, DataBroker dataBroker) {
         LOG.info("Received a request to add node {}", nodeIdentifier);
-
         boolean result = false;
+        final WriteTransaction transaction = dataBroker.newWriteOnlyTransaction();
+        
+        Optional<Evc> optionalEvc = LegatoUtils.readEvc(
+                dataBroker,
+                LogicalDatastoreType.OPERATIONAL,
+                InstanceIdentifier
+                        .create(MefServices.class)
+                        .child(CarrierEthernet.class)
+                        .child(SubscriberServices.class)
+                        .child(Evc.class,
+                                new EvcKey(new EvcIdType(evc.getEvcId()))));
 
         List<Evc> evcList = new ArrayList<Evc>();
         evcList.add(evc);
 
-        final WriteTransaction transaction = dataBroker.newWriteOnlyTransaction();
-        transaction.put(LogicalDatastoreType.OPERATIONAL, nodeIdentifier,
+        // if EVC Id present in operational DB
+        if (optionalEvc.isPresent()) {
+            transaction.put(LogicalDatastoreType.OPERATIONAL, nodeIdentifier,
                 new SubscriberServicesBuilder().setEvc(evcList).build());
+        }
+        else {
+            transaction.merge(LogicalDatastoreType.OPERATIONAL, nodeIdentifier,
+                    new SubscriberServicesBuilder().setEvc(evcList).build());
+        }
 
         try {
             transaction.submit().checkedGet();
             result = true;
         } catch (org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException e) {
-            LOG.error("Unable to add node in OperationalDB() ", nodeIdentifier, e);
+            LOG.error("Unable to update node in OperationalDB() ", nodeIdentifier, e);
         }
         return result;
 
     }
+
+    public static List<String> validateVlanTag(EVCDao evcDao){
+        List<String> vlanIdList = new ArrayList<String>();
+        ArrayList<String> vlanTagList = new ArrayList<String> ();
+
+        for (String uniId : evcDao.getUniIdList()) {
+            vlanTagList = (ArrayList<String>) evcDao.getUniVlanIdList().get(uniId);
+            if (vlanIdList.size() == 0) {
+                vlanIdList = vlanTagList;
+            } else if (vlanIdList.size() != vlanTagList.size()) {
+                LOG.error("All end points should have equal number of vlan tags");
+                vlanIdList = new ArrayList<String> ();
+            } else if (!vlanIdList.equals(vlanTagList)){
+                LOG.error("All end points should have same vlan tags");
+                vlanIdList = new ArrayList<String> ();
+            }
+        }
+        return vlanIdList;
+    }
+
 
 }

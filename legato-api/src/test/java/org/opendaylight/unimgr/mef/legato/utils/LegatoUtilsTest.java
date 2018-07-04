@@ -82,7 +82,6 @@ public class LegatoUtilsTest {
     private CheckedFuture checkedFuture;
     private static final EvcIdType EVC_NODE_ID = new EvcIdType("EVC1");
 
-
     @Before
     public void setUp() throws Exception {
         PowerMockito.mockStatic(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
@@ -183,11 +182,11 @@ public class LegatoUtilsTest {
         when(LegatoUtils.parseNodes(evc)).thenReturn(evcDao);
         MemberModifier.suppress(
                 MemberMatcher.method(LegatoUtils.class, Constants.CREATE_CONNECTIVITY_INPUT));
-        when(LegatoUtils.buildCreateConnectivityServiceInput(evcDao))
+        when(LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID))
                 .thenReturn(input);
         assertNotNull(input);
         assertEquals(input,
-                LegatoUtils.buildCreateConnectivityServiceInput(evcDao));
+                LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID));
     }
 
 

@@ -169,7 +169,7 @@ public class EvcIntegrationTest {
             final EVCDao evcDao = LegatoUtils.parseNodes(evc);
             Future<RpcResult<CreateConnectivityServiceOutput>> result =
                     this.prestoConnectivityService.createConnectivityService(
-                            LegatoUtils.buildCreateConnectivityServiceInput(evcDao));
+                            LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID));
             assertTrue(result.get().isSuccessful());
 
             final InstanceIdentifier<?> evcKey = InstanceIdentifier.create(MefServices.class)
@@ -210,7 +210,7 @@ public class EvcIntegrationTest {
         final EVCDao evcDao = LegatoUtils.parseNodes(evc);
         assertEquals(true,
                 callUpdateConnectionService(LegatoUtils.buildUpdateConnectivityServiceInput(evcDao,
-                        evcDao.getUniList().get(0), Constants.UUID)));
+                        evcDao.getUniIdList().get(0), Constants.UUID)));
 
         final InstanceIdentifier<?> evcKey = InstanceIdentifier.create(MefServices.class)
                 .child(CarrierEthernet.class).child(SubscriberServices.class)
