@@ -19,7 +19,6 @@ public class EVCDao {
     private Integer maxFrameSize;
     private String connectionType;
     private String svcType;
-    //private List<String> uniList;
     private List<String> uniIdList;
     private Map<String, Object> uniVlanIdList;
     
@@ -55,14 +54,6 @@ public class EVCDao {
     public void setSvcType(String svcType) {
         this.svcType = svcType;
     }
-
-   /* public List<String> getUniList() {
-        return uniList;
-    }
-
-    public void setUniList(List<String> uniList) {
-        this.uniList = uniList;
-    }*/
 
     public List<String> getUniIdList() {
         return uniIdList;

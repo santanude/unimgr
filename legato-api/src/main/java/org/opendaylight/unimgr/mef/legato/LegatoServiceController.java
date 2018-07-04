@@ -340,49 +340,7 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
         LOG.info(" ********** END deleteConnection() ****************** ");
     }
 
-   /* private void callCreateConnectionService(
-            CreateConnectivityServiceInput createConnServiceInput, String evcId) {
-        try {
-            Future<RpcResult<CreateConnectivityServiceOutput>> response = this.prestoConnectivityService
-                    .createConnectivityService(createConnServiceInput);
 
-            if (response.get().isSuccessful()) {
-                LOG.info("call Success = {}, response = {} ", response.get()
-                        .isSuccessful(), response.get().getResult());
-                LOG.info("evcId = {}, UUID = {} ", evcId, response.get()
-                        .getResult().getService().getUuid().getValue());
-
-                EVC_UUIDMAP.put(evcId, response.get().getResult().getService()
-                        .getUuid().getValue());
-
-                LOG.info("======== {} ", EVC_UUIDMAP.toString());
-
-                Optional<Evc> optionalEvc = LegatoUtils.readEvc(
-                        dataBroker,
-                        LogicalDatastoreType.CONFIGURATION,
-                        InstanceIdentifier
-                                .create(MefServices.class)
-                                .child(CarrierEthernet.class)
-                                .child(SubscriberServices.class)
-                                .child(Evc.class,
-                                        new EvcKey(new EvcIdType(evcId))));
-
-                // Add Node in OPERATIONAL DB
-                if (optionalEvc.isPresent()) {
-                    LegatoUtils.updateEvcInOperationalDB(optionalEvc.get(), EVC_IID_OPERATIONAL,
-                            dataBroker);
-                }
-
-            } else {
-                LOG.info("call Failure = {} >> {} ", response.get()
-                        .isSuccessful(), response.get().getErrors());
-            }
-        } catch (Exception ex) {
-            LOG.error("Error in callCreateConnectionService(). Err: ", ex);
-        }
-    }*/
-    
-    
     private boolean callCreateConnectionService(
             CreateConnectivityServiceInput createConnServiceInput, String evcId, List<String> uuidList) {
         try {
