@@ -40,13 +40,13 @@
   </properties>
 
   <dependencies>
-    <dependency>
+    <!--<dependency>
       <groupId>org.opendaylight.unimgr</groupId>
       <artifactId>odl-unimgr-netvirt</artifactId>
       <version>${project.version}</version>
       <type>xml</type>
       <classifier>features</classifier>
-    </dependency>
+    </dependency>-->
     <dependency>
       <groupId>org.opendaylight.dlux</groupId>
       <artifactId>odl-dlux-core</artifactId>
@@ -54,11 +54,11 @@
       <type>xml</type>
       <classifier>features</classifier>
     </dependency>
-    <dependency>
+    <!--<dependency>
       <groupId>org.opendaylight.unimgr</groupId>
       <artifactId>cpeui-bundle</artifactId>
       <version>${project.version}</version>
-    </dependency>
+    </dependency>-->
   </dependencies>
   <build>
     <plugins>

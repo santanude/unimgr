@@ -47,13 +47,13 @@
       <type>xml</type>
       <classifier>features</classifier>
     </dependency>
-    <dependency>
+    <!--<dependency>
       <groupId>org.opendaylight.unimgr</groupId>
       <artifactId>odl-unimgr-console</artifactId>
       <version>${project.version}</version>
       <type>xml</type>
       <classifier>features</classifier>
-    </dependency>
+    </dependency>-->
     <dependency>
       <groupId>org.opendaylight.netconf</groupId>
       <artifactId>odl-mdsal-apidocs</artifactId>
