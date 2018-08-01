@@ -42,6 +42,7 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev18030
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityServiceBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityServiceKey;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.end.point.ServiceInterfacePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.ConnConstraintBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.topology.Node;
@@ -105,7 +106,7 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
     public void testSingleDriverActivation() throws Exception {
         //having
         final String servId = "service-id";
-        CreateConnectivityServiceInput input = new CreateConnectivityServiceInputBuilder()
+        CreateConnectivityServiceInput input = new CreateConnectivityServiceInputBuilder().setConnConstraint(new ConnConstraintBuilder().setIsExclusive(true).build())
                 .setEndPoint(eps(uuid1 + ":1", uuid1 + ":2"))
                 .build();
 
@@ -178,7 +179,7 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
         final String uuid2 = "uuid2";
         final String uuid3 = "uuid3";
 
-        CreateConnectivityServiceInput input = new CreateConnectivityServiceInputBuilder()
+        CreateConnectivityServiceInput input = new CreateConnectivityServiceInputBuilder().setConnConstraint(new ConnConstraintBuilder().setIsExclusive(true).build())
                 .setEndPoint(eps(uuid1 + ":1", uuid3 + ":3"))
                 .build();
 
