@@ -39,6 +39,7 @@ public class OpenFlowUtils {
     private static final String DROP_FLOW_ID = "default-DROP";
     private static final Short FLOW_TABLE_ID = 0;
     private static final int VLAN_FLOW_PRIORITY = 20;
+    private static final int EMPTY_VLAN_FLOW_PRIORITY = 20;
     private static final int INTERSWITCH_FLOW_PRIORITY = 10;
     private static final int DROP_FLOW_PRIORITY = 0;
 
@@ -106,6 +107,14 @@ public class OpenFlowUtils {
         List<Flow> flows = new ArrayList<>();
         flows.addAll(createVlanPassingFlows(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks));
         flows.add(createVlanIngressFlow(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks, queueNumber));
+
+        return flows;
+    }
+    
+    public static List<Flow> getFlows(String servicePort, List<Link> interswitchLinks, String serviceName, long queueNumber) {
+        List<Flow> flows = new ArrayList<>();
+        flows.addAll(createPassingFlows(servicePort, serviceName, interswitchLinks));
+        flows.addAll(createIngressFlow(servicePort, serviceName, interswitchLinks));
 
         return flows;
     }
@@ -200,9 +209,16 @@ public class OpenFlowUtils {
                                .map(link -> createVlanPassingFlow(outputPort, link.getLinkId().getValue(), internalVlanId, externalVlanId,serviceName))
                                .collect(Collectors.toList());
     }
+    
+    private static List<Flow> createPassingFlows(String outputPort, String serviceName, List<Link> interswitchLinks) {
+        return interswitchLinks.stream()
+                               .map(link -> createPassingFlow(outputPort, link.getLinkId().getValue(), serviceName))
+                               .collect(Collectors.toList());
+    }
 
     private static Flow createVlanPassingFlow(String outputPort, String inputPort, int internalVlanId, Optional<Integer> externalVlanId, String serviceName) {
         // Create list of actions and VLAN match
+        LOG.info(" inside createVlanPassingFlow () outputPort{}, inputPort{} ", outputPort, inputPort );
         List<Action> actions = new ArrayList<>();
         int actionOrder = 0;
 
@@ -219,6 +235,25 @@ public class OpenFlowUtils {
                 .setTableId(FLOW_TABLE_ID)
                 .setPriority(VLAN_FLOW_PRIORITY)
                 .setMatch(MatchUtils.createVlanMatch(internalVlanId, inputPort))
+                .setInstructions(ActionUtils.createInstructions(actions))
+                .build();
+    }
+    
+    private static Flow createPassingFlow(String outputPort, String inputPort, String serviceName) {
+        LOG.info(" inside createPassingFlow () outputPort{}, inputPort{} ", outputPort, inputPort );
+        List<Action> actions = new ArrayList<>();
+        int actionOrder = 0;
+
+        //actions.add(ActionUtils.createPopVlanAction(actionOrder++));
+        
+        actions.add(ActionUtils.createOutputAction(outputPort, actionOrder));
+
+        FlowId flowId = new FlowId(getVlanFlowId(serviceName, inputPort));
+        return new FlowBuilder().setId(flowId)
+                .setKey(new FlowKey(flowId))
+                .setTableId(FLOW_TABLE_ID)
+                .setPriority(EMPTY_VLAN_FLOW_PRIORITY)
+                .setMatch(MatchUtils.createWithoutVlanMatch(inputPort))
                 .setInstructions(ActionUtils.createInstructions(actions))
                 .build();
     }
@@ -257,6 +292,29 @@ public class OpenFlowUtils {
                                 .setMatch(externalVlanId.isPresent() ? MatchUtils.createVlanMatch(externalVlanId.get(), inputPort) : MatchUtils.createInPortMatch(inputPort))
                                 .setInstructions(ActionUtils.createInstructions(actions))
                                 .build();
+    }
+
+    private static List<Flow> createIngressFlow(String outputPort, String serviceName, List<Link> interswitchLinks) {
+        return interswitchLinks.stream()
+                               .map(link -> createIngressFlow(outputPort, link.getLinkId().getValue(), serviceName))
+                               .collect(Collectors.toList());
+    }
+    
+    public static Flow createIngressFlow(String outputPort, String inputPort, String serviceName) {
+        LOG.info(" inside createIngressFlow () outputPort{}, inputPort{} ", outputPort, inputPort );
+        List<Action> actions = new ArrayList<>();
+        int actionOrder = 0;
+
+        actions.add(ActionUtils.createOutputAction(inputPort, actionOrder));
+
+        FlowId flowId = new FlowId(getVlanFlowId(serviceName, outputPort));
+        return new FlowBuilder().setId(flowId)
+                .setKey(new FlowKey(flowId))
+                .setTableId(FLOW_TABLE_ID)
+                .setPriority(EMPTY_VLAN_FLOW_PRIORITY)
+                .setMatch(MatchUtils.createWithoutVlanMatch(outputPort))
+                .setInstructions(ActionUtils.createInstructions(actions))
+                .build();
     }
 
     private static String getVlanFlowId(String serviceName, String inputPort) {

@@ -106,7 +106,7 @@ public class OvsActivatorTest extends AbstractDataBrokerTest{
 
         //when
         try {
-            ovsActivator.activate(endPoints,serviceId);
+            ovsActivator.activate(endPoints,serviceId, true);
         } catch (ResourceNotAvailableException e) {
             fail(e.getMessage());
         } catch (TransactionCommitFailedException e) {

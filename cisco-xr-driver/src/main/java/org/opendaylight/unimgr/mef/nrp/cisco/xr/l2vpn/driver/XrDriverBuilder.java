@@ -52,6 +52,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             List<Map.Entry<EndPoint,EndPoint>> bridgeActivatedPairs = null;
             List<EndPoint> endPoints;
             String serviceId;
+            boolean isExclusive;
 
             @Override
             public void commit() {
@@ -64,9 +65,10 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             }
 
             @Override
-            public void initialize(List<EndPoint> endPoints, String serviceId, NrpConnectivityServiceAttrs context) {
+            public void initialize(List<EndPoint> endPoints, String serviceId, NrpConnectivityServiceAttrs context, boolean isExclusive) {
                 this.endPoints = endPoints;
                 this.serviceId = serviceId;
+                this.isExclusive = isExclusive;
 
                 localActivator = new L2vpnLocalConnectActivator(dataBroker,mountPointService);
                 p2pActivator = new L2vpnP2pConnectActivator(dataBroker,mountPointService);
@@ -127,7 +129,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
             BiConsumer<List<EndPoint>,AbstractL2vpnActivator> activate = (neighbors, activator) -> {
                 try {
-                    activator.activate(neighbors, serviceId);
+                    activator.activate(neighbors, serviceId, true);
                 } catch (TransactionCommitFailedException e) {
                     LOG.error("Activation error occured: {}",e.getMessage());
                 }

@@ -99,7 +99,7 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
             String uniqueStamp = service.getServiceIdPool().getServiceId();
             LOG.debug("connectivity service passed validation, request = {}", input);
 
-            ActivationTransaction tx = prepareTransaction(toCsId(uniqueStamp));
+            ActivationTransaction tx = prepareTransaction(toCsId(uniqueStamp), input.getConnConstraint().isIsExclusive());
             if (tx != null) {
                 ActivationTransaction.Result txResult = tx.activate();
                 if (txResult.isSuccessful()) {
@@ -127,7 +127,7 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
         }
     }
 
-    private ActivationTransaction prepareTransaction(String serviceId) throws FailureResult {
+    private ActivationTransaction prepareTransaction(String serviceId, boolean isExclusive) throws FailureResult {
         LOG.debug("decompose request");
         decomposedRequest = service.getDecomposer().decompose(endpoints, null);
 
@@ -142,7 +142,7 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
             if (!driver.isPresent()) {
                 throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", s.getNodeUuid()));
             }
-            driver.get().initialize(s.getEndpoints(), serviceId, null);
+            driver.get().initialize(s.getEndpoints(), serviceId, null, isExclusive);
             LOG.debug("driver {} added to activation transaction", driver.get());
             return driver.get();
         }).forEach(tx::addDriver);

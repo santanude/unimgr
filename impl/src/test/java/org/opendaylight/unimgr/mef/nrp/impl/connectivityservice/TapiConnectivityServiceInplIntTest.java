@@ -486,6 +486,7 @@ public class TapiConnectivityServiceInplIntTest extends AbstractTestWithTopo {
                 .setUuid(new Uuid(csId))
                 .setConnection(Collections.singletonList(connection.getUuid()))
                 .setEndPoint(toEps(connection.getConnectionEndPoint()))
+                .setIsExclusive(true)
                 .build();
         InstanceIdentifier<Context1> connectivityCtx = NrpDao.ctx().augmentation(Context1.class);
         tx.put(LogicalDatastoreType.OPERATIONAL, connectivityCtx.child(ConnectivityService.class,  new ConnectivityServiceKey(cs.getUuid())), cs);

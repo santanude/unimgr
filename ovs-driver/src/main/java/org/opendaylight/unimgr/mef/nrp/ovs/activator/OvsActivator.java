@@ -51,18 +51,18 @@ public class OvsActivator implements ResourceActivator {
      * @param endPoints list of endpoint to interconnect
      */
     @Override
-    public void activate(List<EndPoint> endPoints, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
+    public void activate(List<EndPoint> endPoints, String serviceName, boolean isExclusive) throws ResourceNotAvailableException, TransactionCommitFailedException {
         OvsActivatorHelper.validateExternalVLANs(endPoints);
 
         VlanUtils vlanUtils = new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue());
-
+       // boolean isExclusive = true;
         for (EndPoint endPoint:endPoints) {
-            activateEndpoint(endPoint, serviceName, vlanUtils);
-        }
+            activateEndpoint(endPoint, serviceName, vlanUtils, isExclusive);
+        } 
 
     }
 
-    private void activateEndpoint(EndPoint endPoint, String serviceName, VlanUtils vlanUtils) throws ResourceNotAvailableException, TransactionCommitFailedException {
+    private void activateEndpoint(EndPoint endPoint, String serviceName, VlanUtils vlanUtils, boolean isExclusive) throws ResourceNotAvailableException, TransactionCommitFailedException {
         // Transaction - Get Open vSwitch node and its flow table
         String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().getValue());
         TopologyTransaction topologyTransaction = new TopologyTransaction(dataBroker);
@@ -74,31 +74,40 @@ public class OvsActivator implements ResourceActivator {
         List<Flow> flowsToDelete = new ArrayList<>();
         List<Link> interswitchLinks = topologyTransaction.readInterswitchLinks(node);
         if (!OpenFlowUtils.isTablePreconfigured(table)) {
-            LOG.debug("Table is not preconfigured. Adding base flows.");
+            LOG.info("Table is not preconfigured. Adding base flows.");
             flowsToWrite.addAll(OpenFlowUtils.getBaseFlows(interswitchLinks));
             flowsToDelete.addAll(OpenFlowUtils.getExistingFlowsWithoutLLDP(table));
         }
 
-        OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction, endPoint);
+        OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction, endPoint, isExclusive);
         String openFlowPortName = ovsActivatorHelper.getOpenFlowPortName();
         long queueNumber = queueNumberGenerator.getAndIncrement();
-        flowsToWrite.addAll(OpenFlowUtils.getVlanFlows(openFlowPortName, vlanUtils.getVlanID(serviceName), ovsActivatorHelper.getCeVlanId(),interswitchLinks, serviceName, queueNumber));
-
-        // Transaction - Add flows related to service to table and remove unnecessary flows
-        TableTransaction tableTransaction = new TableTransaction(dataBroker, node, table);
-        tableTransaction.deleteFlows(flowsToDelete, true);
-        tableTransaction.writeFlows(flowsToWrite);
-
-		List<String> outputPortNames = interswitchLinks.stream()
-				.map(link -> ovsActivatorHelper.getTpNameFromOpenFlowPortName(link.getLinkId().getValue()))
-				.collect(Collectors.toList());
-
-		if(ovsActivatorHelper.isIBwpConfigured()) {
-            //Create egress qos
-            OvsdbUtils.createEgressQos(dataBroker, portName, outputPortNames, ovsActivatorHelper.getQosMinRate(),
-                    ovsActivatorHelper.getQosMaxRate(), serviceName, queueNumber);
+        
+        LOG.info("VLAN ID = {} ", ovsActivatorHelper.getCeVlanId().isPresent());
+        
+        if(isExclusive && ovsActivatorHelper.getCeVlanId().isPresent() == false ){
+            LOG.info( " NEW LOGIC here openFlowPortName {}" , openFlowPortName);
+            flowsToWrite.addAll(OpenFlowUtils.getFlows(openFlowPortName, interswitchLinks, serviceName, queueNumber));
+        }
+        else{
+            LOG.info( "EXISTING LOGIC");
+            flowsToWrite.addAll(OpenFlowUtils.getVlanFlows(openFlowPortName, vlanUtils.getVlanID(serviceName), ovsActivatorHelper.getCeVlanId(),interswitchLinks, serviceName, queueNumber));
         }
 
+        // Transaction - Add flows related to service to table and remove unnecessary flows
+            TableTransaction tableTransaction = new TableTransaction(dataBroker, node, table);
+            tableTransaction.deleteFlows(flowsToDelete, true);
+            tableTransaction.writeFlows(flowsToWrite);
+
+    		List<String> outputPortNames = interswitchLinks.stream()
+    				.map(link -> ovsActivatorHelper.getTpNameFromOpenFlowPortName(link.getLinkId().getValue()))
+    				.collect(Collectors.toList());
+    
+    		if(ovsActivatorHelper.isIBwpConfigured()) {
+                //Create egress qos
+                OvsdbUtils.createEgressQos(dataBroker, portName, outputPortNames, ovsActivatorHelper.getQosMinRate(),
+                        ovsActivatorHelper.getQosMaxRate(), serviceName, queueNumber);
+            }
 
 
     }
@@ -117,7 +126,7 @@ public class OvsActivator implements ResourceActivator {
 
         // Transaction - Get Open vSwitch node and its flow table
         TopologyTransaction topologyTransaction = new TopologyTransaction(dataBroker);
-        OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction, endPoint);
+        OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction, endPoint, true);
 
         Node openFlowNode = topologyTransaction.readNodeOF(ovsActivatorHelper.getOpenFlowPortName());
         Table table = OpenFlowUtils.getTable(openFlowNode);
@@ -150,7 +159,7 @@ public class OvsActivator implements ResourceActivator {
 	private void updateEndpoint(EndPoint endPoint, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException{
 
 		TopologyTransaction topologyTransaction = new TopologyTransaction(dataBroker);
-	    OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction, endPoint);
+	    OvsActivatorHelper ovsActivatorHelper = new OvsActivatorHelper(topologyTransaction, endPoint, true);
 
 		String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().getValue());
 		Node node = topologyTransaction.readNode(portName);

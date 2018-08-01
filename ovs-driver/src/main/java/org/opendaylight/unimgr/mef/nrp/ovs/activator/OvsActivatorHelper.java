@@ -38,6 +38,7 @@ class OvsActivatorHelper {
     private EndPoint endPoint;
     private String tpName;
     private BiMap<String, String> portMap;
+    private boolean isExclusive;
 
     private static final String INGRESS_BWP_FLOW_NOT_SET_ERROR_MESSAGE = "Ingress bwp flow is not set for End Point '%s'.";
     private static final String ATTRS_NOT_SET_ERROR_MESSAGE = "End Point '%s' does not have '%s' set.";
@@ -46,11 +47,12 @@ class OvsActivatorHelper {
 
     private static final Logger LOG = LoggerFactory.getLogger(OvsActivatorHelper.class);
 
-    OvsActivatorHelper(TopologyTransaction topologyTransaction, EndPoint endPoint) {
+    OvsActivatorHelper(TopologyTransaction topologyTransaction, EndPoint endPoint, boolean isExclusive) {
         this.nodes = topologyTransaction.readNodes();
         this.endPoint = endPoint;
         tpName = getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().getValue());
         this.portMap = createPortMap(nodes);
+        this.isExclusive = isExclusive;
     }
 
     private OvsActivatorHelper(EndPoint endPoint) {
@@ -66,17 +68,32 @@ class OvsActivatorHelper {
 
         if ( (endPoint.getAttrs() != null) && (endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource() != null) ) {
             NrpCarrierEthConnectivityEndPointResource attr = endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
-            if ( (attr.getCeVlanIdListAndUntag()!=null) && !(attr.getCeVlanIdListAndUntag().getVlanId().isEmpty()) ) {
+           /* if ( (attr.getCeVlanIdListAndUntag()!=null) && !(attr.getCeVlanIdListAndUntag().getVlanId().isEmpty()) ) {
                 //for now we support only one CE VLAN
                 return Optional.of(attr.getCeVlanIdListAndUntag().getVlanId().get(0).getVlanId().getValue().intValue());
             } else {
                 return Optional.empty(); //port-base service
-            }
+            }*/
+             
+            LOG.info("isExclusive value {}", isExclusive);
+            // if isExclusive == false i.e tag based service like EVPL, EVLAN
+            if (isExclusive) {
+                if ((attr.getCeVlanIdListAndUntag() != null) && !(attr.getCeVlanIdListAndUntag().getVlanId().isEmpty())) {
+                    // for now we support only one CE VLAN
+                    return Optional.of(attr.getCeVlanIdListAndUntag().getVlanId().get(0).getVlanId().getValue().intValue());
+                } 
+            }else {
+                if ( (attr.getCeVlanIdListAndUntag()!=null) && !(attr.getCeVlanIdListAndUntag().getVlanId().isEmpty()) ) {
+                   return Optional.of(attr.getCeVlanIdListAndUntag().getVlanId().get(0).getVlanId().getValue().intValue());
+                } 
+            }    
+
         } else {
             String className = NrpCarrierEthConnectivityEndPointResource.class.toString();
             LOG.warn(String.format(ATTRS_NOT_SET_ERROR_MESSAGE, tpName, className));
             throw new ResourceNotAvailableException(String.format(ATTRS_NOT_SET_ERROR_MESSAGE, tpName, className));
         }
+        return Optional.empty();
     }
 
     /**
