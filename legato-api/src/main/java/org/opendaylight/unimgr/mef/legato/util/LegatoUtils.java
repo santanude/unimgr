@@ -395,7 +395,7 @@ public class LegatoUtils {
         LOG.info("Received a request to add node {}", nodeIdentifier);
         boolean result = false;
         final WriteTransaction transaction = dataBroker.newWriteOnlyTransaction();
-        
+
         Optional<Evc> optionalEvc = LegatoUtils.readEvc(
                 dataBroker,
                 LogicalDatastoreType.OPERATIONAL,
@@ -413,8 +413,7 @@ public class LegatoUtils {
         if (optionalEvc.isPresent()) {
             transaction.put(LogicalDatastoreType.OPERATIONAL, nodeIdentifier,
                 new SubscriberServicesBuilder().setEvc(evcList).build());
-        }
-        else {
+        } else {
             transaction.merge(LogicalDatastoreType.OPERATIONAL, nodeIdentifier,
                     new SubscriberServicesBuilder().setEvc(evcList).build());
         }
@@ -429,9 +428,9 @@ public class LegatoUtils {
 
     }
 
-    public static List<String> validateVlanTag(EVCDao evcDao){
+    public static List<String> validateVlanTag(EVCDao evcDao) {
         List<String> vlanIdList = new ArrayList<String>();
-        ArrayList<String> vlanTagList = new ArrayList<String> ();
+        ArrayList<String> vlanTagList = new ArrayList<String>();
 
         for (String uniId : evcDao.getUniIdList()) {
             vlanTagList = (ArrayList<String>) evcDao.getUniVlanIdList().get(uniId);
@@ -439,10 +438,10 @@ public class LegatoUtils {
                 vlanIdList = vlanTagList;
             } else if (vlanIdList.size() != vlanTagList.size()) {
                 LOG.error("All end points should have equal number of vlan tags");
-                vlanIdList = new ArrayList<String> ();
-            } else if (!vlanIdList.equals(vlanTagList)){
+                vlanIdList = new ArrayList<String>();
+            } else if (!vlanIdList.equals(vlanTagList)) {
                 LOG.error("All end points should have same vlan tags");
-                vlanIdList = new ArrayList<String> ();
+                vlanIdList = new ArrayList<String>();
             }
         }
         return vlanIdList;

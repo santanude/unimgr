@@ -176,7 +176,7 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
 
         try {
             EVCDao evcDao =  LegatoUtils.parseNodes(evc);
-            LOG.info ("========" + evcDao.getUniVlanIdList().toString());
+            LOG.info("========" + evcDao.getUniVlanIdList().toString());
             assert evcDao != null
                     && evcDao.getUniIdList() != null && evcDao.getConnectionType() != null;
             LOG.info(" connection-type :{}, svc-type :{}", evcDao.getConnectionType(), evcDao.getSvcType());
@@ -203,8 +203,8 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                         for (int i = 0; i < vlanIdList.size(); i++) {
                             if (callCreateConnectionService(
                                     LegatoUtils.buildCreateConnectivityServiceInput(evcDao, vlanIdList.get(i)),
-                                    evcDao.getEvcId(), uuidList) ){
-                            }else{
+                                    evcDao.getEvcId(), uuidList)) {
+                            } else {
                                 // Safe option is to remove created connectivity services if one of them fails. 
                                 deleteConnection(evcDao.getEvcId());
                                 uuidList = null;
@@ -212,7 +212,7 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                             }
                         }
 
-                        if (uuidList != null && uuidList.size() > 0){
+                        if (uuidList != null && uuidList.size() > 0) {
                             EVC_UUID_MAP_LIST.put(evcDao.getEvcId(), uuidList);
                             
                             Optional<Evc> optionalEvc = LegatoUtils.readEvc(
@@ -231,7 +231,7 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                                         dataBroker);
                             }
                         }
-                        LOG.info ("EVC_UUID_MAP_LIST  " + EVC_UUID_MAP_LIST.toString());
+                        LOG.info("EVC_UUID_MAP_LIST  " + EVC_UUID_MAP_LIST.toString());
                     }
                 }
             } else {
@@ -313,7 +313,7 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                 LOG.info("Deleting UUID: {} of EVC Id: {} ",
                         EVC_UUID_MAP_LIST.get(evcId), evcId);
 
-                for(String uuid : EVC_UUID_MAP_LIST.get(evcId)){
+                for (String uuid : EVC_UUID_MAP_LIST.get(evcId)) {
                     // on successful deletion of service, remove respective element from EVC_UUID_MAP_LIST
                     if (callDeleteConnectionService(new DeleteConnectivityServiceInputBuilder()
                             .setServiceIdOrName(uuid).build())) {
