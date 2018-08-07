@@ -86,10 +86,14 @@ public class LegatoUtils {
             vlanId = "0";
             vlanIdList = new ArrayList<String>();
             assert endPoint.getCeVlans().getCeVlan() != null;
-            for (VlanIdType vlanIdType : endPoint.getCeVlans().getCeVlan()) {
-                vlanId = vlanIdType.getValue().toString();
+            if (endPoint.getCeVlans().getCeVlan().size() > 0) {
+                for (VlanIdType vlanIdType : endPoint.getCeVlans().getCeVlan()) {
+                    vlanId = vlanIdType.getValue().toString();
+                    vlanIdList.add(vlanId);
+                }
+            }else{
+                vlanIdList.add(vlanId);
             }
-            vlanIdList.add(vlanId);
             uniVlanList.put(endPoint.getUniId().getValue().toString(), vlanIdList);
             uniIdList.add(endPoint.getUniId().getValue().toString());
         }
