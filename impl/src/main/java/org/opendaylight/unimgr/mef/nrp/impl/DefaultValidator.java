@@ -8,8 +8,12 @@
 
 package org.opendaylight.unimgr.mef.nrp.impl;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import javax.annotation.Nonnull;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.unimgr.mef.nrp.api.RequestValidator;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.LocalClass;
@@ -17,14 +21,9 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev18030
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityService;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.update.connectivity.service.input.EndPoint;
-import org.opendaylight.yangtools.yang.data.api.schema.tree.TreeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -103,4 +102,50 @@ public class DefaultValidator implements RequestValidator {
 
         return new ValidationResult();
     }
+
+    @Override
+    public ValidationResult checkValidServiceInterfacePoint(CreateConnectivityServiceInput input) {
+        boolean isExclusive = input.getConnConstraint().isIsExclusive();
+        List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint> inputEndPointList =
+                input.getEndPoint();
+        List<ConnectivityService> serviceList =
+                new NrpDao(dataBroker.newReadOnlyTransaction()).getConnectivityServiceList();
+
+        if (serviceList == null) {
+            return new ValidationResult();
+        } else {
+            for (ConnectivityService service : serviceList) {
+                List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPoint> serviceEndPointList =
+                        service.getEndPoint();
+                for (org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint inputServiceEndpoint : inputEndPointList) {
+
+                    for (org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPoint servicEndPoint : serviceEndPointList) {
+
+                        if (areEndpointsEqual(servicEndPoint, inputServiceEndpoint)) {
+                            if (isExclusive == true
+                                    || (isExclusive == false && service.isIsExclusive() == true)) {
+                                return new ValidationResult().problem(
+                                        String.format("Endpoint %s already in use by service %s",
+                                                inputServiceEndpoint.getServiceInterfacePoint()
+                                                        .getServiceInterfacePointId().getValue(),
+                                                service.getUuid().getValue()));
+                            }
+                        }
+
+                    }
+                }
+            }
+
+        }
+        return new ValidationResult();
+    }
+    
+    private boolean areEndpointsEqual(
+            org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPoint servicEndPoint,
+            org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint inputServiceEndpoint) {
+        return servicEndPoint.getServiceInterfacePoint().getServiceInterfacePointId().getValue()
+                .equalsIgnoreCase(inputServiceEndpoint.getServiceInterfacePoint()
+                        .getServiceInterfacePointId().getValue());
+   }
+    
 }

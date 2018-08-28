@@ -88,7 +88,16 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
                 return res.build();
 
             }
-
+            
+            RequestValidator.ValidationResult endPointValidationResult = validateInputEndpoint();
+            if (!endPointValidationResult.isValid()) {
+                LOG.debug("validation for create connectivity service failed = {}", input);
+                RpcResultBuilder<CreateConnectivityServiceOutput> res1 = RpcResultBuilder.failed();
+                endPointValidationResult.getProblems().forEach(p -> res1.withError(RpcError.ErrorType.APPLICATION, p));
+                return res1.build();
+            }
+            
+            
             endpoints = input.getEndPoint().stream().map(ep -> {
                 EndPoint2 nrpAttributes = ep.getAugmentation(EndPoint2.class);
                 EndPoint endPoint = new EndPoint(ep, nrpAttributes);
@@ -125,6 +134,8 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
                     .withError(ErrorType.APPLICATION, e.getMessage())
                     .build();
         }
+        
+        
     }
 
     private ActivationTransaction prepareTransaction(String serviceId, boolean isExclusive) throws FailureResult {
@@ -152,6 +163,10 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
 
     private RequestValidator.ValidationResult validateInput() {
         return service.getValidator().checkValid(input);
+    }
+    
+    private RequestValidator.ValidationResult validateInputEndpoint(){
+        return service.getValidator().checkValidServiceInterfacePoint(input);
     }
 
     private String toCsId(String uniqueStamp) {
@@ -306,4 +321,4 @@ class CreateConnectivityAction implements Callable<RpcResult<CreateConnectivityS
 
         return ceps;
     }
-}
+ }

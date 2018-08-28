@@ -23,6 +23,7 @@ import javax.annotation.Nonnull;
 public interface RequestValidator {
     @Nonnull ValidationResult checkValid(CreateConnectivityServiceInput input);
     @Nonnull ValidationResult checkValid(UpdateConnectivityServiceInput input);
+    @Nonnull ValidationResult checkValidServiceInterfacePoint(CreateConnectivityServiceInput input);
 
     class ValidationResult {
         private final List<String> problems;
