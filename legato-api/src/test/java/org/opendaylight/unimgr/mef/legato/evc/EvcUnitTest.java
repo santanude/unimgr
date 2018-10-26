@@ -163,7 +163,7 @@ public class EvcUnitTest {
             MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class,
                     Constants.CREATE_CONNECTIVITY_INPUT, DataBroker.class,
                     LogicalDatastoreType.class, InstanceIdentifier.class));
-            when(LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID))
+            when(LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint()))
                             .thenReturn((CreateConnectivityServiceInput) objInputBuilder);
 
             final InstanceIdentifier<?> evcKey = InstanceIdentifier.create(MefServices.class)

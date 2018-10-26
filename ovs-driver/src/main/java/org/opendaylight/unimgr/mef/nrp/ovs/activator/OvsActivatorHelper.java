@@ -76,7 +76,7 @@ class OvsActivatorHelper {
             }*/
              
             LOG.info("isExclusive value {}", isExclusive);
-            // if isExclusive == false i.e tag based service like EVPL, EVLAN
+            // if isExclusive == false i.e tag based service like EVPL, EVLAN, EVPTREE
             if (isExclusive) {
                 if ((attr.getCeVlanIdListAndUntag() != null) && !(attr.getCeVlanIdListAndUntag().getVlanId().isEmpty())) {
                     // for now we support only one CE VLAN

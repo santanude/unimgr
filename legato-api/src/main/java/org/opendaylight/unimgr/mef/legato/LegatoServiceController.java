@@ -194,6 +194,12 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                                 .equalsIgnoreCase(LegatoConstants.MULTIPOINTTOMULTIPOINT))) {
                     LOG.info(
                             "connection-type in payload should be multipoint-to-multipoint when svc-type is eplan/evplan");
+                } else if ((evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EPTREE)
+                        || evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EVPTREE))
+                        && (!evcDao.getConnectionType().replace("-", "")
+                                .equalsIgnoreCase(LegatoConstants.ROOTEDMULTIPOINT))) {
+                    LOG.info(
+                            "connection-type in payload should be rooted-multipoint when svc-type is eptree/evptree");
                 } else {
                     assert evcDao.getUniVlanIdList() != null;
                     List<String> vlanIdList = LegatoUtils.validateVlanTag(evcDao);
@@ -202,7 +208,7 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                         List<String> uuidList = new ArrayList<String>();
                         for (int i = 0; i < vlanIdList.size(); i++) {
                             if (callCreateConnectionService(
-                                    LegatoUtils.buildCreateConnectivityServiceInput(evcDao, vlanIdList.get(i)),
+                                    LegatoUtils.buildCreateConnectivityServiceInput(evcDao, vlanIdList.get(i), evc.getEndPoints().getEndPoint()),
                                     evcDao.getEvcId(), uuidList)) {
                             } else {
                                 // Safe option is to remove created connectivity services if one of them fails. 
@@ -235,7 +241,7 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                     }
                 }
             } else {
-                LOG.info("svc-type in payload should be epl, evpl, eplan, evplan");
+                LOG.info("svc-type in payload should be epl, evpl, eplan, evplan, evptree");
             }
 
         } catch (Exception ex) {
@@ -266,6 +272,12 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                                 .equalsIgnoreCase(LegatoConstants.MULTIPOINTTOMULTIPOINT))) {
                     LOG.info(
                             "connection-type in payload should be multipoint-to-multipoint when svc-type is eplan/evplan");
+                } else if ((evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EPTREE)
+                        || evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EVPTREE))
+                        && (!evcDao.getConnectionType().replace("-", "")
+                                .equalsIgnoreCase(LegatoConstants.ROOTEDMULTIPOINT))) {
+                    LOG.info(
+                            "connection-type in payload should be rooted-multipoint when svc-type is eptree/evptree");
                 } else {
                     if (EVC_UUID_MAP_LIST.containsKey(evcDao.getEvcId())) {
                         LOG.info("Update UUID: {} of EVC Id: {} ",
@@ -279,21 +291,12 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                             deleteConnection(evcDao.getEvcId());
                             createConnection(evc);
                         }
-                       /* List<String> uniList = evcDao.getUniList();
-                        assert uniList != null && uniList.size() > 0;
-
-                        for (String uniStr : uniList) {
-                            callUpdateConnectionService(
-                                    LegatoUtils.buildUpdateConnectivityServiceInput(evcDao, uniStr,
-                                            EVC_UUIDMAP.get(evcDao.getEvcId())),
-                                    evcDao.getEvcId());
-                        }*/
                     } else {
                         LOG.info("UUID does not exists for EVC Id : {}", evcDao.getEvcId());
                     }
                 }
             } else {
-                LOG.info("svc-type in payload should be epl, evpl, eplan, evplan");
+                LOG.info("svc-type in payload should be epl, evpl, eplan, evplan, eptree, evptree");
             }
         } catch (Exception ex) {
 

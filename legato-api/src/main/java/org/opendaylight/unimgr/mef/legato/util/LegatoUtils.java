@@ -78,7 +78,7 @@ public class LegatoUtils {
         List<String> vlanIdList;
         Map<String, Object> uniVlanList = new HashMap<String, Object>();
         String vlanId;
-        EVCDao evcDao = new EVCDao();
+        final EVCDao evcDao = new EVCDao();
 
         assert evc != null;
         assert evc.getEndPoints().getEndPoint() != null && evc.getEndPoints().getEndPoint().size() > 0;
@@ -91,7 +91,7 @@ public class LegatoUtils {
                     vlanId = vlanIdType.getValue().toString();
                     vlanIdList.add(vlanId);
                 }
-            }else{
+            } else {
                 vlanIdList.add(vlanId);
             }
             uniVlanList.put(endPoint.getUniId().getValue().toString(), vlanIdList);
@@ -104,6 +104,7 @@ public class LegatoUtils {
         evcDao.setSvcType(evc.getSvcType().getName());
         evcDao.setUniIdList(uniIdList);
         evcDao.setUniVlanList(uniVlanList);
+
         return evcDao;
     }
 
@@ -154,16 +155,18 @@ public class LegatoUtils {
                 .setMaxFrameSize(new PositiveInteger(Long.parseLong(maxFrameSize))).build();
     }
 
-    public static CreateConnectivityServiceInput buildCreateConnectivityServiceInput(EVCDao evcDao, String vlanId) {
+    public static CreateConnectivityServiceInput buildCreateConnectivityServiceInput(EVCDao evcDao,
+            String vlanId, List<EndPoint> endpoints) {
 
         CreateConnectivityServiceInputBuilder createConnServiceInputBuilder =
                 new CreateConnectivityServiceInputBuilder();
         List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint> endpointList;
         boolean isExclusive = false;
 
-        // if svc-type = epl/eplan then set is_exclusive flag as true
+        // if svc-type = epl, eplan or eptree then set is_exclusive flag as true
         if (evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EPL)
-                || evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EPLAN)) {
+                || evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EPLAN)
+                || evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EPTREE)) {
             isExclusive = true;
         }
 
@@ -178,14 +181,19 @@ public class LegatoUtils {
                         .setServiceLevel(LegatoConstants.BEST_EFFORT).setIsExclusive(isExclusive)
                         .setServiceType(ServiceType.MULTIPOINTCONNECTIVITY).build());
                 break;
+            case LegatoConstants.ROOTEDMULTIPOINT:
+                createConnServiceInputBuilder.setConnConstraint(new ConnConstraintBuilder()
+                        .setServiceLevel(LegatoConstants.BEST_EFFORT).setIsExclusive(isExclusive)
+                        .setServiceType(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY).build());
+                break;
             default:
                 break;
         }
 
 
         // build end points
-        assert evcDao.getUniIdList() != null && evcDao.getUniIdList().size() > 0;
-        endpointList = buildCreateEndpoints(evcDao.getUniIdList(), LayerProtocolName.ETH, vlanId);
+        assert endpoints != null && endpoints.size() > 0;
+        endpointList = buildCreateEndpoints(endpoints, LayerProtocolName.ETH, vlanId);
 
         createConnServiceInputBuilder.setEndPoint(endpointList);
 
@@ -203,9 +211,10 @@ public class LegatoUtils {
         UpdateConnectivityServiceInputBuilder updateConnServiceInputBuilder =
                 new UpdateConnectivityServiceInputBuilder();
 
-        // if svc-type = epl/eplan then set is_exclusive flag as true
+        // if svc-type = epl, eplan or eptree then set is_exclusive flag as true
         if (evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EPL)
-                || evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EPLAN)) {
+                || evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EPLAN)
+                || evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EPTREE)) {
             isExclusive = true;
         }
 
@@ -222,6 +231,12 @@ public class LegatoUtils {
                                 .setServiceLevel(LegatoConstants.BEST_EFFORT).setIsExclusive(isExclusive)
                                 .setServiceType(ServiceType.MULTIPOINTCONNECTIVITY).build());
                 break;
+            case LegatoConstants.ROOTEDMULTIPOINT:
+                updateConnServiceInputBuilder
+                        .setConnConstraint(new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.update.connectivity.service.input.ConnConstraintBuilder()
+                                .setServiceLevel(LegatoConstants.BEST_EFFORT).setIsExclusive(isExclusive)
+                                .setServiceType(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY).build());
+                break;
             default:
                 break;
         }
@@ -236,18 +251,17 @@ public class LegatoUtils {
     }
 
     private static List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint> buildCreateEndpoints(
-            List<String> uniIdList, LayerProtocolName layerProtocolName, String vlanId) {
+            List<EndPoint> endpoints, LayerProtocolName layerProtocolName, String vlanId) {
         List<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint> endpointList =
                 new ArrayList<org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.create.connectivity.service.input.EndPoint>();
 
         EndPointBuilder endPointBuilder;
-
-        for (String uniId : uniIdList) {
+        for(org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.EndPoint ep : endpoints) {
             ServiceInterfacePoint sipRef = new ServiceInterfacePointBuilder()
-                    .setServiceInterfacePointId(new Uuid(uniId)).build();
+                    .setServiceInterfacePointId(new Uuid(ep.getUniId().getValue())).build();
 
-            endPointBuilder = new EndPointBuilder().setRole(PortRole.SYMMETRIC)
-                    .setLocalId("e:" + uniId).setServiceInterfacePoint(sipRef)
+            endPointBuilder = new EndPointBuilder().setRole(ep.getRole().getName().equalsIgnoreCase(PortRole.ROOT.getName()) ?  PortRole.ROOT : PortRole.LEAF)
+                    .setLocalId("e:" + ep.getUniId().getValue()).setServiceInterfacePoint(sipRef)
                     .setDirection(PortDirection.BIDIRECTIONAL)
                     .setLayerProtocolName(layerProtocolName).addAugmentation(EndPoint2.class,
                             LegatoUtils.buildCreateEthConnectivityEndPointAugmentation(vlanId));

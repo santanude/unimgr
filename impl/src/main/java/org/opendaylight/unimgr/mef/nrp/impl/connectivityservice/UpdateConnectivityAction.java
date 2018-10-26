@@ -123,7 +123,7 @@ public class UpdateConnectivityAction implements Callable<RpcResult<UpdateConnec
 
                     endpoint.setNepRef(nepRef.get());
 
-                    driver.get().initialize(Arrays.asList(endpoint), serviceId, null, true);
+                    driver.get().initialize(Arrays.asList(endpoint), serviceId, null, true, null);
                     tx.addDriver(driver.get());
                 } else {
                     LOG.warn("No driver information for node {}", node.getUuid());

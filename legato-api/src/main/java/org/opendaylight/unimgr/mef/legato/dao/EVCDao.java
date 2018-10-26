@@ -21,7 +21,7 @@ public class EVCDao {
     private String svcType;
     private List<String> uniIdList;
     private Map<String, Object> uniVlanIdList;
-    
+
 
     public String getEvcId() {
         return evcId;

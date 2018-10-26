@@ -16,10 +16,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import ch.qos.logback.classic.spi.LoggingEvent;
-import ch.qos.logback.core.Appender;
-
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
 
@@ -65,6 +61,7 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.Identifier4
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.MaxFrameSizeType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.MefServiceType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.VlanIdType;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceInputBuilder;
@@ -80,6 +77,9 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
 
 /**
  * @author Arif.Hussain@Xoriant.Com
@@ -167,9 +167,13 @@ public class EvcIntegrationTest {
         try {
             assertNotNull(evc);
             final EVCDao evcDao = LegatoUtils.parseNodes(evc);
+
+            CreateConnectivityServiceInput input = LegatoUtils.buildCreateConnectivityServiceInput(
+                    evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint());
+
             Future<RpcResult<CreateConnectivityServiceOutput>> result =
-                    this.prestoConnectivityService.createConnectivityService(
-                            LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID));
+                    this.prestoConnectivityService.createConnectivityService(input);
+
             assertTrue(result.get().isSuccessful());
 
             final InstanceIdentifier<?> evcKey = InstanceIdentifier.create(MefServices.class)
@@ -202,7 +206,7 @@ public class EvcIntegrationTest {
     }
 
 
-    @SuppressWarnings("unchecked")
+   @SuppressWarnings("unchecked")
     @Test
     public void updateEvc() throws InterruptedException, ExecutionException {
 

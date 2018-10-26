@@ -7,8 +7,15 @@
  */
 package org.opendaylight.unimgr.mef.nrp.ovs.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.opendaylight.controller.liblldp.EtherTypes;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortRole;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowId;
@@ -20,12 +27,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.N
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Link;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Class responsible for managing OpenFlow rules in OVS.
@@ -45,6 +46,7 @@ public class OpenFlowUtils {
 
     private static final String FLOW_TABLE_NOT_PRESENT_ERROR_MESSAGE = "Flow table is not present in node '%s'.";
     private static final String NODE_NOT_AUGMENTED_ERROR_MESSAGE = "Node '%s' does not have '%s' augmentation.";
+
     /**
      * Checks if flow table contains base flows
      *
@@ -110,7 +112,46 @@ public class OpenFlowUtils {
 
         return flows;
     }
-    
+
+    /**
+     * Returns list of E-Tree flows for passing traffic using decorated S-VLAN ID via qos queue numer
+     *
+     * @param role differentiate coming endpoint is root or leaf
+     * @param servicePort port on which service is activated (format: openflow:[node]:[port])
+     * @param internalVlanId VLAN ID used internally in OvSwitch network
+     * @param externalVlanId VLAN ID for VLAN aware services. If -1 then ignored and port-base service created.
+     * @param interswitchLinks list of interswitch links for the node on which service is activated
+     * @param serviceName service name (used as prefix for flow IDs)
+     * @param queueNumber qos queue number
+     * @param rootCount identify number of roots
+     * @return list of flows
+     */
+    public static List<Flow> getTreeVlanFlows(String role, String servicePort, int internalVlanId,
+            Optional<Integer> externalVlanId, List<Link> interswitchLinks, String serviceName,
+            long queueNumber, long rootCount, EtreeUtils eTreeUtils) throws ResourceNotAvailableException, TransactionCommitFailedException {
+        List<Flow> flows = new ArrayList<>();
+
+        if (rootCount > 1) { // Case: More then one Roots
+            if (role.equalsIgnoreCase(PortRole.ROOT.getName())) {
+                flows.addAll(createVlanPassingFlows(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks));
+                flows.addAll(createVlanPassingFlows(servicePort, eTreeUtils.getVlanID(serviceName), externalVlanId, serviceName, interswitchLinks));
+                flows.add(createVlanIngressFlow(servicePort, eTreeUtils.getVlanID(serviceName), externalVlanId, serviceName, interswitchLinks, queueNumber));
+            } else {
+                flows.addAll(createVlanPassingFlows(servicePort, eTreeUtils.getVlanID(serviceName), externalVlanId, serviceName, interswitchLinks));
+                flows.add(createVlanIngressFlow(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks, queueNumber));
+            }
+        } else { // Case: Only one Root and more then one Leaf
+            if (role.equalsIgnoreCase(PortRole.ROOT.getName())) {
+                flows.addAll(createVlanPassingFlows(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks));
+                flows.add(createVlanIngressFlow(servicePort, eTreeUtils.getVlanID(serviceName), externalVlanId, serviceName, interswitchLinks, queueNumber));
+            } else {
+                flows.addAll(createVlanPassingFlows(servicePort, eTreeUtils.getVlanID(serviceName), externalVlanId, serviceName, interswitchLinks));
+                flows.add(createVlanIngressFlow(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks, queueNumber));
+            }
+        }
+        return flows;
+    }
+
     public static List<Flow> getFlows(String servicePort, List<Link> interswitchLinks, String serviceName, long queueNumber) {
         List<Flow> flows = new ArrayList<>();
         flows.addAll(createPassingFlows(servicePort, serviceName, interswitchLinks));
@@ -229,7 +270,7 @@ public class OpenFlowUtils {
         }
         actions.add(ActionUtils.createOutputAction(outputPort, actionOrder));
 
-        FlowId flowId = new FlowId(getVlanFlowId(serviceName, inputPort));
+        FlowId flowId = new FlowId(getVlanFlowId(serviceName, inputPort, internalVlanId));
         return new FlowBuilder().setId(flowId)
                 .setKey(new FlowKey(flowId))
                 .setTableId(FLOW_TABLE_ID)
@@ -238,7 +279,7 @@ public class OpenFlowUtils {
                 .setInstructions(ActionUtils.createInstructions(actions))
                 .build();
     }
-    
+
     private static Flow createPassingFlow(String outputPort, String inputPort, String serviceName) {
         LOG.info(" inside createPassingFlow () outputPort{}, inputPort{} ", outputPort, inputPort );
         List<Action> actions = new ArrayList<>();
@@ -248,7 +289,7 @@ public class OpenFlowUtils {
         
         actions.add(ActionUtils.createOutputAction(outputPort, actionOrder));
 
-        FlowId flowId = new FlowId(getVlanFlowId(serviceName, inputPort));
+        FlowId flowId = new FlowId(getVlanFlowId(serviceName, inputPort, 0));
         return new FlowBuilder().setId(flowId)
                 .setKey(new FlowKey(flowId))
                 .setTableId(FLOW_TABLE_ID)
@@ -283,7 +324,7 @@ public class OpenFlowUtils {
                                                                                         outputActionOrder + outputPortIds.indexOf(outputPortId)))
                                     .collect(Collectors.toList()));
 
-        FlowId flowId = new FlowId(getVlanFlowId(serviceName, inputPort));
+        FlowId flowId = new FlowId(getVlanFlowId(serviceName, inputPort, internalVlanId));
         return new FlowBuilder().setId(flowId)
                                 .setKey(new FlowKey(flowId))
                                 .setTableId(FLOW_TABLE_ID)
@@ -299,7 +340,7 @@ public class OpenFlowUtils {
                                .map(link -> createIngressFlow(outputPort, link.getLinkId().getValue(), serviceName))
                                .collect(Collectors.toList());
     }
-    
+
     public static Flow createIngressFlow(String outputPort, String inputPort, String serviceName) {
         LOG.info(" inside createIngressFlow () outputPort{}, inputPort{} ", outputPort, inputPort );
         List<Action> actions = new ArrayList<>();
@@ -307,7 +348,7 @@ public class OpenFlowUtils {
 
         actions.add(ActionUtils.createOutputAction(inputPort, actionOrder));
 
-        FlowId flowId = new FlowId(getVlanFlowId(serviceName, outputPort));
+        FlowId flowId = new FlowId(getVlanFlowId(serviceName, outputPort, 0));
         return new FlowBuilder().setId(flowId)
                 .setKey(new FlowKey(flowId))
                 .setTableId(FLOW_TABLE_ID)
@@ -317,7 +358,10 @@ public class OpenFlowUtils {
                 .build();
     }
 
-    private static String getVlanFlowId(String serviceName, String inputPort) {
-        return serviceName + "-" + FLOW_ID_MIDDLE_PART + "-" + inputPort;
+    private static String getVlanFlowId(String serviceName, String inputPort, int vlanId) {
+        if (vlanId != 0){
+            return serviceName + "-" + FLOW_ID_MIDDLE_PART.concat(String.valueOf(vlanId)) + "-" + inputPort;
+        }else {return serviceName + "-" + FLOW_ID_MIDDLE_PART + "-" + inputPort;}
+        
     }
 }

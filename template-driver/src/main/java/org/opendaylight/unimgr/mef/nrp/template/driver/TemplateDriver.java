@@ -41,7 +41,8 @@ public class TemplateDriver implements ActivationDriverBuilder {
             public List<EndPoint> endpoints;
             public String serviceId;
             public boolean isExlusive;
-
+            public String serviceType;
+            
             @Override
             public void commit() {
                 LOG.info("commit was triggered for {}", serviceId);
@@ -53,10 +54,11 @@ public class TemplateDriver implements ActivationDriverBuilder {
             }
 
             @Override
-            public void initialize(List<EndPoint> endPoints, String serviceId, NrpConnectivityServiceAttrs context, boolean isExlusive) {
+            public void initialize(List<EndPoint> endPoints, String serviceId, NrpConnectivityServiceAttrs context, boolean isExlusive, String serviceType) {
                 this.serviceId = serviceId;
                 this.endpoints = endPoints;
                 this.isExlusive = isExlusive;
+                this.serviceType = serviceType;
 
                 LOG.info("Driver initialized with: " + epsInfo());
             }

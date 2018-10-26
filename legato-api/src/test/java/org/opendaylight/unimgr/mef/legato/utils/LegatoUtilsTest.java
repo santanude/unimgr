@@ -182,11 +182,11 @@ public class LegatoUtilsTest {
         when(LegatoUtils.parseNodes(evc)).thenReturn(evcDao);
         MemberModifier.suppress(
                 MemberMatcher.method(LegatoUtils.class, Constants.CREATE_CONNECTIVITY_INPUT));
-        when(LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID))
+        when(LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint()))
                 .thenReturn(input);
         assertNotNull(input);
         assertEquals(input,
-                LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID));
+                LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint()));
     }
 
 

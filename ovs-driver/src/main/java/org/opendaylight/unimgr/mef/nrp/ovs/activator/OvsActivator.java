@@ -7,13 +7,11 @@
  */
 package org.opendaylight.unimgr.mef.nrp.ovs.activator;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
@@ -21,9 +19,12 @@ import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TableTransaction;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TopologyTransaction;
+import org.opendaylight.unimgr.mef.nrp.ovs.util.EtreeUtils;
 import org.opendaylight.unimgr.mef.nrp.ovs.util.OpenFlowUtils;
 import org.opendaylight.unimgr.mef.nrp.ovs.util.OvsdbUtils;
 import org.opendaylight.unimgr.mef.nrp.ovs.util.VlanUtils;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortRole;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ServiceType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
@@ -51,18 +52,20 @@ public class OvsActivator implements ResourceActivator {
      * @param endPoints list of endpoint to interconnect
      */
     @Override
-    public void activate(List<EndPoint> endPoints, String serviceName, boolean isExclusive) throws ResourceNotAvailableException, TransactionCommitFailedException {
+    public void activate(List<EndPoint> endPoints, String serviceName, boolean isExclusive, String serviceType) throws ResourceNotAvailableException, TransactionCommitFailedException {
         OvsActivatorHelper.validateExternalVLANs(endPoints);
 
         VlanUtils vlanUtils = new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue());
+        EtreeUtils eTreeUtils = new EtreeUtils();
+        long rootCount = endPoints.stream().filter(node -> node.getEndpoint().getRole().equals(PortRole.ROOT)).count();
        // boolean isExclusive = true;
         for (EndPoint endPoint:endPoints) {
-            activateEndpoint(endPoint, serviceName, vlanUtils, isExclusive);
+            activateEndpoint(endPoint, serviceName, vlanUtils, isExclusive, serviceType, rootCount, eTreeUtils);
         } 
 
     }
 
-    private void activateEndpoint(EndPoint endPoint, String serviceName, VlanUtils vlanUtils, boolean isExclusive) throws ResourceNotAvailableException, TransactionCommitFailedException {
+    private void activateEndpoint(EndPoint endPoint, String serviceName, VlanUtils vlanUtils, boolean isExclusive, String serviceType, long rootCount, EtreeUtils eTreeUtils) throws ResourceNotAvailableException, TransactionCommitFailedException {
         // Transaction - Get Open vSwitch node and its flow table
         String portName = OvsActivatorHelper.getPortName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId().getValue());
         TopologyTransaction topologyTransaction = new TopologyTransaction(dataBroker);
@@ -91,7 +94,12 @@ public class OvsActivator implements ResourceActivator {
         }
         else{
             LOG.info( "EXISTING LOGIC");
-            flowsToWrite.addAll(OpenFlowUtils.getVlanFlows(openFlowPortName, vlanUtils.getVlanID(serviceName), ovsActivatorHelper.getCeVlanId(),interswitchLinks, serviceName, queueNumber));
+            if(serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
+                flowsToWrite.addAll(OpenFlowUtils.getTreeVlanFlows(endPoint.getEndpoint().getRole().getName(), openFlowPortName, vlanUtils.getVlanID(serviceName), ovsActivatorHelper.getCeVlanId(),interswitchLinks, serviceName, queueNumber, rootCount, eTreeUtils));
+            }else {
+                flowsToWrite.addAll(OpenFlowUtils.getVlanFlows(openFlowPortName, vlanUtils.getVlanID(serviceName), ovsActivatorHelper.getCeVlanId(),interswitchLinks, serviceName, queueNumber));
+            }
+            
         }
 
         // Transaction - Add flows related to service to table and remove unnecessary flows
@@ -113,13 +121,16 @@ public class OvsActivator implements ResourceActivator {
     }
 
 	@Override
-    public void deactivate(List<EndPoint> endPoints, String serviceName) throws TransactionCommitFailedException, ResourceNotAvailableException {
+    public void deactivate(List<EndPoint> endPoints, String serviceName,String serviceType) throws TransactionCommitFailedException, ResourceNotAvailableException {
 
         for (EndPoint endPoint:endPoints) {
         	deactivateEndpoint(endPoint, serviceName);
         }
         new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue()).releaseServiceVlan(serviceName);
-
+        if (serviceType != null
+                && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
+            new EtreeUtils().releaseTreeServiceVlan(serviceName);
+        }
     }
 
     private void deactivateEndpoint(EndPoint endPoint, String serviceName) throws ResourceNotAvailableException, TransactionCommitFailedException {
