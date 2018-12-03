@@ -24,6 +24,7 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnLocalConnectActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnP2pConnectActivator;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.PseudowireHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.SipHandler;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.NrpConnectivityServiceAttrs;
 import org.slf4j.Logger;
@@ -52,7 +53,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             List<Map.Entry<EndPoint,EndPoint>> bridgeActivatedPairs = null;
             List<EndPoint> endPoints;
             String serviceId;
-
+	   
             @Override
             public void commit() {
                 //ignore for the moment
@@ -67,7 +68,8 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             public void initialize(List<EndPoint> endPoints, String serviceId, NrpConnectivityServiceAttrs context) {
                 this.endPoints = endPoints;
                 this.serviceId = serviceId;
-
+                PseudowireHelper.generatePseudowireId();
+		
                 localActivator = new L2vpnLocalConnectActivator(dataBroker,mountPointService);
                 p2pActivator = new L2vpnP2pConnectActivator(dataBroker,mountPointService);
             }
@@ -127,7 +129,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
             BiConsumer<List<EndPoint>,AbstractL2vpnActivator> activate = (neighbors, activator) -> {
                 try {
-                    activator.activate(neighbors, serviceId);
+               	    activator.activate(neighbors, serviceId);
                 } catch (TransactionCommitFailedException e) {
                     LOG.error("Activation error occured: {}",e.getMessage());
                 }

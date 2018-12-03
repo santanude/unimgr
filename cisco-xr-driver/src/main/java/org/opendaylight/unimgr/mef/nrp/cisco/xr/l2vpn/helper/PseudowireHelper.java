@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class PseudowireHelper {
 
-    private long pseudowireId;
+    private static long pseudowireId;
 
     private List<Pseudowire> pseudowires;
 
@@ -46,17 +46,24 @@ public class PseudowireHelper {
     }
 
     public PseudowireHelper() {
-        this.pseudowireId = IdGenerator.generate();
+//        this.pseudowireId = 2000; //IdGenerator.generate();
         pseudowires = new LinkedList<>();
     }
 
-    public PseudowireHelper(long pseudowireId) {
+  /*  public PseudowireHelper(long pseudowireId) {
         this.pseudowireId = pseudowireId;
         pseudowires = new LinkedList<>();
+    }
+*/
+
+    public static long generatePseudowireId(){
+      pseudowireId = IdGenerator.generate();
+      return pseudowireId;
     }
 
     public PseudowireHelper addPseudowire(Ipv4AddressNoZone neighbor) {
         PseudowireIdRange pwId = new PseudowireIdRange(pseudowireId);
+ 
 
         Pseudowire pseudowire = new PseudowireBuilder()
             .setNeighbor(createNeighbor(neighbor))
@@ -74,7 +81,7 @@ public class PseudowireHelper {
             .build();
     }
 
-    private List<Neighbor> createNeighbor(Ipv4AddressNoZone address) {
+    private List<Neighbor> createNeighbor(Ipv4AddressNoZone address){
         PseudowireLabelRange label = new PseudowireLabelRange(pseudowireId);
 
         MplsStaticLabels mplsStaticLabels = new MplsStaticLabelsBuilder()
@@ -83,8 +90,9 @@ public class PseudowireHelper {
                 .build();
 
         Neighbor neighbor = new NeighborBuilder()
-                .setNeighbor(address).setMplsStaticLabels(mplsStaticLabels)
-                .setXmlClass(new CiscoIosXrString("static"))
+                .setNeighbor(address)
+//		.setMplsStaticLabels(mplsStaticLabels)
+  //              .setXmlClass(new CiscoIosXrString("static"))
                 .build();
 
         return Collections.singletonList(neighbor);

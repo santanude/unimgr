@@ -28,12 +28,11 @@ public class PseudowireHelperTest {
     @Test
     public void testBuild() {
         //given
-        Long pseudowireId = 2000L;
+        Long pseudowireId = PseudowireHelper.generatePseudowireId();
         Ipv4AddressNoZone neighborAddress = new Ipv4AddressNoZone("1.2.3.4");
 
         //when
-        Pseudowires actual = new PseudowireHelper(pseudowireId).addPseudowire(neighborAddress).build();
-
+	Pseudowires actual = new PseudowireHelper().addPseudowire(neighborAddress).build();
         //then
         assertNotNull(actual);
 

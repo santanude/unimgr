@@ -69,6 +69,9 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     public void activate(List<EndPoint> endPoints, String serviceId) throws TransactionCommitFailedException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
+
+	LOG.info("innerName= "+ innerName + "  :  outerName = " + outerName + " ....");
+
         ServicePort port = null;
         ServicePort neighbor = null;
         for (EndPoint endPoint: endPoints) {
@@ -90,6 +93,12 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         Pseudowires pseudowires = activatePseudowire(neighbor);
         XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
+
+	
+	LOG.info("\n=====  nodeName : " + port.getNode().getValue() + ", vlan : " + port.getVlanId());
+        LOG.info("\n=====  interfaceName : " + port.getInterfaceName().toString() + " |||| " + port.getTp().getValue() +",, topology : " + port.getTopology().getValue());
+	LOG.info("\n=====  getL2vpnId() : " + L2vpnHelper.getL2vpnId() + ", \nneighbor : " + neighbor.getVlanId() + " : " + neighbor.getInterfaceName().toString() + " : " + neighbor.getNode().getValue() );
+		        
 
         doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, qosConfig);
     }
