@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Cisco Systems Inc and others.  All rights reserved.
+ * All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -60,14 +60,15 @@ public class InterfaceHelper {
 
         configurationBuilder
             .setInterfaceName(name)
-            .setActive(new InterfaceActive("act"))
-            .setShutdown(Boolean.FALSE);
+            .setActive(new InterfaceActive("act"));
+//            .setShutdown(Boolean.FALSE);
 
         if (mtus.isPresent()) {
             configurationBuilder.setMtus(mtus.get());
         }
 
-        if (setL2Transport) {
+
+      if (setL2Transport) {
             setL2Configuration(configurationBuilder);
         }
 
