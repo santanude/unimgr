@@ -114,8 +114,7 @@ public class OpenFlowUtils {
     }
 
     /**
-     * Returns list of E-Tree flows for passing traffic using decorated S-VLAN ID via qos queue numer
-     *
+     * Method is used for tagged (EVP) base tree service  .
      * @param role differentiate coming endpoint is root or leaf
      * @param servicePort port on which service is activated (format: openflow:[node]:[port])
      * @param internalVlanId VLAN ID used internally in OvSwitch network
@@ -123,10 +122,13 @@ public class OpenFlowUtils {
      * @param interswitchLinks list of interswitch links for the node on which service is activated
      * @param serviceName service name (used as prefix for flow IDs)
      * @param queueNumber qos queue number
-     * @param rootCount identify number of roots
+     * @param rootCount shows number of root
+     * @param eTreeUtils is utility object
      * @return list of flows
+     * @throws ResourceNotAvailableException if node is not augmented with FlowCapableNode class or flow table is not present in node
+     * @throws TransactionCommitFailedException is raised and returned when transaction commit failed
      */
-    public static List<Flow> getTreeVlanFlows(String role, String servicePort, int internalVlanId,
+    public static List<Flow> getEvpTree(String role, String servicePort, int internalVlanId,
             Optional<Integer> externalVlanId, List<Link> interswitchLinks, String serviceName,
             long queueNumber, long rootCount, EtreeUtils eTreeUtils) throws ResourceNotAvailableException, TransactionCommitFailedException {
         List<Flow> flows = new ArrayList<>();
@@ -149,9 +151,91 @@ public class OpenFlowUtils {
                 flows.add(createVlanIngressFlow(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks, queueNumber));
             }
         }
+
         return flows;
     }
 
+    /**
+     * Method is used for port base (EP) tree service  .
+     * @param role differentiate coming endpoint is root or leaf
+     * @param servicePort port on which service is activated (format: openflow:[node]:[port])
+     * @param internalVlanId VLAN ID used internally in OvSwitch network
+     * @param externalVlanId VLAN ID for VLAN aware services. If -1 then ignored and port-base
+     *        service created.
+     * @param interswitchLinks list of interswitch links for the node on which service is activated
+     * @param serviceName service name (used as prefix for flow IDs)
+     * @param queueNumber qos queue number
+     * @param rootCount shows number of root
+     * @param eTreeUtils is utility object
+     * @param isExclusive show requested service is port or tag based
+     * @return list of flows
+     * @throws ResourceNotAvailableException if node is not augmented with FlowCapableNode class or
+     *         flow table is not present in node
+     * @throws TransactionCommitFailedException is raised and returned when transaction commit
+     *         failed
+     */
+    public static List<Flow> getEpTree(String role, String servicePort, int internalVlanId,
+            Optional<Integer> externalVlanId, List<Link> interswitchLinks, String serviceName,
+            long queueNumber, long rootCount, EtreeUtils eTreeUtils, boolean isExclusive) throws ResourceNotAvailableException, TransactionCommitFailedException {
+        List<Flow> flows = new ArrayList<>();
+
+        EtreeUtils.cpeVlanRange();
+        EtreeUtils.generatePrePopVlan();
+        EtreeUtils.speVlanRange(internalVlanId);
+        defaultFlows(role, flows, servicePort, internalVlanId, externalVlanId, interswitchLinks, serviceName, queueNumber, rootCount, eTreeUtils, isExclusive);
+        unTaggedFlows(role, flows, servicePort, internalVlanId, externalVlanId, interswitchLinks, serviceName, queueNumber, rootCount, eTreeUtils, isExclusive);
+
+        return flows;
+    }
+
+    /**
+     * @param role differentiate coming endpoint is root or leaf
+     * @param flows object 
+     * @param servicePort port on which service is activated (format: openflow:[node]:[port])
+     * @param internalVlanId VLAN ID used internally in OvSwitch network
+     * @param externalVlanId VLAN ID for VLAN aware services. If -1 then ignored and port-base service created.
+     * @param interswitchLinks list of interswitch links for the node on which service is activated
+     * @param serviceName service name (used as prefix for flow IDs)
+     * @param queueNumber qos queue number
+     * @param rootCount shows number of root
+     * @param eTreeUtils is utility object
+     * @param isExclusive show requested service is port or tag based
+     * @return list of flows
+     */
+    private static List<Flow> defaultFlows(String role, List<Flow> flows, String servicePort,
+            int internalVlanId, Optional<Integer> externalVlanId, List<Link> interswitchLinks,
+            String serviceName, long queueNumber, long rootCount, EtreeUtils eTreeUtils,
+            boolean isExclusive) {
+        
+        if (rootCount > 1) { // Case: More then one Roots
+            if (role.equalsIgnoreCase(PortRole.ROOT.getName())) {
+                flows.addAll(createVlanPassingFlows(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks));
+                flows.addAll(createVlanPassingFlows(servicePort, OVSConstant.SPEDEFAULTVAL, externalVlanId, serviceName, interswitchLinks));
+                flows.add(createVlanIngressFlow(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks, queueNumber));
+            } else {
+                flows.addAll(createVlanPassingFlows(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks));
+                flows.add(createVlanIngressFlow(servicePort, OVSConstant.SPEDEFAULTVAL, externalVlanId, serviceName, interswitchLinks, queueNumber));
+            }
+        } else { // Case: Only one Root and more then one Leaf
+            if (role.equalsIgnoreCase(PortRole.ROOT.getName())) {
+                flows.addAll(createVlanPassingFlows(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks));
+                flows.addAll(createIngressFlow(servicePort, serviceName, interswitchLinks));
+            } else {
+                flows.addAll(createPassingFlows(servicePort, serviceName, interswitchLinks));
+                flows.add(createVlanIngressFlow(servicePort, internalVlanId, externalVlanId, serviceName, interswitchLinks, queueNumber));
+            }
+        }
+
+        return flows;
+    }
+
+    /**
+     * @param servicePort servicePort port on which service is activated (format: openflow:[node]:[port])
+     * @param interswitchLinks list of interswitch links for the node on which service is activated
+     * @param serviceName service name (used as prefix for flow IDs)
+     * @param queueNumber qos queue number
+     * @return list of flows
+     */
     public static List<Flow> getFlows(String servicePort, List<Link> interswitchLinks, String serviceName, long queueNumber) {
         List<Flow> flows = new ArrayList<>();
         flows.addAll(createPassingFlows(servicePort, serviceName, interswitchLinks));
@@ -159,6 +243,94 @@ public class OpenFlowUtils {
 
         return flows;
     }
+
+    /**
+     * @param role differentiate coming endpoint is root or leaf
+     * @param flows object 
+     * @param servicePort port on which service is activated (format: openflow:[node]:[port])
+     * @param internalVlanId VLAN ID used internally in OvSwitch network
+     * @param externalVlanId VLAN ID for VLAN aware services. If -1 then ignored and port-base service created.
+     * @param interswitchLinks list of interswitch links for the node on which service is activated
+     * @param serviceName service name (used as prefix for flow IDs)
+     * @param queueNumber qos queue number
+     * @param rootCount shows number of root
+     * @param eTreeUtils is utility object
+     * @param isExclusive show requested service is port or tag based
+     * @return list of flows
+     * @throws ResourceNotAvailableException if node is not augmented with FlowCapableNode class or flow table is not present in node
+     * @throws TransactionCommitFailedException is raised and returned when transaction commit failed
+     */
+    private static List<Flow> unTaggedFlows(String role, List<Flow> flows, String servicePort, int internalVlanId, Optional<Integer> externalVlanId, List<Link> interswitchLinks,
+            String serviceName, long queueNumber, long rootCount, EtreeUtils eTreeUtils, boolean isExclusive) throws ResourceNotAvailableException, TransactionCommitFailedException {
+
+        if (role.equalsIgnoreCase(PortRole.ROOT.getName())) {
+            createRootFlows(flows, servicePort, internalVlanId, externalVlanId, interswitchLinks, serviceName, queueNumber, rootCount, eTreeUtils);
+        } else {
+            createLeafFlows(flows, servicePort, internalVlanId, externalVlanId, interswitchLinks, serviceName, queueNumber, eTreeUtils);
+        }
+
+        return flows;
+    }
+
+    /**
+     * @param flows object
+     * @param servicePort port on which service is activated (format: openflow:[node]:[port])
+     * @param internalVlanId VLAN ID used internally in OvSwitch network
+     * @param externalVlanId VLAN ID for VLAN aware services. If -1 then ignored and port-base service created.
+     * @param interswitchLinks list of interswitch links for the node on which service is activated
+     * @param serviceName service name (used as prefix for flow IDs)
+     * @param queueNumber qos queue number
+     * @param rootCount shows number of root
+     * @param eTreeUtils is utility object
+     * @throws ResourceNotAvailableException if node is not augmented with FlowCapableNode class or flow table is not present in node
+     * @throws TransactionCommitFailedException is raised and returned when transaction commit failed
+     */
+    public static void createRootFlows(List<Flow> flows, String servicePort, int internalVlanId, Optional<Integer> externalVlanId, List<Link> interswitchLinks, String serviceName, long queueNumber, long rootCount, EtreeUtils eTreeUtils) throws ResourceNotAvailableException, TransactionCommitFailedException {
+        int[] rng = EtreeUtils.isAvailableVlan(internalVlanId);
+
+        for (int i = rng[0]; i <= rng[1]; i++) {
+            int epVlanID = eTreeUtils.getEpVlanID(serviceName, OVSConstant.CPETYPE);
+            externalVlanId = Optional.of(Integer.valueOf(epVlanID));
+            
+            if (rootCount > 1) { // Case: More then one Roots
+                flows.addAll(createVlanPassingFlows(servicePort, i, externalVlanId, serviceName, interswitchLinks));
+                flows.addAll(createVlanPassingFlows(servicePort, epVlanID, externalVlanId, serviceName, interswitchLinks));
+                flows.add(createVlanIngressFlow(servicePort, epVlanID, externalVlanId, serviceName, interswitchLinks, queueNumber));
+            } else { // Case: Only one Root and more then one Leaf
+                flows.addAll(createVlanPassingFlows(servicePort, i, externalVlanId, serviceName, interswitchLinks));
+                flows.add(createVlanIngressFlow(servicePort, epVlanID, externalVlanId, serviceName, interswitchLinks, queueNumber));
+            }
+        }
+
+        eTreeUtils.releaseEpTreeServiceVlan(serviceName);
+    }
+
+    /**
+     * @param flows object
+     * @param servicePort port on which service is activated (format: openflow:[node]:[port])
+     * @param internalVlanId VLAN ID used internally in OvSwitch network
+     * @param externalVlanId VLAN ID for VLAN aware services. If -1 then ignored and port-base service created.
+     * @param interswitchLinks list of interswitch links for the node on which service is activated
+     * @param serviceName service name (used as prefix for flow IDs)
+     * @param queueNumber qos queue number
+     * @param eTreeUtils is utility object
+     * @throws ResourceNotAvailableException if node is not augmented with FlowCapableNode class or flow table is not present in node
+     * @throws TransactionCommitFailedException is raised and returned when transaction commit failed
+     * @return flows for leaf
+     */
+    public static List<Flow> createLeafFlows(List<Flow> flows, String servicePort, int internalVlanId, Optional<Integer> externalVlanId, List<Link> interswitchLinks, String serviceName,
+            long queueNumber, EtreeUtils eTreeUtils) throws ResourceNotAvailableException, TransactionCommitFailedException{
+
+        for (int vlan = OVSConstant.CPESTARTINCLUSIVE; vlan <= OVSConstant.CPEENDEXCLUSIVE; vlan++) {
+            externalVlanId = Optional.of(Integer.valueOf(vlan));
+            flows.addAll(createVlanPassingFlows(servicePort, vlan, externalVlanId, serviceName, interswitchLinks));
+            flows.add(createVlanIngressFlow(servicePort, eTreeUtils.getEpVlanID(serviceName, OVSConstant.SPETYPE), externalVlanId, serviceName, interswitchLinks, queueNumber));
+        }
+        eTreeUtils.releaseEpTreeServiceVlan(serviceName);
+
+        return flows;
+    }
+
 
     /**
      * Returns list of flows related to service named serviceName installed in specified flow table

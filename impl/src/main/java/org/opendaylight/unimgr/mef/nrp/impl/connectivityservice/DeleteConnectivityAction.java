@@ -145,7 +145,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
             if (!driver.isPresent()) {
                 throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", e.getKey()));
             }
-            driver.get().initialize(e.getValue(), serviceId.getValue(), null, true, serviceType);
+            driver.get().initialize(e.getValue(), serviceId.getValue(), null, false, serviceType);
             LOG.debug("driver {} added to deactivation transaction", driver.get());
             return driver.get();
         }).forEach(tx::addDriver);

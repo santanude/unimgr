@@ -90,12 +90,17 @@ public class OvsActivator implements ResourceActivator {
         
         if(isExclusive && ovsActivatorHelper.getCeVlanId().isPresent() == false ){
             LOG.info( " NEW LOGIC here openFlowPortName {}" , openFlowPortName);
-            flowsToWrite.addAll(OpenFlowUtils.getFlows(openFlowPortName, interswitchLinks, serviceName, queueNumber));
+            // Port based E-tree service 
+            if(serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
+                flowsToWrite.addAll(OpenFlowUtils.getEpTree(endPoint.getEndpoint().getRole().getName(), openFlowPortName, vlanUtils.getVlanID(serviceName), ovsActivatorHelper.getCeVlanId(),interswitchLinks, serviceName, queueNumber, rootCount, eTreeUtils, isExclusive));
+            } else {
+                flowsToWrite.addAll(OpenFlowUtils.getFlows(openFlowPortName, interswitchLinks, serviceName, queueNumber));
+            }
         }
         else{
             LOG.info( "EXISTING LOGIC");
             if(serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
-                flowsToWrite.addAll(OpenFlowUtils.getTreeVlanFlows(endPoint.getEndpoint().getRole().getName(), openFlowPortName, vlanUtils.getVlanID(serviceName), ovsActivatorHelper.getCeVlanId(),interswitchLinks, serviceName, queueNumber, rootCount, eTreeUtils));
+                flowsToWrite.addAll(OpenFlowUtils.getEvpTree(endPoint.getEndpoint().getRole().getName(), openFlowPortName, vlanUtils.getVlanID(serviceName), ovsActivatorHelper.getCeVlanId(),interswitchLinks, serviceName, queueNumber, rootCount, eTreeUtils));
             }else {
                 flowsToWrite.addAll(OpenFlowUtils.getVlanFlows(openFlowPortName, vlanUtils.getVlanID(serviceName), ovsActivatorHelper.getCeVlanId(),interswitchLinks, serviceName, queueNumber));
             }
@@ -121,15 +126,14 @@ public class OvsActivator implements ResourceActivator {
     }
 
 	@Override
-    public void deactivate(List<EndPoint> endPoints, String serviceName,String serviceType) throws TransactionCommitFailedException, ResourceNotAvailableException {
+    public void deactivate(List<EndPoint> endPoints, String serviceName,String serviceType, boolean isExclusive) throws TransactionCommitFailedException, ResourceNotAvailableException {
 
         for (EndPoint endPoint:endPoints) {
         	deactivateEndpoint(endPoint, serviceName);
         }
         new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue()).releaseServiceVlan(serviceName);
-        if (serviceType != null
-                && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
-            new EtreeUtils().releaseTreeServiceVlan(serviceName);
+        if (serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()) && isExclusive == false) {
+                new EtreeUtils().releaseTreeServiceVlan(serviceName);
         }
     }
 

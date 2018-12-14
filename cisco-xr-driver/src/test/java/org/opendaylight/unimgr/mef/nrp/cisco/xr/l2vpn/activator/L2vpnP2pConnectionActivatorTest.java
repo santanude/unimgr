@@ -107,7 +107,7 @@ public class L2vpnP2pConnectionActivatorTest extends AbstractDataBrokerTest {
     private void deactivate() {
         //when
         try {
-            l2VpnP2PConnectActivator.deactivate(endPoints,serviceId, ServiceType.POINTTOPOINTCONNECTIVITY.getName());
+            l2VpnP2PConnectActivator.deactivate(endPoints,serviceId, ServiceType.POINTTOPOINTCONNECTIVITY.getName(), false);
         } catch (TransactionCommitFailedException e) {
             fail("Error during deactivation : " + e.getMessage());
         }
