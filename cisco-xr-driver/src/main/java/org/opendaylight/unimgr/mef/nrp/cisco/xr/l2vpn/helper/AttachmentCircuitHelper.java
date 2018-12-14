@@ -34,7 +34,7 @@ public class AttachmentCircuitHelper {
     public AttachmentCircuitHelper addPort(ServicePort port) {
         attachmentCircuits.add(
             new AttachmentCircuitBuilder()
-                .setName(InterfaceHelper.getInterfaceName(port))
+                .setName((null == port.getVlanId()) ? InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port))
                 .setEnable(Boolean.TRUE)
                 .build()
         );
