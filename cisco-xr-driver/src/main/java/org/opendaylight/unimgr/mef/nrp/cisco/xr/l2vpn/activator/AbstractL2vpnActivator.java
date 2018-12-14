@@ -98,9 +98,14 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 	LOG.info("\n=====  nodeName : " + port.getNode().getValue() + ", vlan : " + port.getVlanId());
         LOG.info("\n=====  interfaceName : " + port.getInterfaceName().toString() + " |||| " + port.getTp().getValue() +",, topology : " + port.getTopology().getValue());
 	LOG.info("\n=====  getL2vpnId() : " + L2vpnHelper.getL2vpnId() + ", \nneighbor : " + neighbor.getVlanId() + " : " + neighbor.getInterfaceName().toString() + " : " + neighbor.getNode().getValue() );
-		        
 
-        doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, qosConfig);
+
+	if(null != L2vpnHelper.getL2vpnId()){	
+		InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
+		createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
+	 }
+
+	doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, qosConfig);
     }
 
     @Override
@@ -133,6 +138,21 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         transaction.submit().checkedGet();
     }
 
+    protected void createSubInterface(String nodeName,
+		                InterfaceConfigurations interfaceConfigurations
+				            ) throws TransactionCommitFailedException {
+
+ 	LOG.info("\ninside createSubInterface()===");
+	    Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
+			            if (!optional.isPresent()) {
+						   LOG.error("Could not retrieve MountPoint for {}", nodeName);
+					        return;
+					 }
+	   WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
+	   transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
+	   transaction.submit().checkedGet();
+    }
+
     protected void doDeactivate(String nodeName,
                                 InstanceIdentifier<P2pXconnect> xconnectId,
                                 InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId) throws TransactionCommitFailedException {
@@ -152,6 +172,8 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     protected abstract java.util.Optional<PolicyManager> activateQos(String name, ServicePort port);
 
     protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu);
+
+    protected abstract InterfaceConfigurations createSubInterface(ServicePort portA, ServicePort portZ, long mtu);
 
     protected abstract Pseudowires activatePseudowire(ServicePort neighbor);
 

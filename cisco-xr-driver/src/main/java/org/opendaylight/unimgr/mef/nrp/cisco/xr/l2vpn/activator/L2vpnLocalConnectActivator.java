@@ -60,6 +60,15 @@ public class L2vpnLocalConnectActivator extends AbstractL2vpnActivator {
             .build();
     }
 
+
+    @Override
+    public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor, long mtu) {
+
+          return new InterfaceHelper()
+                .addSubInterface(port, Optional.empty(), true)
+                .build();
+    }
+
     @Override
     protected Pseudowires activatePseudowire(ServicePort neighbor) {
         return new PseudowireHelper().build();

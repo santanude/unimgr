@@ -11,9 +11,18 @@ import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurationsBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceModeEnum;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationBuilder;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.Mtus;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109.InterfaceConfiguration2;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109.InterfaceConfiguration2Builder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109._interface.configurations._interface.configuration.EthernetService;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109._interface.configurations._interface.configuration.EthernetServiceBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109._interface.configurations._interface.configuration.ethernet.service.Encapsulation;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109._interface.configurations._interface.configuration.ethernet.service.EncapsulationBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.datatypes.rev151109.Match;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.datatypes.rev151109.VlanTagOrAny;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.InterfaceConfiguration3;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.InterfaceConfiguration3Builder;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109._interface.configurations._interface.configuration.L2Transport;
@@ -43,6 +52,20 @@ public class InterfaceHelper {
         return new InterfaceName(interfaceName);
     }
 
+    public static InterfaceName getSubInterfaceName(ServicePort port) {
+        String interfaceName = port.getTp().getValue();
+
+        if (interfaceName.contains(":")) {
+            interfaceName = interfaceName.split(":")[1];
+        }
+        if (null != port.getVlanId()) {
+            interfaceName = interfaceName + "." + port.getVlanId();
+            }
+
+        return new InterfaceName(interfaceName);
+    }
+
+
     public static InstanceIdentifier<InterfaceConfigurations> getInterfaceConfigurationsId() {
         return InstanceIdentifier.builder(InterfaceConfigurations.class).build();
     }
@@ -55,6 +78,10 @@ public class InterfaceHelper {
         return addInterface(getInterfaceName(port), mtus, setL2Transport);
     }
 
+    public InterfaceHelper addSubInterface(ServicePort port, Optional<Mtus> mtus, boolean setL2Transport) {
+         return addSubInterface(getSubInterfaceName(port), mtus, port);
+     }
+
     public InterfaceHelper addInterface(InterfaceName name, Optional<Mtus> mtus, boolean setL2Transport) {
         InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();
 
@@ -63,7 +90,7 @@ public class InterfaceHelper {
             .setActive(new InterfaceActive("act"));
 //            .setShutdown(Boolean.FALSE);
 
-        if (mtus.isPresent()) {
+      if (mtus.isPresent()) {
             configurationBuilder.setMtus(mtus.get());
         }
 
@@ -72,8 +99,46 @@ public class InterfaceHelper {
             setL2Configuration(configurationBuilder);
         }
 
+
         configurations.add(configurationBuilder.build());
         return this;
+    }
+
+    public InterfaceHelper addSubInterface(InterfaceName name, Optional<Mtus> mtus, ServicePort port) {
+       InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();  
+
+       configurationBuilder
+            .setInterfaceName(name)
+            .setActive(new InterfaceActive("act"))
+//            .setShutdown(Boolean.FALSE)
+            .setDescription("Create sub interface through ODL")
+            .setInterfaceModeNonPhysical(InterfaceModeEnum.L2Transport);
+
+
+            setEthernetService(configurationBuilder, port);
+
+	    if (mtus.isPresent()) {
+	             configurationBuilder.setMtus(mtus.get());
+	    }
+	
+	     configurations.add(configurationBuilder.build());
+	 return this;
+    }
+
+    private void setEthernetService(InterfaceConfigurationBuilder configurationBuilder, ServicePort port) {
+        Encapsulation encapsulation = new EncapsulationBuilder()
+           .setOuterRange1Low(new VlanTagOrAny(port.getVlanId()))
+           .setOuterTagType(Match.MatchDot1q)
+           .build();
+
+        InterfaceConfiguration2 augmentation = new InterfaceConfiguration2Builder()
+                .setEthernetService(new EthernetServiceBuilder()
+                    .setEncapsulation(encapsulation)
+                    .build()
+                )
+                .build();
+
+          configurationBuilder.addAugmentation(InterfaceConfiguration2.class, augmentation);
     }
 
     public InterfaceConfigurations build() {
