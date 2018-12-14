@@ -132,16 +132,18 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     }
 
     protected void createSubInterface(String nodeName,
-                                      InterfaceConfigurations interfaceConfigurations) throws TransactionCommitFailedException {
+            InterfaceConfigurations interfaceConfigurations
+	            ) throws TransactionCommitFailedException {
 
-       Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
-       if (!optional.isPresent()) {
-         LOG.error("Could not retrieve MountPoint for {}", nodeName);
-         return;
-       }
-       WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-       transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
-       transaction.submit().checkedGet();
+    	LOG.info("\ninside createSubInterface()===");
+    	Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
+    	if (!optional.isPresent()) {
+    		LOG.error("Could not retrieve MountPoint for {}", nodeName);
+    		return;
+    	}
+    	WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
+    	transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
+    	transaction.submit().checkedGet();
     }
 
     protected void doDeactivate(String nodeName,

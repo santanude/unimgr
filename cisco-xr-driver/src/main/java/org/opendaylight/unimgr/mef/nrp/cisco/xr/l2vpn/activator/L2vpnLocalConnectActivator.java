@@ -63,8 +63,9 @@ public class L2vpnLocalConnectActivator extends AbstractL2vpnActivator {
 
     @Override
     public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor, long mtu) {
+
           return new InterfaceHelper()
-                .addSubInterface(port, Optional.empty())
+                .addSubInterface(port, Optional.empty(), true)
                 .build();
     }
 
