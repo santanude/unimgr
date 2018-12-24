@@ -58,9 +58,7 @@ public class InterfaceHelper {
         if (interfaceName.contains(":")) {
             interfaceName = interfaceName.split(":")[1];
         }
-        if (null != port.getVlanId()) {
-            interfaceName = interfaceName + "." + port.getVlanId();
-        }
+        interfaceName = interfaceName + "." + port.getVlanId();
 
         return new InterfaceName(interfaceName);
     }
@@ -78,7 +76,7 @@ public class InterfaceHelper {
         return addInterface(getInterfaceName(port), mtus, setL2Transport);
     }
 
-    public InterfaceHelper addSubInterface(ServicePort port, Optional<Mtus> mtus, boolean setL2Transport) {
+    public InterfaceHelper addSubInterface(ServicePort port, Optional<Mtus> mtus ) {
          return addSubInterface(getSubInterfaceName(port), mtus, port);
      }
 
@@ -94,11 +92,9 @@ public class InterfaceHelper {
             configurationBuilder.setMtus(mtus.get());
         }
 
-
       if (setL2Transport) {
             setL2Configuration(configurationBuilder);
         }
-
 
         configurations.add(configurationBuilder.build());
         return this;
@@ -114,15 +110,14 @@ public class InterfaceHelper {
             .setDescription("Create sub interface through ODL")
             .setInterfaceModeNonPhysical(InterfaceModeEnum.L2Transport);
 
-
             setEthernetService(configurationBuilder, port);
 
-	    if (mtus.isPresent()) {
-	             configurationBuilder.setMtus(mtus.get());
-	    }
-	
-	     configurations.add(configurationBuilder.build());
-	 return this;
+            if (mtus.isPresent()) {
+               configurationBuilder.setMtus(mtus.get());
+            }
+            configurations.add(configurationBuilder.build());
+
+            return this;
     }
 
     private void setEthernetService(InterfaceConfigurationBuilder configurationBuilder, ServicePort port) {

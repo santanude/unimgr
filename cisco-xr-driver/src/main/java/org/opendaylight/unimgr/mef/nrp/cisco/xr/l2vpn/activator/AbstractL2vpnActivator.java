@@ -87,13 +87,13 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         }
 
         java.util.Optional<PolicyManager> qosConfig = activateQos(innerName, port);
-        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu);
+        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
         Pseudowires pseudowires = activatePseudowire(neighbor);
         XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
 
 
-        if (null != L2vpnHelper.getL2vpnId()) {
+        if (!isExclusive) {
           InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
           createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
         }
@@ -162,7 +162,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     protected abstract java.util.Optional<PolicyManager> activateQos(String name, ServicePort port);
 
-    protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu);
+    protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu, boolean isExclusive);
 
     protected abstract InterfaceConfigurations createSubInterface(ServicePort portA, ServicePort portZ, long mtu);
 
