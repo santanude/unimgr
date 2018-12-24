@@ -60,7 +60,7 @@ public class InterfaceHelper {
         }
         if (null != port.getVlanId()) {
             interfaceName = interfaceName + "." + port.getVlanId();
-            }
+        }
 
         return new InterfaceName(interfaceName);
     }

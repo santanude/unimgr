@@ -108,7 +108,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     public void init() {
-        LOG.info("initializing topology handler for {}", XrDriverBuilder.XR_NODE);
+        LOG.debug("initializing topology handler for {}", XrDriverBuilder.XR_NODE);
         initializeWithRetrial(MAX_RETRIALS);
     }
 
@@ -133,11 +133,11 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                         TimeUnit.MILLISECONDS.sleep(500);
                     } catch (InterruptedException _e) { }
                     if(retrialCouter != MAX_RETRIALS) {
-                        LOG.info("Retrying initialization of {} for {} time", XrDriverBuilder.XR_NODE, MAX_RETRIALS - retrialCouter + 1);
+                        LOG.debug("Retrying initialization of {} for {} time", XrDriverBuilder.XR_NODE, MAX_RETRIALS - retrialCouter + 1);
                     }
                     initializeWithRetrial(retrialCouter - 1);
                 } else {
-                    LOG.info("No node created due to the error", t);
+                    LOG.error("No node created due to the error", t);
                 }
 
             }
@@ -185,7 +185,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
     private void onAddedNodes(@Nonnull Collection<Node> added) throws ReadFailedException {
         if (added.isEmpty()) return;
-        LOG.info("found {} added XR nodes", added.size());
+        LOG.debug("found {} added XR nodes", added.size());
 
         final ReadWriteTransaction topoTx = dataBroker.newReadWriteTransaction();
         NrpDao dao = new NrpDao(topoTx);
@@ -199,7 +199,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
             dao.addSip(sip);
             MappedServiceInterfacePoint sipRef = TapiUtils.toSipRef(sip.getUuid(), MappedServiceInterfacePoint.class);
             nep = new OwnedNodeEdgePointBuilder(nep).setMappedServiceInterfacePoint(Collections.singletonList(sipRef)).build();
-            LOG.info("Adding nep {} to {} node", nep.getUuid(), XrDriverBuilder.XR_NODE);
+            LOG.trace("Adding nep {} to {} node", nep.getUuid(), XrDriverBuilder.XR_NODE);
             dao.updateNep(XrDriverBuilder.XR_NODE, nep);
         });
 
@@ -235,10 +235,9 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                 Optional<MountPoint> mountPoint = mountService.getMountPoint(id);
                 if (mountPoint.isPresent()) {
                     DataBroker deviceBroker = mountPoint.get().getService(DataBroker.class).get();
-                    LOG.info("\n====== Device Broker ==== " + deviceBroker.toString());
+                    LOG.debug("\n====== Device Broker ==== " + deviceBroker.toString());
                     List<OwnedNodeEdgePoint> tps;
                     try(ReadOnlyTransaction tx = deviceBroker.newReadOnlyTransaction()) {
-			    ports1(tx);
                         tps = ports(tx)
                                 .filter(i -> {
                                     boolean shutdown = i != null && i.isShutdown() != null && i.isShutdown();
@@ -282,15 +281,5 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
         return Stream.empty();
     }
-
-    private void ports1(ReadOnlyTransaction tx) throws ReadFailedException {
-        Optional<InterfaceConfigurations> interfaces = tx.read(LogicalDatastoreType.OPERATIONAL, InterfaceHelper.getInterfaceConfigurationsId()).checkedGet();
-        LOG.info("===#of interface========"+interfaces.get().getInterfaceConfiguration().size());
-
-	for(InterfaceConfiguration interfaceConfiguration : interfaces.get().getInterfaceConfiguration()){
-          LOG.info(" ==== interface name ===== {}", interfaceConfiguration.getKey());
-        }
-
-   }
 
 }

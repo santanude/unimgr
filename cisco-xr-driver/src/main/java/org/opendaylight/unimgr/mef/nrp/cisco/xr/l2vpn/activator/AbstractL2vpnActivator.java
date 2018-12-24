@@ -69,11 +69,9 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     public void activate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType) throws TransactionCommitFailedException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
-
-	LOG.info("innerName= "+ innerName + "  :  outerName = " + outerName + " ....");
-
         ServicePort port = null;
         ServicePort neighbor = null;
+        
         for (EndPoint endPoint: endPoints) {
             if (port==null) {
                 port = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
@@ -94,18 +92,13 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
 
-	
-	LOG.info("\n=====  nodeName : " + port.getNode().getValue() + ", vlan : " + port.getVlanId());
-        LOG.info("\n=====  interfaceName : " + port.getInterfaceName().toString() + " |||| " + port.getTp().getValue() +",, topology : " + port.getTopology().getValue());
-	LOG.info("\n=====  getL2vpnId() : " + L2vpnHelper.getL2vpnId() + ", \nneighbor : " + neighbor.getVlanId() + " : " + neighbor.getInterfaceName().toString() + " : " + neighbor.getNode().getValue() );
 
+        if (null != L2vpnHelper.getL2vpnId()) {
+          InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
+          createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
+        }
 
-	if(null != L2vpnHelper.getL2vpnId()){	
-		InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
-		createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
-	 }
-
-	doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, qosConfig);
+        doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, qosConfig);
     }
 
     @Override
@@ -139,18 +132,16 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     }
 
     protected void createSubInterface(String nodeName,
-		                InterfaceConfigurations interfaceConfigurations
-				            ) throws TransactionCommitFailedException {
+                                      InterfaceConfigurations interfaceConfigurations) throws TransactionCommitFailedException {
 
- 	LOG.info("\ninside createSubInterface()===");
-	    Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
-			            if (!optional.isPresent()) {
-						   LOG.error("Could not retrieve MountPoint for {}", nodeName);
-					        return;
-					 }
-	   WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-	   transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
-	   transaction.submit().checkedGet();
+       Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
+       if (!optional.isPresent()) {
+         LOG.error("Could not retrieve MountPoint for {}", nodeName);
+         return;
+       }
+       WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
+       transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
+       transaction.submit().checkedGet();
     }
 
     protected void doDeactivate(String nodeName,

@@ -72,12 +72,12 @@ public class L2vpnP2pConnectActivator extends AbstractL2vpnActivator {
 
     @Override
         public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor, long mtu) {
-	        String interfraceName = "sub_vlan";
-	        Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(interfraceName));
+            String interfraceName = "sub_vlan";
+            Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(interfraceName));
 
-	        return new InterfaceHelper()
-		            .addSubInterface(port, Optional.of(mtus), true)
-		            .build();
+            return new InterfaceHelper()
+            .addSubInterface(port, Optional.of(mtus), true)
+            .build();
     }
 
     @Override
