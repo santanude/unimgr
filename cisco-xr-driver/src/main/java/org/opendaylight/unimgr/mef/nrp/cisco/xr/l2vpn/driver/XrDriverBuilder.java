@@ -53,13 +53,9 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             List<Map.Entry<EndPoint,EndPoint>> bridgeActivatedPairs = null;
             List<EndPoint> endPoints;
             String serviceId;
-<<<<<<< HEAD
             boolean isExclusive;
             String serviceType;
-            
-=======
 	   
->>>>>>> afceef7... Cisco XR driver related changes
             @Override
             public void commit() {
                 //ignore for the moment
@@ -74,14 +70,10 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             public void initialize(List<EndPoint> endPoints, String serviceId, NrpConnectivityServiceAttrs context, boolean isExclusive, String serviceType) {
                 this.endPoints = endPoints;
                 this.serviceId = serviceId;
-<<<<<<< HEAD
                 this.isExclusive = isExclusive;
                 this.serviceType = serviceType;
 
-=======
                 PseudowireHelper.generatePseudowireId();
-		
->>>>>>> afceef7... Cisco XR driver related changes
                 localActivator = new L2vpnLocalConnectActivator(dataBroker,mountPointService);
                 p2pActivator = new L2vpnP2pConnectActivator(dataBroker,mountPointService);
             }
@@ -141,11 +133,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
             BiConsumer<List<EndPoint>,AbstractL2vpnActivator> activate = (neighbors, activator) -> {
                 try {
-<<<<<<< HEAD
                     activator.activate(neighbors, serviceId, true, serviceType);
-=======
-               	    activator.activate(neighbors, serviceId);
->>>>>>> afceef7... Cisco XR driver related changes
                 } catch (TransactionCommitFailedException e) {
                     LOG.error("Activation error occured: {}",e.getMessage());
                 }
