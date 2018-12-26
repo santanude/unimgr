@@ -89,7 +89,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         java.util.Optional<PolicyManager> qosConfig = activateQos(innerName, port);
         InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
         Pseudowires pseudowires = activatePseudowire(neighbor);
-        XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires);
+        XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires, isExclusive);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
 
         // create sub interface for tag based service
@@ -168,7 +168,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     protected abstract Pseudowires activatePseudowire(ServicePort neighbor);
 
-    protected abstract XconnectGroups activateXConnect(String outerName, String innerName, ServicePort portA, ServicePort portZ, Pseudowires pseudowires);
+    protected abstract XconnectGroups activateXConnect(String outerName, String innerName, ServicePort portA, ServicePort portZ, Pseudowires pseudowires, boolean isExclusive);
 
     protected abstract L2vpn activateL2Vpn(XconnectGroups xconnectGroups);
 
