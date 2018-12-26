@@ -69,7 +69,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     public void activate(List<EndPoint> endPoints, String serviceId) throws TransactionCommitFailedException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
-
+        boolean isExclusive = true;
 	LOG.info("innerName= "+ innerName + "  :  outerName = " + outerName + " ....");
 
         ServicePort port = null;
@@ -89,21 +89,16 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         }
 
         java.util.Optional<PolicyManager> qosConfig = activateQos(innerName, port);
-        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu);
+        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
         Pseudowires pseudowires = activatePseudowire(neighbor);
         XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires, isExclusive);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
 
-	
-	LOG.info("\n=====  nodeName : " + port.getNode().getValue() + ", vlan : " + port.getVlanId());
-        LOG.info("\n=====  interfaceName : " + port.getInterfaceName().toString() + " |||| " + port.getTp().getValue() +",, topology : " + port.getTopology().getValue());
-	LOG.info("\n=====  getL2vpnId() : " + L2vpnHelper.getL2vpnId() + ", \nneighbor : " + neighbor.getVlanId() + " : " + neighbor.getInterfaceName().toString() + " : " + neighbor.getNode().getValue() );
-
-
-	if(null != L2vpnHelper.getL2vpnId()){	
-		InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
-		createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
-	 }
+        // create sub interface for tag based service
+        if (!isExclusive) {
+          InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
+          createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
+        }
 
 	doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, qosConfig);
     }
@@ -171,7 +166,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     protected abstract java.util.Optional<PolicyManager> activateQos(String name, ServicePort port);
 
-    protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu);
+    protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu, boolean isExclusive);
 
     protected abstract InterfaceConfigurations createSubInterface(ServicePort portA, ServicePort portZ, long mtu);
 

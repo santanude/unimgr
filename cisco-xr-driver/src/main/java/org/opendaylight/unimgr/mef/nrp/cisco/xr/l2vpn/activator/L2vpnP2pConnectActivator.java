@@ -59,11 +59,11 @@ public class L2vpnP2pConnectActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    public InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor, long mtu) {
+    public InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor, long mtu, boolean isExclusive) {
         String interfraceName = port.getInterfaceName();
-
         Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(interfraceName));
-	boolean setL2Transport = (port.getVlanId() == null) ? true : false;
+        // Enable L2Trasportation for port basesd service
+        boolean setL2Transport = (isExclusive) ? true : false;
         
 	return new InterfaceHelper()
             .addInterface(port, Optional.of(mtus), setL2Transport)
