@@ -7,7 +7,6 @@
  */
 package org.opendaylight.unimgr.mef.nrp.ovs.util;
 
-import com.google.common.collect.Sets;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -19,11 +18,17 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
+import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
 import org.opendaylight.unimgr.mef.nrp.ovs.exception.VlanPoolExhaustedException;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.context.ConnectivityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.common.collect.Sets;
 
 
 
@@ -42,7 +47,7 @@ public class EtreeUtils {
     private static Set<Integer> cpeRange = null;
     private static Set<Integer> speRange = null;
     private final static String VLAN_POOL_EXHAUSTED_ERROR_MESSAGE = "All VLAN IDs are in use. VLAN pool exhausted.";
-
+    private ConnectivityService value;
     private final static Logger LOG = LoggerFactory.getLogger(EtreeUtils.class);
 
 
@@ -172,6 +177,23 @@ public class EtreeUtils {
     public void releaseEpTreeServiceVlan(String serviceName) {
         usedEpTreeVlans.removeAll(usedEpTreeService.entrySet().stream().filter(e -> e.getValue().equals(serviceName)).map(Map.Entry::getKey).collect(Collectors.toSet()));
         usedEpTreeService.entrySet().removeIf(serviceVlanMap -> serviceVlanMap.getValue().equals(serviceName));
+    }
+
+    /**
+     * Method fetch service type (tagged or port) based on the nodeId and return true or false in IsExclusive flag  .
+     * @param dataBroker
+     * @param nodeId
+     * @return boolean true/false
+     * @throws FailureResult
+     */
+    public boolean getServiceType(DataBroker dataBroker, String nodeId) throws FailureResult {
+        value = new NrpDao(dataBroker.newReadOnlyTransaction()).getConnectivityService(new Uuid(nodeId));
+
+        if (value == null) {
+            throw new FailureResult("There is no service with id {0}", nodeId);
+        }
+
+        return value.isIsExclusive();
     }
 
 }

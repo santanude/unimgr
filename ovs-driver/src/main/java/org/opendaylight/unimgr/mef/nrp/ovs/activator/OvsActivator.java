@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
+import org.opendaylight.unimgr.mef.nrp.api.FailureResult;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceNotAvailableException;
 import org.opendaylight.unimgr.mef.nrp.ovs.transaction.TableTransaction;
@@ -132,8 +133,13 @@ public class OvsActivator implements ResourceActivator {
         	deactivateEndpoint(endPoint, serviceName);
         }
         new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue()).releaseServiceVlan(serviceName);
-        if (serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()) && isExclusive == false) {
+        try {
+            isExclusive = new EtreeUtils().getServiceType(dataBroker, serviceName);
+            if (serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()) && isExclusive == false) {
                 new EtreeUtils().releaseTreeServiceVlan(serviceName);
+            }
+        } catch (FailureResult e) {
+            LOG.error("Unable to find out service type result with serviceid {0}", e);
         }
     }
 
