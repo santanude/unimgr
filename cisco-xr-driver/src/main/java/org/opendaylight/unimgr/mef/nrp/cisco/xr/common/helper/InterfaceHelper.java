@@ -58,6 +58,7 @@ public class InterfaceHelper {
         if (interfaceName.contains(":")) {
             interfaceName = interfaceName.split(":")[1];
         }
+        // adding vlan id with interface name
         interfaceName = interfaceName + "." + port.getVlanId();
 
         return new InterfaceName(interfaceName);
@@ -109,7 +110,7 @@ public class InterfaceHelper {
 //            .setShutdown(Boolean.FALSE)
             .setDescription("Create sub interface through ODL")
             .setInterfaceModeNonPhysical(InterfaceModeEnum.L2Transport);
-
+            // set ethernet service
             setEthernetService(configurationBuilder, port);
 
             if (mtus.isPresent()) {

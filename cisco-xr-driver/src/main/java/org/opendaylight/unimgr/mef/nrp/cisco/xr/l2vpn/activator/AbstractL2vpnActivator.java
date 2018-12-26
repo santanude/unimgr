@@ -92,7 +92,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
 
-
+        // create sub interface for tag based service
         if (!isExclusive) {
           InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
           createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
