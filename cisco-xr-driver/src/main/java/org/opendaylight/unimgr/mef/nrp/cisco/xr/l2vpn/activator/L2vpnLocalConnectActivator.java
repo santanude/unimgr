@@ -75,10 +75,10 @@ public class L2vpnLocalConnectActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    protected XconnectGroups activateXConnect(String outerName, String innerName, ServicePort portA, ServicePort portZ, Pseudowires pseudowires) {
+    protected XconnectGroups activateXConnect(String outerName, String innerName, ServicePort portA, ServicePort portZ, Pseudowires pseudowires, boolean isExclusive) {
         AttachmentCircuits attachmentCircuits = new AttachmentCircuitHelper()
-            .addPort(portA)
-            .addPort(portZ)
+            .addPort(portA, isExclusive)
+            .addPort(portZ, isExclusive)
             .build();
 
         XconnectGroup xconnectGroup = new XConnectHelper()

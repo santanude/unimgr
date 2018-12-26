@@ -88,9 +88,9 @@ public class L2vpnP2pConnectActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    public XconnectGroups activateXConnect(String outerName, String innerName, ServicePort port, ServicePort neighbor, Pseudowires pseudowires) {
+    public XconnectGroups activateXConnect(String outerName, String innerName, ServicePort port, ServicePort neighbor, Pseudowires pseudowires, boolean isExclusive) {
         AttachmentCircuits attachmentCircuits = new AttachmentCircuitHelper()
-             .addPort(port)
+             .addPort(port, isExclusive)
              .build();
 
         XconnectGroup xconnectGroup = new XConnectHelper()
