@@ -31,10 +31,10 @@ public class AttachmentCircuitHelper {
         attachmentCircuits = new LinkedList<>();
     }
 
-    public AttachmentCircuitHelper addPort(ServicePort port) {
+    public AttachmentCircuitHelper addPort(ServicePort port, boolean isExclusive) {
         attachmentCircuits.add(
             new AttachmentCircuitBuilder()
-                .setName((null == port.getVlanId()) ? InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port))
+                .setName((isExclusive) ? InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port))
                 .setEnable(Boolean.TRUE)
                 .build()
         );
