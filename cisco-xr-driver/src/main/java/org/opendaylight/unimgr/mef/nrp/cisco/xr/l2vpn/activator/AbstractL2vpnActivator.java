@@ -89,7 +89,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         java.util.Optional<PolicyManager> qosConfig = activateQos(innerName, port);
         InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
         Pseudowires pseudowires = activatePseudowire(neighbor);
-        XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires, isExclusive);
+        XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
 
         // create sub interface for tag based service
@@ -102,7 +102,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     }
 
     @Override
-    public void deactivate(List<EndPoint> endPoints, String serviceId, String serviceType, boolean isExclusive) throws TransactionCommitFailedException {
+    public void deactivate(List<EndPoint> endPoints, String serviceId, String serviceType) throws TransactionCommitFailedException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
@@ -168,7 +168,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     protected abstract Pseudowires activatePseudowire(ServicePort neighbor);
 
-    protected abstract XconnectGroups activateXConnect(String outerName, String innerName, ServicePort portA, ServicePort portZ, Pseudowires pseudowires, boolean isExclusive);
+    protected abstract XconnectGroups activateXConnect(String outerName, String innerName, ServicePort portA, ServicePort portZ, Pseudowires pseudowires);
 
     protected abstract L2vpn activateL2Vpn(XconnectGroups xconnectGroups);
 

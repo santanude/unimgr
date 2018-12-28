@@ -127,9 +127,10 @@ public class OvsActivator implements ResourceActivator {
     }
 
 	@Override
-    public void deactivate(List<EndPoint> endPoints, String serviceName,String serviceType, boolean isExclusive) throws TransactionCommitFailedException, ResourceNotAvailableException {
-
-        for (EndPoint endPoint:endPoints) {
+    public void deactivate(List<EndPoint> endPoints, String serviceName, String serviceType) throws TransactionCommitFailedException, ResourceNotAvailableException {
+	    boolean isExclusive = false;
+        
+	    for (EndPoint endPoint:endPoints) {
         	deactivateEndpoint(endPoint, serviceName);
         }
         new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue()).releaseServiceVlan(serviceName);
