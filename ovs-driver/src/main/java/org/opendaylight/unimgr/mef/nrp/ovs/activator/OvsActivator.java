@@ -59,7 +59,6 @@ public class OvsActivator implements ResourceActivator {
         VlanUtils vlanUtils = new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue());
         EtreeUtils eTreeUtils = new EtreeUtils();
         long rootCount = endPoints.stream().filter(node -> node.getEndpoint().getRole().equals(PortRole.ROOT)).count();
-       // boolean isExclusive = true;
         for (EndPoint endPoint:endPoints) {
             activateEndpoint(endPoint, serviceName, vlanUtils, isExclusive, serviceType, rootCount, eTreeUtils);
         } 
@@ -89,7 +88,7 @@ public class OvsActivator implements ResourceActivator {
         
         LOG.info("VLAN ID = {} ", ovsActivatorHelper.getCeVlanId().isPresent());
         
-        if(isExclusive && ovsActivatorHelper.getCeVlanId().isPresent() == false ){
+        if(isExclusive && ! ovsActivatorHelper.getCeVlanId().isPresent()){
             LOG.info( " NEW LOGIC here openFlowPortName {}" , openFlowPortName);
             // Port based E-tree service 
             if(serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
@@ -136,7 +135,7 @@ public class OvsActivator implements ResourceActivator {
         new VlanUtils(dataBroker, endPoints.iterator().next().getNepRef().getNodeId().getValue()).releaseServiceVlan(serviceName);
         try {
             isExclusive = new EtreeUtils().getServiceType(dataBroker, serviceName);
-            if (serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()) && isExclusive == false) {
+            if (serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()) && !isExclusive ) {
                 new EtreeUtils().releaseTreeServiceVlan(serviceName);
             }
         } catch (FailureResult e) {

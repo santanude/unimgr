@@ -5,7 +5,6 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-
 package org.opendaylight.unimgr.mef.legato;
 
 import com.google.common.base.Optional;
@@ -66,8 +65,6 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
             .child(SubscriberServices.class).build();
 
     private ListenerRegistration<LegatoServiceController> dataTreeChangeListenerRegistration;
-
-    private static final Map<String, String> EVC_UUIDMAP = new HashMap<String, String>();
     private static final Map<String, List<String>> EVC_UUID_MAP_LIST = new HashMap<String, List<String>>();
 
     private TapiConnectivityService prestoConnectivityService;
@@ -136,7 +133,7 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
             createConnection(evc);
 
         } catch (Exception ex) {
-            LOG.error("error: ", ex);
+            LOG.error(LegatoConstants.ERROR, ex);
         }
 
         LOG.info(" ********** END addNode() ****************** ");
@@ -146,12 +143,13 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
     private void updateNode(Evc evc) {
         LOG.info(" inside updateNode()");
 
+
         try {
             assert evc != null;
             updateConnection(evc);
 
         } catch (Exception ex) {
-            LOG.error("error: ", ex);
+            LOG.error(LegatoConstants.ERROR, ex);
         }
 
         LOG.info(" ********** END updateNode() ****************** ");
@@ -165,7 +163,7 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
             assert evc != null;
             deleteConnection(evc.getEvcId().getValue());
         } catch (Exception ex) {
-            LOG.error("error: ", ex);
+            LOG.error(LegatoConstants.ERROR, ex);
         }
 
         LOG.info(" ********** END deleteNode() ****************** ");
@@ -310,7 +308,6 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
         try {
 
             assert EVC_UUID_MAP_LIST != null;
-//            LOG.info("EVC_UUID_MAP_LIST Before " + EVC_UUID_MAP_LIST.toString() );
 
             if (EVC_UUID_MAP_LIST.containsKey(evcId)) {
                 LOG.info("Deleting UUID: {} of EVC Id: {} ",
@@ -325,7 +322,6 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                 }
                 EVC_UUID_MAP_LIST.remove(evcId);
 
-                //LOG.info("EVC_UUID_MAP_LIST After " + EVC_UUID_MAP_LIST.toString() );
                 // delete EVC node from OPERATIONAL DB
                 LegatoUtils.deleteFromOperationalDB(InstanceIdentifier
                         .create(MefServices.class).child(CarrierEthernet.class)
@@ -337,7 +333,7 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
             }
 
         } catch (Exception ex) {
-            LOG.error("error: ", ex);
+            LOG.error(LegatoConstants.ERROR, ex);
         }
 
         LOG.info(" ********** END deleteConnection() ****************** ");

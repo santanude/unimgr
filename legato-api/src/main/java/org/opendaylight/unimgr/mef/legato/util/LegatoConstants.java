@@ -16,6 +16,10 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 
 public class LegatoConstants {
 
+    private LegatoConstants() {
+        throw new IllegalStateException(LegatoConstants.UTILITY);
+    }
+
     public static final String EVC_CON_TYPE = "EVC_CON_TYPE";
 
     public static final String BEST_EFFORT = "BEST_EFFORT";
@@ -55,4 +59,8 @@ public class LegatoConstants {
     public static final String EPTREE = "eptree";
 
     public static final String EVPTREE = "evptree";
+
+    public static final String ERROR = "error: ";
+
+    public static final String UTILITY = "Utility class";
 }
