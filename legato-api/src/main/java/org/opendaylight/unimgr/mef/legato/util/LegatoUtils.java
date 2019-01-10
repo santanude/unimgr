@@ -199,6 +199,10 @@ public class LegatoUtils {
                 break;
         }
 
+        // if isExclusive == true i.e port bases service then set vlanId =0 to bypass given vlan tag
+        if (isExclusive) {
+        	vlanId = "0";
+        }
 
         // build end points
         assert endpoints != null && endpoints.size() > 0;
