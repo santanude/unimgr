@@ -10,6 +10,7 @@ package org.opendaylight.unimgr.mef.legato.util;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -467,6 +468,7 @@ public class LegatoUtils {
 
     }
 
+
     public static List<String> validateVlanTag(EVCDao evcDao) {
         List<String> vlanIdList = new ArrayList<String>();
         ArrayList<String> vlanTagList = new ArrayList<String>();
@@ -481,10 +483,33 @@ public class LegatoUtils {
             } else if (!vlanIdList.equals(vlanTagList)) {
                 LOG.error("All end points should have same vlan tags");
                 vlanIdList = new ArrayList<String>();
+
+                return vlanIdList;
             }
+        }
+        if (Collections.frequency(vlanIdList, "0") == vlanIdList.size()) {
+            vlanIdList.clear();
         }
         return vlanIdList;
     }
 
 
+    public static boolean removeFlowFromConfigDatastore(InstanceIdentifier<?> nodeIdentifier,
+            DataBroker dataBroker) {
+
+        LOG.info("Removing EVC from CONFIGURATION datastore ", nodeIdentifier);
+        boolean result = false;
+
+        final WriteTransaction transaction = dataBroker.newWriteOnlyTransaction();
+        transaction.delete(LogicalDatastoreType.CONFIGURATION, nodeIdentifier);
+
+        try {
+            transaction.submit().checkedGet();
+            result = true;
+        } catch (org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException e) {
+            LOG.error("Unable to remove evc from CONFIGURATION datastore  ", nodeIdentifier, e);
+        }
+        return result;
+    }
+    
 }

@@ -236,6 +236,22 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                             }
                         }
                         LOG.info("EVC_UUID_MAP_LIST  " + EVC_UUID_MAP_LIST.toString());
+                    } else {
+                        if(evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EVPL) || evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EVPLAN) || 
+                                evcDao.getSvcType().equalsIgnoreCase(LegatoConstants.EVPTREE)) {
+
+                            LegatoUtils.removeFlowFromConfigDatastore(
+                                        InstanceIdentifier.create(MefServices.class)
+                                        .child(CarrierEthernet.class)
+                                        .child(SubscriberServices.class)
+                                        .child(Evc.class,
+                                         new EvcKey(new EvcIdType(evcDao.getEvcId()))),
+                                         dataBroker);
+
+                            LOG.error("Service Type : " + evcDao.getSvcType() + ", EVC ID : "
+                                    + evcDao.getEvcId()
+                                    + " Removed successfully from configuration datastore. ");
+                        }
                     }
                 }
             } else {
