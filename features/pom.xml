@@ -24,6 +24,7 @@
   </prerequisites>
   <modules>
     <module>features4-unimgr</module>
+    <module>odl-legato-ui</module>   
     <module>odl-unimgr</module>
     <module>odl-unimgr-rest</module>
     <module>odl-unimgr-cisco-xr-driver</module>
