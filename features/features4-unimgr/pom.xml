@@ -23,6 +23,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <packaging>feature</packaging>
 
   <dependencies>
+ <dependency>
+  <groupId>org.opendaylight.legato.ui</groupId>
+  <artifactId>odl-legato-ui</artifactId>
+  <version>0.3.1-SNAPSHOT</version>
+  <type>xml</type>
+  <classifier>features</classifier>
+  </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>odl-unimgr-rest</artifactId>

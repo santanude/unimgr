@@ -1,0 +1,30 @@
+<div class="container">
+  <br />
+<form  (ngSubmit)='internalcreateEvcService()' [formGroup]='createEvcForm' novalidate class="form">
+  <table>
+  <tr>
+<td><label>Node 1</label></td>
+<td><input formControlName='node1'
+  type="text"
+  class="form-control"
+  placeholder="Enter Node 1" /></td>
+  </tr>
+  <tr>
+      <td>
+<label>Node 2</label>
+        </td>
+<td>
+    <input formControlName='node2'
+  type="text"
+  class="form-control"
+  placeholder="Enter Node 2" />
+</td>
+  </tr>
+  <tr>
+      <div class="wrapper">
+          <button class="button">Button</button>
+      </div>
+  </tr>
+  </table>
+</form>
+</div>
