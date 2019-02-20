@@ -1,0 +1,14 @@
+/* You can add global styles to this file, and also import other style files */
+body {
+    margin: 0;
+    background: #eee9ee;
+    font-family: 'Montserrat','sans-seri';
+    height: 100%;
+    width: 100%;
+}
+#container{
+    background: #eee9ee;
+    display: grid;
+    grid-template-columns:20% auto;
+    height: 100%;
+}
