@@ -68,12 +68,12 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
 
     @Override
     protected String getInnerName(String serviceId) {
-        return "EUR16"+replaceForbidenCharacters(serviceId);
+        return replaceForbidenCharacters(serviceId);
     }
 
     @Override
     protected String getOuterName(String serviceId) {
-        return "EUR16"+replaceForbidenCharacters(serviceId);
+        return replaceForbidenCharacters(serviceId);
     }
 
     /**
@@ -99,6 +99,15 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
 
         return new InterfaceHelper().addInterface(port, Optional.of(mtus), setL2Transport).build();
     }
-    
+
+    @Override
+    public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor, long mtu) {
+        String mtuOwnerName = "sub_vlan";
+        Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(mtuOwnerName));
+
+        return new InterfaceHelper()
+        .addSubInterface(port, Optional.of(mtus))
+        .build();
+}
 
 }
