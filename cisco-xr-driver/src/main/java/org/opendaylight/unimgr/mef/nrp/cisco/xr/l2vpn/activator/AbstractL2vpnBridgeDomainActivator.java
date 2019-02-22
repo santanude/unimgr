@@ -85,7 +85,14 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
        BdPseudowires bdPseudowires = activateBdPseudowire(neighbor);
        BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(outerName, innerName, port, neighbor, bdPseudowires, isExclusive);
        L2vpn l2vpn = activateL2Vpn(bridgeDomainGroups);
-       doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn);
+
+        // create sub interface for tag based service
+        if (!isExclusive) {
+            InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
+            createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
+        }
+
+        doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn);
     }
 
 
@@ -101,6 +108,19 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
         transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
         transaction.merge(LogicalDatastoreType.CONFIGURATION, L2vpnHelper.getL2vpnId(), l2vpn);
+        transaction.submit().checkedGet();
+    }
+
+    protected void createSubInterface(String nodeName, InterfaceConfigurations interfaceConfigurations)
+            throws TransactionCommitFailedException {
+
+        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
+        if (!optional.isPresent()) {
+            LOG.error("Could not retrieve MountPoint for {}", nodeName);
+            return;
+        }
+        WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
+        transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
         transaction.submit().checkedGet();
     }
 
@@ -154,5 +174,6 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
     protected abstract String getInnerName(String serviceId);
     protected abstract String getOuterName(String serviceId);
     protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu, boolean isExclusive);
+    protected abstract InterfaceConfigurations createSubInterface(ServicePort portA, ServicePort portZ, long mtu);
 
 }

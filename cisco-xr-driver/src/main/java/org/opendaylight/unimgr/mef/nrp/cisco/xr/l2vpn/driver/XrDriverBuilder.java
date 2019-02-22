@@ -78,10 +78,8 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                 this.serviceType = serviceType;
 
                 if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())) {
-                    if (isExclusive) {
-                        PseudowireHelper.generatePseudowireId();
-                        bdActivator = new L2vpnBridgeDomainActivator(dataBroker, mountPointService);
-                    }
+                    PseudowireHelper.generatePseudowireId();
+                    bdActivator = new L2vpnBridgeDomainActivator(dataBroker, mountPointService);
                 } else {
                     PseudowireHelper.generatePseudowireId();
                     localActivator = new L2vpnLocalConnectActivator(dataBroker, mountPointService);
