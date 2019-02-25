@@ -30,8 +30,7 @@ public class BdAttachmentCircuitHelper {
     public BdAttachmentCircuitHelper addPort(ServicePort port, boolean isExclusive) {
         bdAttachmentCircuits.add(
             new BdAttachmentCircuitBuilder()
-                //.setName((isExclusive) ? InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port))
-                .setName(InterfaceHelper.getInterfaceName(port))
+                .setName((isExclusive) ? InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port))
                         .build());
 
         return this;
