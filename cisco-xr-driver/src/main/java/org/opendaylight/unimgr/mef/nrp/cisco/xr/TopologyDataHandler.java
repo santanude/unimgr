@@ -24,9 +24,9 @@ import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesServic
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.driver.XrDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationKey;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907.InterfaceConfigurations;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations.InterfaceConfiguration;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations.InterfaceConfigurationKey;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.LayerProtocolName;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortDirection;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortRole;
@@ -168,7 +168,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
     @Override
     public void onDataTreeChanged(@Nonnull Collection<DataTreeModification<Node>> changes) {
-
+    	LOG.info(" inside onDataTreeChanged () ");
         List<Node> addedNodes = changes.stream().map(DataTreeModification::getRootNode)
                 .map(addedNode::apply)
                 .filter(n -> {
@@ -184,7 +184,9 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     private void onAddedNodes(@Nonnull Collection<Node> added) throws ReadFailedException {
-        if (added.isEmpty()) return;
+        LOG.info("addedNodes size = " + added.size());
+    	
+    	if (added.isEmpty()) return;
         LOG.info("found {} added XR nodes", added.size());
 
         final ReadWriteTransaction topoTx = dataBroker.newReadWriteTransaction();
@@ -227,14 +229,18 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     };
 
     private List<OwnedNodeEdgePoint> toTp(Collection<Node> nodes) {
-        OwnedNodeEdgePointBuilder tpBuilder = new OwnedNodeEdgePointBuilder();
+        LOG.info("\n inside toTp () ");
+    	OwnedNodeEdgePointBuilder tpBuilder = new OwnedNodeEdgePointBuilder();
         return nodes.stream().flatMap(cn -> {
             final NodeKey key = cn.getKey();
             try {
                 KeyedInstanceIdentifier<Node, NodeKey> id = mountIds.get(key);
                 Optional<MountPoint> mountPoint = mountService.getMountPoint(id);
+                LOG.info("\nMountPoint  id : {}, key : {}  ",id, key);
+                
                 if (mountPoint.isPresent()) {
                     DataBroker deviceBroker = mountPoint.get().getService(DataBroker.class).get();
+                    
                     LOG.info("\n====== Device Broker ==== " + deviceBroker.toString());
                     List<OwnedNodeEdgePoint> tps;
                     try(ReadOnlyTransaction tx = deviceBroker.newReadOnlyTransaction()) {
