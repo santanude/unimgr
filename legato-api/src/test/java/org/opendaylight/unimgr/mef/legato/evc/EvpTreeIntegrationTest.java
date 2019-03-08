@@ -5,7 +5,6 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-
 package org.opendaylight.unimgr.mef.legato.evc;
 
 import static org.junit.Assert.assertEquals;
@@ -18,7 +17,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import com.google.common.base.Optional;
@@ -27,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -101,13 +98,10 @@ public class EvpTreeIntegrationTest {
     @SuppressWarnings("rawtypes")
     @Mock
     private CheckedFuture checkedFuture;
-    private EndPointBuilder endPointBuilder1;
-    private EndPointBuilder endPointBuilder2;
-    private EndPointBuilder endPointBuilder3;
+    private EndPointBuilder endPointBuilder;
     private Evc evc;
     private Evc evc1;
     private EVCDao evcDao;
-    private EvcBuilder evcBuilder;
     private ch.qos.logback.classic.Logger root;
 
     @SuppressWarnings("unchecked")
@@ -122,32 +116,26 @@ public class EvpTreeIntegrationTest {
 
         MemberModifier.field(LegatoServiceController.class, "dataBroker")
                 .set(legatoServiceController, dataBroker);
-
-        endPointBuilder1 = new EndPointBuilder();
-        endPointBuilder1.setUniId(new Identifier45(Constants.UNI_ID1));
-        endPointBuilder1.setRole(EvcUniRoleType.Root);
+        final List<EndPoint> endPointList = new ArrayList<EndPoint>();
+        endPointBuilder = new EndPointBuilder();
+        endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID1));
+        endPointBuilder.setRole(EvcUniRoleType.Root);
         VlanIdType vlanType = new VlanIdType(new Integer(Constants.VLAN_ID_TYPE));
         final List<VlanIdType> vlanList = new ArrayList<VlanIdType>();
         vlanList.add(vlanType);
-        endPointBuilder1.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList)).build());
-        endPointBuilder2 = new EndPointBuilder();
-        endPointBuilder2.setUniId(new Identifier45(Constants.UNI_ID2));
-        endPointBuilder2.setRole(EvcUniRoleType.Leaf);
-        VlanIdType vlanType2 = new VlanIdType(new Integer(Constants.VLAN_ID_TYPE));
-        final List<VlanIdType> vlanList2 = new ArrayList<VlanIdType>();
-        vlanList2.add(vlanType2);
-        endPointBuilder2.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList2)).build());
-        endPointBuilder3 = new EndPointBuilder();
-        endPointBuilder3.setUniId(new Identifier45(Constants.UNI_ID3));
-        endPointBuilder3.setRole(EvcUniRoleType.Leaf);
-        VlanIdType vlanType3 = new VlanIdType(new Integer(Constants.VLAN_ID_TYPE));
-        final List<VlanIdType> vlanList3 = new ArrayList<VlanIdType>();
-        vlanList3.add(vlanType3);
-        endPointBuilder3.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList3)).build());
-        final List<EndPoint> endPointList = new ArrayList<EndPoint>();
-        endPointList.add(endPointBuilder1.build());
-        endPointList.add(endPointBuilder2.build());
-        endPointList.add(endPointBuilder3.build());
+        endPointBuilder.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList)).build());
+        endPointList.add(endPointBuilder.build());
+        endPointBuilder = new EndPointBuilder();
+        endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID2));
+        endPointBuilder.setRole(EvcUniRoleType.Leaf);
+        endPointBuilder.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList)).build());
+        endPointList.add(endPointBuilder.build());
+        endPointBuilder = new EndPointBuilder();
+        endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID3));
+        endPointBuilder.setRole(EvcUniRoleType.Leaf);
+        endPointBuilder.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList)).build());
+        endPointList.add(endPointBuilder.build());
+
 
         evc = (Evc) new EvcBuilder().setEvcId(new EvcIdType(Constants.EVC_ID_TYPE))
                 .setEndPoints(new EndPointsBuilder().setEndPoint(endPointList).build())
@@ -196,10 +184,6 @@ public class EvpTreeIntegrationTest {
                 this.prestoConnectivityService.createConnectivityService(input);
 
         assertTrue(result.get().isSuccessful());
-
-        final InstanceIdentifier<?> evcKey = InstanceIdentifier.create(MefServices.class)
-                .child(CarrierEthernet.class).child(SubscriberServices.class)
-                .child(Evc.class, new EvcKey(new EvcIdType(evc.getEvcId())));
 
         final Optional<Evc> optEvc = mock(Optional.class);
         when(optEvc.isPresent()).thenReturn(true);
