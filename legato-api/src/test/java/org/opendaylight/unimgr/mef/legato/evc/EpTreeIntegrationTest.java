@@ -18,6 +18,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import com.google.common.base.Optional;
@@ -50,14 +51,12 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.m
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.EndPointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.EndPoint;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.EndPointBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.end.point.CeVlansBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.ConnectionType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.EvcIdType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.EvcUniRoleType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.Identifier45;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.MaxFrameSizeType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.MefServiceType;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.VlanIdType;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceInput;
@@ -117,30 +116,21 @@ public class EpTreeIntegrationTest {
 
         MemberModifier.field(LegatoServiceController.class, "dataBroker")
                 .set(legatoServiceController, dataBroker);
+
         final List<EndPoint> endPointList = new ArrayList<EndPoint>();
         endPointBuilder = new EndPointBuilder();
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID1));
         endPointBuilder.setRole(EvcUniRoleType.Root);
-        VlanIdType vlanType = new VlanIdType(new Integer(Constants.VLAN_ID_TYPE));
-        final List<VlanIdType> vlanList = new ArrayList<VlanIdType>();
-        vlanList.add(vlanType);
-        endPointBuilder.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList)).build());
         endPointList.add(endPointBuilder.build());
+
         endPointBuilder = new EndPointBuilder();
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID2));
         endPointBuilder.setRole(EvcUniRoleType.Leaf);
-        VlanIdType vlanType2 = new VlanIdType(new Integer(Constants.VLAN_ID_TYPE));
-        final List<VlanIdType> vlanList2 = new ArrayList<VlanIdType>();
-        vlanList2.add(vlanType2);
-        endPointBuilder.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList2)).build());
         endPointList.add(endPointBuilder.build());
+
         endPointBuilder = new EndPointBuilder();
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID3));
         endPointBuilder.setRole(EvcUniRoleType.Leaf);
-        VlanIdType vlanType3 = new VlanIdType(new Integer(Constants.VLAN_ID_TYPE));
-        final List<VlanIdType> vlanList3 = new ArrayList<VlanIdType>();
-        vlanList3.add(vlanType3);
-        endPointBuilder.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList3)).build());
         endPointList.add(endPointBuilder.build());
 
         evc = (Evc) new EvcBuilder().setEvcId(new EvcIdType(Constants.EVC_ID_TYPE))

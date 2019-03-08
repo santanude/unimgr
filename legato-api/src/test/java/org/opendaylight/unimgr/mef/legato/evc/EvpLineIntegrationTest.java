@@ -17,6 +17,11 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
+import com.google.common.base.Optional;
+import com.google.common.util.concurrent.CheckedFuture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -69,10 +74,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.base.Optional;
-import com.google.common.util.concurrent.CheckedFuture;
-import ch.qos.logback.classic.spi.LoggingEvent;
-import ch.qos.logback.core.Appender;
 
 /**
  * @author Om.SAwasthi@Xoriant.Com
@@ -103,7 +104,6 @@ public class EvpLineIntegrationTest {
     private Evc evc;
     private Evc evc1;
     private EVCDao evcDao;
-    private EvcBuilder evcBuilder;
     private ch.qos.logback.classic.Logger root;
 
     @SuppressWarnings("unchecked")
@@ -119,19 +119,20 @@ public class EvpLineIntegrationTest {
         MemberModifier.field(LegatoServiceController.class, "dataBroker")
                 .set(legatoServiceController, dataBroker);
         final List<EndPoint> endPointList = new ArrayList<EndPoint>();
+
+        final List<VlanIdType> vlanList = new ArrayList<VlanIdType>();
+        vlanList.add(new VlanIdType(new Integer(Constants.VLAN_ID_TYPE)));
+
         endPointBuilder = new EndPointBuilder();
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID1));
         endPointBuilder.setRole(EvcUniRoleType.Root);
-        VlanIdType vlanType = new VlanIdType(new Integer(Constants.VLAN_ID_TYPE));
-        final List<VlanIdType> vlanList = new ArrayList<VlanIdType>();
-        vlanList.add(vlanType);
         endPointBuilder.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList)).build());
         endPointList.add(endPointBuilder.build());
+
         endPointBuilder = new EndPointBuilder();
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID2));
         endPointBuilder.setRole(EvcUniRoleType.Root);
         endPointBuilder.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList)).build());
-
         endPointList.add(endPointBuilder.build());
 
         evc = (Evc) new EvcBuilder().setEvcId(new EvcIdType(Constants.EVC_ID_TYPE))
@@ -146,12 +147,14 @@ public class EvpLineIntegrationTest {
         List<String> uniIdList = new ArrayList<String>();
         uniIdList.add(Constants.UNI_ID1);
         uniIdList.add(Constants.UNI_ID2);
+
         evcDao = new EVCDao();
         evcDao.setMaxFrameSize(Integer.valueOf(Constants.MAXFRAME_SIZE_TYPE));
         evcDao.setEvcId(Constants.EVC_ID_TYPE);
         evcDao.setConnectionType(ConnectionType.PointToPoint.getName());
         evcDao.setSvcType(MefServiceType.Evpl.getName());
         evcDao.setUniIdList(uniIdList);
+
         root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         when(mockAppender.getName()).thenReturn("MOCK");
         root.addAppender(mockAppender);

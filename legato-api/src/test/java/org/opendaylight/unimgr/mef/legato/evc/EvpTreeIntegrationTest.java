@@ -5,6 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
+
 package org.opendaylight.unimgr.mef.legato.evc;
 
 import static org.junit.Assert.assertEquals;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import com.google.common.base.Optional;
@@ -116,20 +118,24 @@ public class EvpTreeIntegrationTest {
 
         MemberModifier.field(LegatoServiceController.class, "dataBroker")
                 .set(legatoServiceController, dataBroker);
+
+        final List<VlanIdType> vlanList = new ArrayList<VlanIdType>();
+        vlanList.add(new VlanIdType(Constants.VLAN_ID_TYPE));
+
         final List<EndPoint> endPointList = new ArrayList<EndPoint>();
+
         endPointBuilder = new EndPointBuilder();
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID1));
         endPointBuilder.setRole(EvcUniRoleType.Root);
-        VlanIdType vlanType = new VlanIdType(new Integer(Constants.VLAN_ID_TYPE));
-        final List<VlanIdType> vlanList = new ArrayList<VlanIdType>();
-        vlanList.add(vlanType);
         endPointBuilder.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList)).build());
         endPointList.add(endPointBuilder.build());
+
         endPointBuilder = new EndPointBuilder();
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID2));
         endPointBuilder.setRole(EvcUniRoleType.Leaf);
         endPointBuilder.setCeVlans((new CeVlansBuilder().setCeVlan(vlanList)).build());
         endPointList.add(endPointBuilder.build());
+
         endPointBuilder = new EndPointBuilder();
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID3));
         endPointBuilder.setRole(EvcUniRoleType.Leaf);

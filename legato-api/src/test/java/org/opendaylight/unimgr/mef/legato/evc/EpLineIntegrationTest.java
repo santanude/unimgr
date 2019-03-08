@@ -18,8 +18,11 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -54,7 +57,6 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.m
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.cos.names.CosNameKey;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.EndPoint;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.EndPointBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.end.point.CeVlansBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.ConnectionType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.EvcIdType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.EvcUniRoleType;
@@ -62,7 +64,6 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.Identifier1
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.Identifier45;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.MaxFrameSizeType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.MefServiceType;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.VlanIdType;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceInput;
@@ -79,8 +80,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ch.qos.logback.classic.spi.LoggingEvent;
-import ch.qos.logback.core.Appender;
 
 /**
  * @author Om.SAwasthi@Xoriant.Com
@@ -107,8 +106,7 @@ public class EpLineIntegrationTest {
     @SuppressWarnings("rawtypes")
     @Mock
     private CheckedFuture checkedFuture;
-    private EndPointBuilder endPointBuilder1;
-    private EndPointBuilder endPointBuilder2;
+    private EndPointBuilder endPointBuilder;
     private Evc evc;
     private Evc evc1;
     private EVCDao evcDao;
@@ -137,23 +135,17 @@ public class EpLineIntegrationTest {
         CosNamesBuilder cosNamesBuilder = new CosNamesBuilder();
         cosNamesBuilder.setCosName(cosNameList);
 
-        final List<VlanIdType> vlanIdTypes = new ArrayList<>();
-        vlanIdTypes.add(new VlanIdType(Constants.VLAN_ID_TYPE));
-
-        CeVlansBuilder ceVlansBuilder = new CeVlansBuilder();
-        ceVlansBuilder.setCeVlan(vlanIdTypes);
-
-        endPointBuilder1 = new EndPointBuilder();
-        endPointBuilder1.setCeVlans(ceVlansBuilder.build());
-        endPointBuilder1.setUniId(new Identifier45(Constants.UNI_ID1));
-        endPointBuilder1.setRole(EvcUniRoleType.Root);
-        endPointBuilder2 = new EndPointBuilder();
-        endPointBuilder2.setCeVlans(ceVlansBuilder.build());
-        endPointBuilder2.setUniId(new Identifier45(Constants.UNI_ID2));
-        endPointBuilder2.setRole(EvcUniRoleType.Root);
         final List<EndPoint> endPointList = new ArrayList<EndPoint>();
-        endPointList.add(endPointBuilder1.build());
-        endPointList.add(endPointBuilder2.build());
+
+        endPointBuilder = new EndPointBuilder();
+        endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID1));
+        endPointBuilder.setRole(EvcUniRoleType.Root);
+        endPointList.add(endPointBuilder.build());
+
+        endPointBuilder = new EndPointBuilder();
+        endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID2));
+        endPointBuilder.setRole(EvcUniRoleType.Root);
+        endPointList.add(endPointBuilder.build());
 
         evc = (Evc) new EvcBuilder().setKey(new EvcKey(new EvcIdType(Constants.EVC_ID_TYPE)))
                 .setMaxFrameSize(new MaxFrameSizeType(Constants.MAXFRAME_SIZE_TYPE))
