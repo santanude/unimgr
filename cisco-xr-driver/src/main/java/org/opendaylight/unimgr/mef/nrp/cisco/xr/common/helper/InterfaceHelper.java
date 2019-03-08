@@ -77,7 +77,7 @@ public class InterfaceHelper {
         return addInterface(getInterfaceName(port), mtus, setL2Transport);
     }
 
-    public InterfaceHelper addSubInterface(ServicePort port, Optional<Mtus> mtus, boolean setL2Transport) {
+    public InterfaceHelper addSubInterface(ServicePort port, Optional<Mtus> mtus) {
         return addSubInterface(getSubInterfaceName(port), mtus, port);
     }
 

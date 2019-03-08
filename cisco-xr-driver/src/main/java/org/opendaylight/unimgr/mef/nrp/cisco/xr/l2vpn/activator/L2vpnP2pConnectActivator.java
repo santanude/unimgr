@@ -77,7 +77,7 @@ public class L2vpnP2pConnectActivator extends AbstractL2vpnActivator {
 	        Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(interfraceName));
 
 	        return new InterfaceHelper()
-		            .addSubInterface(port, Optional.of(mtus), true)
+		            .addSubInterface(port, Optional.of(mtus))
 		            .build();
     }
 
