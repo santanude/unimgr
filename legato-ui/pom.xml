@@ -42,7 +42,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Web-ContextPath>/legato-ui</Web-ContextPath>
+                        <Web-ContextPath>/unimgr</Web-ContextPath>
                         <Private-Package>*</Private-Package>
                         <Include-Resource>./src/main/legato-ui/dist</Include-Resource>
                     </instructions>

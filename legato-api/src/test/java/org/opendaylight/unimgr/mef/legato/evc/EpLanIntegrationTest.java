@@ -84,8 +84,6 @@ import org.slf4j.LoggerFactory;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({InstanceIdentifier.class, LogicalDatastoreType.class, LegatoUtils.class})
 public class EpLanIntegrationTest {
-    /*@Mock
-    private LegatoServiceController legatoServiceController;*/
     @Mock
     private TapiConnectivityService prestoConnectivityService;
     @Mock
@@ -102,7 +100,7 @@ public class EpLanIntegrationTest {
     private CheckedFuture checkedFuture;
     private EndPointBuilder endPointBuilder;
     private Evc evc;
-    //private Evc evc1;
+   
     private EVCDao evcDao;
     private ch.qos.logback.classic.Logger root;
 
@@ -110,15 +108,7 @@ public class EpLanIntegrationTest {
     @Before
     public void setUp() throws Exception {
 
-        /*prestoConnectivityService =
-                PowerMockito.mock(TapiConnectivityService.class, Mockito.CALLS_REAL_METHODS);
-        legatoServiceController =
-                PowerMockito.mock(LegatoServiceController.class, Mockito.CALLS_REAL_METHODS);*/
-        //PowerMockito.mock(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
-
-        /*MemberModifier.field(LegatoServiceController.class, "dataBroker")
-                .set(legatoServiceController, dataBroker);*/
-        
+                
         final List<VlanIdType> vlanIdTypes = new ArrayList<>();
         vlanIdTypes.add(new VlanIdType(301));
         
@@ -151,17 +141,8 @@ public class EpLanIntegrationTest {
                 .setConnectionType(ConnectionType.MultipointToMultipoint)
                 .setSvcType(MefServiceType.Eplan).build();
 
-        //evc1 = (Evc) new EvcBuilder().setSvcType(MefServiceType.Evplan).build();
+        
 
-        /*List<String> uniIdList = new ArrayList<String>();
-        uniIdList.add(Constants.UNI_ID1);
-        uniIdList.add(Constants.UNI_ID2);
-        evcDao = new EVCDao();
-        evcDao.setMaxFrameSize(Integer.valueOf(Constants.MAXFRAME_SIZE_TYPE));
-        evcDao.setEvcId(Constants.EVC_ID_TYPE);
-        evcDao.setConnectionType(ConnectionType.MultipointToMultipoint.getName());
-        evcDao.setSvcType(MefServiceType.Eplan.getName());
-        evcDao.setUniIdList(uniIdList);*/
         root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         when(mockAppender.getName()).thenReturn("MOCK");
         root.addAppender(mockAppender);
@@ -185,7 +166,6 @@ public class EpLanIntegrationTest {
         CreateConnectivityServiceInput input = LegatoUtils.buildCreateConnectivityServiceInput(
                 evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint());
         
-        //this.prestoConnectivityService.createConnectivityService(input);
         final RpcResult<CreateConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
         final Future<RpcResult<CreateConnectivityServiceOutput>> future = mock(Future.class);
         
@@ -237,7 +217,7 @@ public class EpLanIntegrationTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testUpdateService() throws InterruptedException, ExecutionException {
+    public void testUpdateService() throws InterruptedException, ExecutionException, ReadFailedException {
 
         // having
         assertNotNull(evc);
@@ -249,7 +229,6 @@ public class EpLanIntegrationTest {
 
         assertEquals(ConnectionType.MultipointToMultipoint.getName(), evcDao.getConnectionType());
         assertEquals(MefServiceType.Eplan.getName(), evcDao.getSvcType());
-
         DeleteConnectivityServiceInput deleteConnectivityServiceInput = new DeleteConnectivityServiceInputBuilder().setServiceIdOrName(Constants.UUID).build();
 
         final RpcResult<DeleteConnectivityServiceOutput> delRpcResult = mock(RpcResult.class);
@@ -265,58 +244,8 @@ public class EpLanIntegrationTest {
         // then
         assertTrue(delResult.get().isSuccessful());
         
-        
-        
-        
-        CreateConnectivityServiceInput createConnectivityServiceInput = LegatoUtils.buildCreateConnectivityServiceInput(
-                evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint());
-        
-        //this.prestoConnectivityService.createConnectivityService(input);
-        final RpcResult<CreateConnectivityServiceOutput> createRpcResult = mock(RpcResult.class);
-        final Future<RpcResult<CreateConnectivityServiceOutput>> createfuture = mock(Future.class);
-        
-        when(createfuture.get()).thenReturn(createRpcResult);
-        when(createRpcResult.isSuccessful()).thenReturn(true);
-        when(prestoConnectivityService.createConnectivityService(createConnectivityServiceInput)).thenReturn(createfuture);
-        
-        //when
-        Future<RpcResult<CreateConnectivityServiceOutput>> createResult = this.prestoConnectivityService.createConnectivityService(createConnectivityServiceInput);
-        //then
-        assertTrue(createResult.get().isSuccessful());
-
-        final Optional<Evc> optEvc = mock(Optional.class);
-        when(optEvc.isPresent()).thenReturn(true);
-        when(optEvc.get()).thenReturn(evc);
-        
-        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.READ_EVC, DataBroker.class, LogicalDatastoreType.class, 
-                InstanceIdentifier.class));
-
-        final InstanceIdentifier<SubscriberServices> instanceIdentifier = 
-                InstanceIdentifier.builder(MefServices.class).child(CarrierEthernet.class).child(SubscriberServices.class).build();
-        
-        when(dataBroker.newWriteOnlyTransaction()).thenReturn(transaction);
-        when(LegatoUtils.readEvc(any(DataBroker.class), any(LogicalDatastoreType.class), any(InstanceIdentifier.class))).thenReturn(optEvc);
-        doNothing().when(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
-        when(transaction.submit()).thenReturn(checkedFuture);
-        
-        assertEquals(true,LegatoUtils.updateEvcInOperationalDB(evc, instanceIdentifier, dataBroker));
-        verify(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
-        verify(transaction).submit();
+        this.testCreateService();
     }
-
-    /*private boolean callUpdateConnectionService(
-            UpdateConnectivityServiceInput updateConnectivityServiceInput) {
-        try {
-            Future<RpcResult<UpdateConnectivityServiceOutput>> response = this.prestoConnectivityService
-                            .updateConnectivityService(updateConnectivityServiceInput);
-
-            return true;
-
-        } catch (Exception ex) {
-            return false;
-        }
-    }*/
-
     @Test
     public void testUpdateServiceBadInput() throws InterruptedException, ExecutionException {
 
@@ -378,7 +307,6 @@ public class EpLanIntegrationTest {
         }));
 
     }
-
     @Test
     public void testDeleteServiceBadInput() throws InterruptedException, ExecutionException {
 
