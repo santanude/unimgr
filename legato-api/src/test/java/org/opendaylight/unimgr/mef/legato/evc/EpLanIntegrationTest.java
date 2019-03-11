@@ -22,10 +22,12 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +39,6 @@ import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
-import org.opendaylight.unimgr.mef.legato.LegatoServiceController;
 import org.opendaylight.unimgr.mef.legato.dao.EVCDao;
 import org.opendaylight.unimgr.mef.legato.util.LegatoUtils;
 import org.opendaylight.unimgr.mef.legato.utils.Constants;
@@ -50,19 +51,20 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.m
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.EndPointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.EndPoint;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.EndPointBuilder;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.legato.services.rev171215.mef.services.carrier.ethernet.subscriber.services.evc.end.points.end.point.CeVlansBuilder;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.ConnectionType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.EvcIdType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.EvcUniRoleType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.Identifier45;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.MaxFrameSizeType;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.MefServiceType;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.types.rev171215.VlanIdType;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.CreateConnectivityServiceOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceInput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.TapiConnectivityService;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceInput;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceOutput;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.powermock.api.mockito.PowerMockito;
@@ -73,6 +75,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * @author Om.SAwasthi@Xoriant.Com
  *
@@ -81,8 +84,8 @@ import org.slf4j.LoggerFactory;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({InstanceIdentifier.class, LogicalDatastoreType.class, LegatoUtils.class})
 public class EpLanIntegrationTest {
-    @Mock
-    private LegatoServiceController legatoServiceController;
+    /*@Mock
+    private LegatoServiceController legatoServiceController;*/
     @Mock
     private TapiConnectivityService prestoConnectivityService;
     @Mock
@@ -99,7 +102,7 @@ public class EpLanIntegrationTest {
     private CheckedFuture checkedFuture;
     private EndPointBuilder endPointBuilder;
     private Evc evc;
-    private Evc evc1;
+    //private Evc evc1;
     private EVCDao evcDao;
     private ch.qos.logback.classic.Logger root;
 
@@ -107,28 +110,38 @@ public class EpLanIntegrationTest {
     @Before
     public void setUp() throws Exception {
 
-        prestoConnectivityService =
+        /*prestoConnectivityService =
                 PowerMockito.mock(TapiConnectivityService.class, Mockito.CALLS_REAL_METHODS);
         legatoServiceController =
-                PowerMockito.mock(LegatoServiceController.class, Mockito.CALLS_REAL_METHODS);
-        PowerMockito.mock(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
+                PowerMockito.mock(LegatoServiceController.class, Mockito.CALLS_REAL_METHODS);*/
+        //PowerMockito.mock(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
 
-        MemberModifier.field(LegatoServiceController.class, "dataBroker")
-                .set(legatoServiceController, dataBroker);
+        /*MemberModifier.field(LegatoServiceController.class, "dataBroker")
+                .set(legatoServiceController, dataBroker);*/
+        
+        final List<VlanIdType> vlanIdTypes = new ArrayList<>();
+        vlanIdTypes.add(new VlanIdType(301));
+        
+        CeVlansBuilder ceVlansBuilder = new CeVlansBuilder();
+        ceVlansBuilder.setCeVlan(vlanIdTypes);
+        
         final List<EndPoint> endPointList = new ArrayList<EndPoint>();
         endPointBuilder = new EndPointBuilder();
+        endPointBuilder.setCeVlans(ceVlansBuilder.build());
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID1));
         endPointBuilder.setRole(EvcUniRoleType.Root);
 
         endPointList.add(endPointBuilder.build());
         endPointBuilder = new EndPointBuilder();
+        endPointBuilder.setCeVlans(ceVlansBuilder.build());
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID2));
-        endPointBuilder.setRole(EvcUniRoleType.Root);
+        endPointBuilder.setRole(EvcUniRoleType.Leaf);
 
         endPointList.add(endPointBuilder.build());
         endPointBuilder = new EndPointBuilder();
+        endPointBuilder.setCeVlans(ceVlansBuilder.build());
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID3));
-        endPointBuilder.setRole(EvcUniRoleType.Root);
+        endPointBuilder.setRole(EvcUniRoleType.Leaf);
         endPointList.add(endPointBuilder.build());
 
         evc = (Evc) new EvcBuilder().setEvcId(new EvcIdType(Constants.EVC_ID_TYPE))
@@ -138,9 +151,9 @@ public class EpLanIntegrationTest {
                 .setConnectionType(ConnectionType.MultipointToMultipoint)
                 .setSvcType(MefServiceType.Eplan).build();
 
-        evc1 = (Evc) new EvcBuilder().setSvcType(MefServiceType.Evplan).build();
+        //evc1 = (Evc) new EvcBuilder().setSvcType(MefServiceType.Evplan).build();
 
-        List<String> uniIdList = new ArrayList<String>();
+        /*List<String> uniIdList = new ArrayList<String>();
         uniIdList.add(Constants.UNI_ID1);
         uniIdList.add(Constants.UNI_ID2);
         evcDao = new EVCDao();
@@ -148,148 +161,136 @@ public class EpLanIntegrationTest {
         evcDao.setEvcId(Constants.EVC_ID_TYPE);
         evcDao.setConnectionType(ConnectionType.MultipointToMultipoint.getName());
         evcDao.setSvcType(MefServiceType.Eplan.getName());
-        evcDao.setUniIdList(uniIdList);
+        evcDao.setUniIdList(uniIdList);*/
         root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         when(mockAppender.getName()).thenReturn("MOCK");
         root.addAppender(mockAppender);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     @Test
-    public void createEvcTrue()
-            throws ReadFailedException, InterruptedException, ExecutionException {
+    public void testCreateService() throws ReadFailedException, InterruptedException, ExecutionException {
+        
+        //having
         assertNotNull(evc);
+        evcDao = LegatoUtils.parseNodes(evc);
+
         MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.PARSE_NODES));
         PowerMockito.mockStatic(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
         when(LegatoUtils.parseNodes(evc)).thenReturn(evcDao);
-        EVCDao evcDao1 = LegatoUtils.parseNodes(evc);
-        assertEquals(ConnectionType.MultipointToMultipoint.getName(), evcDao1.getConnectionType());
-        assertEquals(MefServiceType.Eplan.getName(), evcDao1.getSvcType());
+        
+        assertEquals(ConnectionType.MultipointToMultipoint.getName(), evcDao.getConnectionType());
+        assertEquals(MefServiceType.Eplan.getName(), evcDao.getSvcType());
+        
         CreateConnectivityServiceInput input = LegatoUtils.buildCreateConnectivityServiceInput(
-                evcDao1, Constants.VLAN_ID, evc.getEndPoints().getEndPoint());
-        this.prestoConnectivityService.createConnectivityService(input);
+                evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint());
+        
+        //this.prestoConnectivityService.createConnectivityService(input);
         final RpcResult<CreateConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
         final Future<RpcResult<CreateConnectivityServiceOutput>> future = mock(Future.class);
+        
         when(future.get()).thenReturn(rpcResult);
         when(rpcResult.isSuccessful()).thenReturn(true);
         when(prestoConnectivityService.createConnectivityService(input)).thenReturn(future);
-
-        Future<RpcResult<CreateConnectivityServiceOutput>> result =
-                this.prestoConnectivityService.createConnectivityService(input);
-
+        
+        //when
+        Future<RpcResult<CreateConnectivityServiceOutput>> result = this.prestoConnectivityService.createConnectivityService(input);
+        //then
         assertTrue(result.get().isSuccessful());
 
         final Optional<Evc> optEvc = mock(Optional.class);
         when(optEvc.isPresent()).thenReturn(true);
         when(optEvc.get()).thenReturn(evc);
-        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.READ_EVC,
-                DataBroker.class, LogicalDatastoreType.class, InstanceIdentifier.class));
+        
+        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.READ_EVC, DataBroker.class, LogicalDatastoreType.class, 
+                InstanceIdentifier.class));
 
-        final InstanceIdentifier<SubscriberServices> instanceIdentifier =
-                InstanceIdentifier.builder(MefServices.class).child(CarrierEthernet.class)
-                        .child(SubscriberServices.class).build();
+        final InstanceIdentifier<SubscriberServices> instanceIdentifier = 
+                InstanceIdentifier.builder(MefServices.class).child(CarrierEthernet.class).child(SubscriberServices.class).build();
+        
         when(dataBroker.newWriteOnlyTransaction()).thenReturn(transaction);
-        when(LegatoUtils.readEvc(any(DataBroker.class), any(LogicalDatastoreType.class),
-                any(InstanceIdentifier.class))).thenReturn(optEvc);
-        doNothing().when(transaction).put(any(LogicalDatastoreType.class),
-                any(InstanceIdentifier.class), any(Evc.class));
+        when(LegatoUtils.readEvc(any(DataBroker.class), any(LogicalDatastoreType.class), any(InstanceIdentifier.class))).thenReturn(optEvc);
+        doNothing().when(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
         when(transaction.submit()).thenReturn(checkedFuture);
-        assertEquals(true,
-                LegatoUtils.updateEvcInOperationalDB(evc, instanceIdentifier, dataBroker));
-        verify(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class),
-                any(Evc.class));
+        
+        assertEquals(true,LegatoUtils.updateEvcInOperationalDB(evc, instanceIdentifier, dataBroker));
+        verify(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
         verify(transaction).submit();
     }
 
     @Test
-    public void createEvcfalse() throws ReadFailedException, ExecutionException {
-
-        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.PARSE_NODES));
-        EVCDao evcDao1 = evcDao;
-        evcDao1.setSvcType(MefServiceType.Evplan.getName());
-        PowerMockito.mockStatic(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
-
-        when(LegatoUtils.parseNodes(evc1)).thenReturn((EVCDao) evcDao1);
-        EVCDao evcDao2 = LegatoUtils.parseNodes(evc1);
-        assertEquals(Integer.valueOf(Constants.MAXFRAME_SIZE_TYPE), evcDao2.getMaxFrameSize());
-        assertEquals(Constants.EVC_ID_TYPE, evcDao2.getEvcId());
-        assertEquals(ConnectionType.MultipointToMultipoint.getName(), evcDao2.getConnectionType());
-        assertNotEquals(MefServiceType.Eplan.getName(), evcDao2.getSvcType());
-
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void updateEvc() throws InterruptedException, ExecutionException {
-
+    public void testcreateServiceBadInput() throws ReadFailedException, ExecutionException {
+        // having
         assertNotNull(evc);
+        evcDao = LegatoUtils.parseNodes(evc);
+        evcDao.setSvcType(MefServiceType.Evplan.getName());
+
         MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.PARSE_NODES));
         PowerMockito.mockStatic(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
         when(LegatoUtils.parseNodes(evc)).thenReturn(evcDao);
-        EVCDao evcDao1 = LegatoUtils.parseNodes(evc);
-        assertEquals(ConnectionType.MultipointToMultipoint.getName(), evcDao1.getConnectionType());
-        assertEquals(MefServiceType.Eplan.getName(), evcDao1.getSvcType());
 
-        assertEquals(true,
-                callUpdateConnectionService(LegatoUtils.buildUpdateConnectivityServiceInput(evcDao1,
-                        evcDao1.getUniIdList().get(0) + "#" + Constants.VLAN_ID, Constants.UUID)));
+        // then
+        assertEquals(ConnectionType.MultipointToMultipoint.getName(), evcDao.getConnectionType());
+        assertNotEquals(MefServiceType.Eplan.getName(), evcDao.getSvcType());
+
+    }
+
+/*    @SuppressWarnings("unchecked")
+    @Test
+    public void testUpdateService() throws InterruptedException, ExecutionException {
+
+        // having
+        assertNotNull(evc);
+        evcDao = LegatoUtils.parseNodes(evc);
+
+        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.PARSE_NODES));
+        PowerMockito.mockStatic(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
+        when(LegatoUtils.parseNodes(evc)).thenReturn(evcDao);
+
+        assertEquals(ConnectionType.MultipointToMultipoint.getName(), evcDao.getConnectionType());
+        assertEquals(MefServiceType.Eplan.getName(), evcDao.getSvcType());
+
+        // when
+        assertEquals(true, callUpdateConnectionService(LegatoUtils.buildUpdateConnectivityServiceInput(evcDao,
+                        evcDao.getUniIdList().get(0) + "#" + Constants.VLAN_ID, Constants.UUID)));
 
         final InstanceIdentifier<?> evcKey = InstanceIdentifier.create(MefServices.class)
                 .child(CarrierEthernet.class).child(SubscriberServices.class)
                 .child(Evc.class, new EvcKey(new EvcIdType(evc.getEvcId())));
 
-        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.READ_EVC,
-                DataBroker.class, LogicalDatastoreType.class, InstanceIdentifier.class));
+        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.READ_EVC, DataBroker.class, LogicalDatastoreType.class, InstanceIdentifier.class));
+
         final Optional<Evc> optEvc = mock(Optional.class);
-        when(LegatoUtils.readEvc(any(DataBroker.class), any(LogicalDatastoreType.class),
-                any(InstanceIdentifier.class))).thenReturn(optEvc);
+        when(LegatoUtils.readEvc(any(DataBroker.class), any(LogicalDatastoreType.class), any(InstanceIdentifier.class))).thenReturn(optEvc);
         when(optEvc.isPresent()).thenReturn(true);
         when(optEvc.get()).thenReturn(evc);
 
+        // then
         when(dataBroker.newWriteOnlyTransaction()).thenReturn(transaction);
-        doNothing().when(transaction).delete(any(LogicalDatastoreType.class),
-                any(InstanceIdentifier.class));
+        doNothing().when(transaction).delete(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
         when(transaction.submit()).thenReturn(checkedFuture);
+
         assertEquals(true, LegatoUtils.deleteFromOperationalDB(evcKey, dataBroker));
         verify(transaction).delete(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
         verify(transaction).submit();
 
-        final InstanceIdentifier<SubscriberServices> instanceIdentifier =
-                InstanceIdentifier.builder(MefServices.class).child(CarrierEthernet.class)
+        final InstanceIdentifier<SubscriberServices> instanceIdentifier = InstanceIdentifier.builder(MefServices.class).child(CarrierEthernet.class)
                         .child(SubscriberServices.class).build();
 
         WriteTransaction transaction2 = Mockito.mock(WriteTransaction.class);
         when(dataBroker.newWriteOnlyTransaction()).thenReturn(transaction2);
-        doNothing().when(transaction2).put(any(LogicalDatastoreType.class),
-                any(InstanceIdentifier.class), any(Evc.class));
+        doNothing().when(transaction2).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
         when(transaction2.submit()).thenReturn(checkedFuture);
-        assertEquals(true,
-                LegatoUtils.updateEvcInOperationalDB(evc, instanceIdentifier, dataBroker));
-        verify(transaction2).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class),
-                any(Evc.class));
+
+        assertEquals(true, LegatoUtils.updateEvcInOperationalDB(evc, instanceIdentifier, dataBroker));
+        verify(transaction2).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
         verify(transaction2).submit();
-    }
-
-    @Test
-    public void updateEvcFalse() throws InterruptedException, ExecutionException {
-
-        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.PARSE_NODES));
-        EVCDao evcDao1 = evcDao;
-        evcDao1.setSvcType(MefServiceType.Evpl.getName());
-        PowerMockito.mockStatic(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
-        when(LegatoUtils.parseNodes(evc1)).thenReturn((EVCDao) evcDao1);
-        EVCDao evcDao2 = LegatoUtils.parseNodes(evc1);
-        assertEquals(Integer.valueOf(Constants.MAXFRAME_SIZE_TYPE), evcDao2.getMaxFrameSize());
-        assertEquals(Constants.EVC_ID_TYPE, evcDao2.getEvcId());
-        assertEquals(ConnectionType.MultipointToMultipoint.getName(), evcDao2.getConnectionType());
-        assertNotEquals(MefServiceType.Eplan.getName(), evcDao2.getSvcType());
     }
 
     private boolean callUpdateConnectionService(
             UpdateConnectivityServiceInput updateConnectivityServiceInput) {
         try {
-            Future<RpcResult<UpdateConnectivityServiceOutput>> response =
-                    this.prestoConnectivityService
+            Future<RpcResult<UpdateConnectivityServiceOutput>> response = this.prestoConnectivityService
                             .updateConnectivityService(updateConnectivityServiceInput);
 
             return true;
@@ -297,25 +298,58 @@ public class EpLanIntegrationTest {
         } catch (Exception ex) {
             return false;
         }
+    }*/
+
+    @Test
+    public void testUpdateServiceBadInput() throws InterruptedException, ExecutionException {
+
+        // having
+        assertNotNull(evc);
+        evcDao = LegatoUtils.parseNodes(evc);
+        evcDao.setSvcType(MefServiceType.Evplan.getName());
+
+        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.PARSE_NODES));
+        PowerMockito.mockStatic(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
+        when(LegatoUtils.parseNodes(evc)).thenReturn(evcDao);
+
+        // then
+        assertEquals(ConnectionType.MultipointToMultipoint.getName(), evcDao.getConnectionType());
+        assertNotEquals(MefServiceType.Eplan.getName(), evcDao.getSvcType());
     }
+
+
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
-    public void deleteEvc() throws InterruptedException, ExecutionException {
+    public void testDeleteService() throws InterruptedException, ExecutionException {
 
+        // having
         DeleteConnectivityServiceInput input = new DeleteConnectivityServiceInputBuilder()
                 .setServiceIdOrName(Constants.UUID).build();
-        assertEquals(true, callDeleteConnectionService(input));
+
+        final RpcResult<DeleteConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
+        final Future<RpcResult<DeleteConnectivityServiceOutput>> future = mock(Future.class);
+        
+        when(future.get()).thenReturn(rpcResult);
+        when(rpcResult.isSuccessful()).thenReturn(true);
+        when(prestoConnectivityService.deleteConnectivityService(input)).thenReturn(future);
+
+        // when
+        Future<RpcResult<DeleteConnectivityServiceOutput>> result = this.prestoConnectivityService.deleteConnectivityService(input);
+
+        // then
+        assertTrue(result.get().isSuccessful());
 
         final InstanceIdentifier<?> evcKey = InstanceIdentifier.create(MefServices.class)
                 .child(CarrierEthernet.class).child(SubscriberServices.class)
                 .child(Evc.class, new EvcKey(new EvcIdType(Constants.EVC_ID_TYPE)));
 
         when(dataBroker.newWriteOnlyTransaction()).thenReturn(transaction);
-        doNothing().when(transaction).delete(any(LogicalDatastoreType.class),
-                any(InstanceIdentifier.class));
+        doNothing().when(transaction).delete(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
         when(transaction.submit()).thenReturn(checkedFuture);
+
         assertEquals(true, LegatoUtils.deleteFromOperationalDB(evcKey, dataBroker));
+
         verify(transaction).delete(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
         verify(transaction).submit();
         verify(mockAppender).doAppend(argThat(new ArgumentMatcher() {
@@ -328,44 +362,18 @@ public class EpLanIntegrationTest {
 
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
-    public void deleteEvcFalse() throws InterruptedException, ExecutionException {
+    public void testDeleteServiceBadInput() throws InterruptedException, ExecutionException {
 
-        DeleteConnectivityServiceInput input = new DeleteConnectivityServiceInputBuilder()
-                .setServiceIdOrName(Constants.UUID).build();
-        assertEquals(true, callDeleteConnectionService(input));
+        // having
+        String UUID = "cs:162052f6bb1:73aaf0f6";
 
-        final InstanceIdentifier<?> evcKey = InstanceIdentifier.create(MefServices.class)
-                .child(CarrierEthernet.class).child(SubscriberServices.class)
-                .child(Evc.class, new EvcKey(new EvcIdType(Constants.EVC_ID_TYPE)));
+        // when
+        DeleteConnectivityServiceInput input = new DeleteConnectivityServiceInputBuilder().setServiceIdOrName(Constants.UUID).build();
 
-        when(dataBroker.newWriteOnlyTransaction()).thenReturn(transaction);
-        doNothing().when(transaction).delete(any(LogicalDatastoreType.class),
-                any(InstanceIdentifier.class));
-        when(transaction.submit()).thenReturn(checkedFuture);
-        assertEquals(true, LegatoUtils.deleteFromOperationalDB(evcKey, dataBroker));
-        verify(transaction).delete(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
-        verify(transaction).submit();
-        verify(mockAppender).doAppend(argThat(new ArgumentMatcher() {
-            @Override
-            public boolean matches(final Object argument) {
-                return ((LoggingEvent) argument).getFormattedMessage()
-                        .contains("Received a request to delete node");
-            }
-        }));
+        // then
+        assertNotEquals(UUID, input.getServiceIdOrName());
 
     }
 
-    private boolean callDeleteConnectionService(
-            DeleteConnectivityServiceInput deleteConnectivityServiceInput) {
-        try {
-            this.prestoConnectivityService
-                    .deleteConnectivityService(deleteConnectivityServiceInput);
-            return true;
-
-        } catch (Exception ex) {
-            return false;
-        }
-    }
 }
