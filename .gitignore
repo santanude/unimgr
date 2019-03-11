@@ -1,7 +1,7 @@
 *.class
 **/target
 bin/
-dist
+
 **/logs
 products
 repository
