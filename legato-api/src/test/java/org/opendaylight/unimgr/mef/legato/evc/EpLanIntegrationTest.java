@@ -235,7 +235,7 @@ public class EpLanIntegrationTest {
 
     }
 
-/*    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     @Test
     public void testUpdateService() throws InterruptedException, ExecutionException {
 
@@ -250,44 +250,61 @@ public class EpLanIntegrationTest {
         assertEquals(ConnectionType.MultipointToMultipoint.getName(), evcDao.getConnectionType());
         assertEquals(MefServiceType.Eplan.getName(), evcDao.getSvcType());
 
+        DeleteConnectivityServiceInput deleteConnectivityServiceInput = new DeleteConnectivityServiceInputBuilder().setServiceIdOrName(Constants.UUID).build();
+
+        final RpcResult<DeleteConnectivityServiceOutput> delRpcResult = mock(RpcResult.class);
+        final Future<RpcResult<DeleteConnectivityServiceOutput>> delFuture = mock(Future.class);
+        
+        when(delFuture.get()).thenReturn(delRpcResult);
+        when(delRpcResult.isSuccessful()).thenReturn(true);
+        when(prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput)).thenReturn(delFuture);
+
         // when
-        assertEquals(true, callUpdateConnectionService(LegatoUtils.buildUpdateConnectivityServiceInput(evcDao,
-                        evcDao.getUniIdList().get(0) + "#" + Constants.VLAN_ID, Constants.UUID)));
-
-        final InstanceIdentifier<?> evcKey = InstanceIdentifier.create(MefServices.class)
-                .child(CarrierEthernet.class).child(SubscriberServices.class)
-                .child(Evc.class, new EvcKey(new EvcIdType(evc.getEvcId())));
-
-        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.READ_EVC, DataBroker.class, LogicalDatastoreType.class, InstanceIdentifier.class));
-
-        final Optional<Evc> optEvc = mock(Optional.class);
-        when(LegatoUtils.readEvc(any(DataBroker.class), any(LogicalDatastoreType.class), any(InstanceIdentifier.class))).thenReturn(optEvc);
-        when(optEvc.isPresent()).thenReturn(true);
-        when(optEvc.get()).thenReturn(evc);
+        Future<RpcResult<DeleteConnectivityServiceOutput>> delResult = this.prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput);
 
         // then
+        assertTrue(delResult.get().isSuccessful());
+        
+        
+        
+        
+        CreateConnectivityServiceInput createConnectivityServiceInput = LegatoUtils.buildCreateConnectivityServiceInput(
+                evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint());
+        
+        //this.prestoConnectivityService.createConnectivityService(input);
+        final RpcResult<CreateConnectivityServiceOutput> createRpcResult = mock(RpcResult.class);
+        final Future<RpcResult<CreateConnectivityServiceOutput>> createfuture = mock(Future.class);
+        
+        when(createfuture.get()).thenReturn(createRpcResult);
+        when(createRpcResult.isSuccessful()).thenReturn(true);
+        when(prestoConnectivityService.createConnectivityService(createConnectivityServiceInput)).thenReturn(createfuture);
+        
+        //when
+        Future<RpcResult<CreateConnectivityServiceOutput>> createResult = this.prestoConnectivityService.createConnectivityService(createConnectivityServiceInput);
+        //then
+        assertTrue(createResult.get().isSuccessful());
+
+        final Optional<Evc> optEvc = mock(Optional.class);
+        when(optEvc.isPresent()).thenReturn(true);
+        when(optEvc.get()).thenReturn(evc);
+        
+        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.READ_EVC, DataBroker.class, LogicalDatastoreType.class, 
+                InstanceIdentifier.class));
+
+        final InstanceIdentifier<SubscriberServices> instanceIdentifier = 
+                InstanceIdentifier.builder(MefServices.class).child(CarrierEthernet.class).child(SubscriberServices.class).build();
+        
         when(dataBroker.newWriteOnlyTransaction()).thenReturn(transaction);
-        doNothing().when(transaction).delete(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
+        when(LegatoUtils.readEvc(any(DataBroker.class), any(LogicalDatastoreType.class), any(InstanceIdentifier.class))).thenReturn(optEvc);
+        doNothing().when(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
         when(transaction.submit()).thenReturn(checkedFuture);
-
-        assertEquals(true, LegatoUtils.deleteFromOperationalDB(evcKey, dataBroker));
-        verify(transaction).delete(any(LogicalDatastoreType.class), any(InstanceIdentifier.class));
+        
+        assertEquals(true,LegatoUtils.updateEvcInOperationalDB(evc, instanceIdentifier, dataBroker));
+        verify(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
         verify(transaction).submit();
-
-        final InstanceIdentifier<SubscriberServices> instanceIdentifier = InstanceIdentifier.builder(MefServices.class).child(CarrierEthernet.class)
-                        .child(SubscriberServices.class).build();
-
-        WriteTransaction transaction2 = Mockito.mock(WriteTransaction.class);
-        when(dataBroker.newWriteOnlyTransaction()).thenReturn(transaction2);
-        doNothing().when(transaction2).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
-        when(transaction2.submit()).thenReturn(checkedFuture);
-
-        assertEquals(true, LegatoUtils.updateEvcInOperationalDB(evc, instanceIdentifier, dataBroker));
-        verify(transaction2).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
-        verify(transaction2).submit();
     }
 
-    private boolean callUpdateConnectionService(
+    /*private boolean callUpdateConnectionService(
             UpdateConnectivityServiceInput updateConnectivityServiceInput) {
         try {
             Future<RpcResult<UpdateConnectivityServiceOutput>> response = this.prestoConnectivityService
