@@ -1,6 +1,9 @@
-<h1>UUID</h1>
+Evc Id : {{evc$}}
+<br/>
+<br/>
+End Point Uni-Id
 <ul>
-<li *ngFor="let user of result$">    
-{{user['uuid']}}<br>
-</li>
+    <li *ngFor="let end of endPoint$">
+     {{end['uni-id']}}   
+    </li>
 </ul>

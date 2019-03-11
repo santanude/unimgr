@@ -18,8 +18,8 @@ export class DataService {
 const  headers = new  HttpHeaders().set("Authorization", "Basic YWRtaW46YWRtaW4=")
                                     .set("Content-Type","application/json");
     console.log("In get User method")
-   // return this.http.get('http://127.0.0.1:8181/restconf/config/mef-legato-services:mef-services/carrier-ethernet/subscriber-services/',{headers});
-   return this.http.get('http://127.0.0.1:8181/restconf/operational/tapi-common:context/tapi-topology:topology/mef:presto-nrp-topology',{headers});
+   return this.http.get('http://127.0.0.1:8181/restconf/config/mef-legato-services:mef-services/carrier-ethernet/subscriber-services',{headers});
+   //return this.http.get('http://127.0.0.1:8181/restconf/operational/tapi-common:context/tapi-topology:topology/mef:presto-nrp-topology',{headers});
   }
   createEvcServcie(data)
   {

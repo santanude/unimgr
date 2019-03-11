@@ -17,7 +17,8 @@ export class PostCompComponent implements OnInit {
   ngOnInit() {
   this.createEvcForm = new FormGroup({
     node1: new FormControl(),
-    node2: new FormControl()
+    node2: new FormControl(),
+    evcId: new FormControl()
 });
   }
  internalcreateEvcService()
@@ -143,7 +144,7 @@ cosEtntries["mef-legato-services:cos-entry"]=cosEntry;
    };
 
    const obj = {
-    "mef-legato-services:evc-id":"EVC1",
+    "mef-legato-services:evc-id":this.createEvcForm.value['evcId'],
     "mef-legato-services:cos-names":cosNames,
     "mef-legato-services:end-points":endPoints,
     "mef-legato-services:carrier-ethernet-sls":carrierEthernetsls,

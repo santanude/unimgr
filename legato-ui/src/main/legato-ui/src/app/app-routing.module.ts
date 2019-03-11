@@ -4,7 +4,7 @@ import  {UserCompComponent} from './user-comp/user-comp.component';
 import  {PostCompComponent} from './post-comp/./post-comp.component';
 const routes: Routes = [
   {
-    path:"",
+    path:"get",
     component:UserCompComponent
   },
   {
