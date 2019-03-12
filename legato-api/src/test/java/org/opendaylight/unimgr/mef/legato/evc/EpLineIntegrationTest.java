@@ -18,6 +18,11 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
+import com.google.common.base.Optional;
+import com.google.common.util.concurrent.CheckedFuture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -71,10 +76,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.base.Optional;
-import com.google.common.util.concurrent.CheckedFuture;
-import ch.qos.logback.classic.spi.LoggingEvent;
-import ch.qos.logback.core.Appender;
 
 /**
  * @author Om.SAwasthi@Xoriant.Com
@@ -106,17 +107,16 @@ public class EpLineIntegrationTest {
     private EVCDao evcDao;
     private ch.qos.logback.classic.Logger root;
 
-
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
-        
+
         final List<VlanIdType> vlanIdTypes = new ArrayList<>();
         vlanIdTypes.add(new VlanIdType(301));
-        
+
         CeVlansBuilder ceVlansBuilder = new CeVlansBuilder();
         ceVlansBuilder.setCeVlan(vlanIdTypes);
-        
+
         final List<EndPoint> endPointList = new ArrayList<EndPoint>();
 
         endPointBuilder = new EndPointBuilder();
@@ -136,8 +136,8 @@ public class EpLineIntegrationTest {
                 .setEvcId(new EvcIdType(Constants.EVC_ID_TYPE)).setSvcType(MefServiceType.Epl)
                 .setConnectionType(ConnectionType.PointToPoint)
                 .setEndPoints(new EndPointsBuilder().setEndPoint(endPointList).build()).build();
-        
-                root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+
+        root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         when(mockAppender.getName()).thenReturn("MOCK");
         root.addAppender(mockAppender);
 
@@ -159,8 +159,7 @@ public class EpLineIntegrationTest {
         assertEquals(ConnectionType.PointToPoint.getName(), evcDao.getConnectionType());
         assertEquals(MefServiceType.Epl.getName(), evcDao.getSvcType());
         
-        CreateConnectivityServiceInput input = LegatoUtils.buildCreateConnectivityServiceInput(
-                evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint());
+        CreateConnectivityServiceInput input = LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint());
 
         final RpcResult<CreateConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
         final Future<RpcResult<CreateConnectivityServiceOutput>> future = mock(Future.class);
@@ -197,7 +196,7 @@ public class EpLineIntegrationTest {
 
     @Test
     public void testcreateServiceBadInput() throws ReadFailedException, ExecutionException {
-        
+
         assertNotNull(evc);
         evcDao = LegatoUtils.parseNodes(evc);
         evcDao.setSvcType(MefServiceType.Evpl.getName());
@@ -209,7 +208,6 @@ public class EpLineIntegrationTest {
         // then
         assertEquals(ConnectionType.PointToPoint.getName(), evcDao.getConnectionType());
         assertNotEquals(MefServiceType.Epl.getName(), evcDao.getSvcType());
-        
 
     }
 
@@ -230,7 +228,7 @@ public class EpLineIntegrationTest {
 
         final RpcResult<DeleteConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
         final Future<RpcResult<DeleteConnectivityServiceOutput>> future = mock(Future.class);
-        
+
         when(future.get()).thenReturn(rpcResult);
         when(rpcResult.isSuccessful()).thenReturn(true);
         when(prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput)).thenReturn(future);
@@ -254,6 +252,7 @@ public class EpLineIntegrationTest {
         MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.PARSE_NODES));
         PowerMockito.mockStatic(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
         when(LegatoUtils.parseNodes(evc)).thenReturn(evcDao);
+
         // then
         assertEquals(ConnectionType.PointToPoint.getName(), evcDao.getConnectionType());
         assertNotEquals(MefServiceType.Epl.getName(), evcDao.getSvcType());
@@ -262,7 +261,7 @@ public class EpLineIntegrationTest {
    @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
     public void testDeleteService() throws InterruptedException, ExecutionException {
-     // having
+        // having
         DeleteConnectivityServiceInput input = new DeleteConnectivityServiceInputBuilder()
                 .setServiceIdOrName(Constants.UUID).build();
 
@@ -313,6 +312,5 @@ public class EpLineIntegrationTest {
         assertNotEquals(UUID, input.getServiceIdOrName());
 
     }
-
 
 }
