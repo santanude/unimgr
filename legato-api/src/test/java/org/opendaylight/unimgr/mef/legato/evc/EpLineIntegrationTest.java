@@ -155,10 +155,10 @@ public class EpLineIntegrationTest {
         MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.PARSE_NODES));
         PowerMockito.mockStatic(LegatoUtils.class, Mockito.CALLS_REAL_METHODS);
         when(LegatoUtils.parseNodes(evc)).thenReturn(evcDao);
-        
+
         assertEquals(ConnectionType.PointToPoint.getName(), evcDao.getConnectionType());
         assertEquals(MefServiceType.Epl.getName(), evcDao.getSvcType());
-        
+
         CreateConnectivityServiceInput input = LegatoUtils.buildCreateConnectivityServiceInput(evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint());
 
         final RpcResult<CreateConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
@@ -176,18 +176,16 @@ public class EpLineIntegrationTest {
         final Optional<Evc> optEvc = mock(Optional.class);
         when(optEvc.isPresent()).thenReturn(true);
         when(optEvc.get()).thenReturn(evc);
-        
-        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.READ_EVC, DataBroker.class, LogicalDatastoreType.class, 
-                InstanceIdentifier.class));
 
-        final InstanceIdentifier<SubscriberServices> instanceIdentifier = 
-                InstanceIdentifier.builder(MefServices.class).child(CarrierEthernet.class).child(SubscriberServices.class).build();
-        
+        MemberModifier.suppress(MemberMatcher.method(LegatoUtils.class, Constants.READ_EVC, DataBroker.class, LogicalDatastoreType.class, InstanceIdentifier.class));
+
+        final InstanceIdentifier<SubscriberServices> instanceIdentifier = InstanceIdentifier.builder(MefServices.class).child(CarrierEthernet.class).child(SubscriberServices.class).build();
+
         when(dataBroker.newWriteOnlyTransaction()).thenReturn(transaction);
         when(LegatoUtils.readEvc(any(DataBroker.class), any(LogicalDatastoreType.class), any(InstanceIdentifier.class))).thenReturn(optEvc);
         doNothing().when(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
         when(transaction.submit()).thenReturn(checkedFuture);
-        
+
         assertEquals(true,LegatoUtils.updateEvcInOperationalDB(evc, instanceIdentifier, dataBroker));
         verify(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
         verify(transaction).submit();
@@ -238,7 +236,7 @@ public class EpLineIntegrationTest {
 
         // then
         assertTrue(result.get().isSuccessful());
-        
+
         this.testCreateService();
     }
 
@@ -267,7 +265,7 @@ public class EpLineIntegrationTest {
 
         final RpcResult<DeleteConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
         final Future<RpcResult<DeleteConnectivityServiceOutput>> future = mock(Future.class);
-        
+
         when(future.get()).thenReturn(rpcResult);
         when(rpcResult.isSuccessful()).thenReturn(true);
         when(prestoConnectivityService.deleteConnectivityService(input)).thenReturn(future);
@@ -303,13 +301,13 @@ public class EpLineIntegrationTest {
     public void testDeleteServiceBadInput() throws InterruptedException, ExecutionException {
 
         // having
-        String UUID = "cs:162052f6bb1:73aaf0f6";
+        String uuid = "cs:162052f6bb1:73aaf0f6";
 
         // when
         DeleteConnectivityServiceInput input = new DeleteConnectivityServiceInputBuilder().setServiceIdOrName(Constants.UUID).build();
 
         // then
-        assertNotEquals(UUID, input.getServiceIdOrName());
+        assertNotEquals(uuid, input.getServiceIdOrName());
 
     }
 

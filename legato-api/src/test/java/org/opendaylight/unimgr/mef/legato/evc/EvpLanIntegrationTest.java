@@ -65,8 +65,6 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev18030
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.DeleteConnectivityServiceOutput;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.TapiConnectivityService;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceInput;
-import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.UpdateConnectivityServiceOutput;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.powermock.api.mockito.PowerMockito;
@@ -76,6 +74,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * @author Om.SAwasthi@Xoriant.Com
@@ -114,7 +113,7 @@ public class EvpLanIntegrationTest {
 
         final List<VlanIdType> vlanList = new ArrayList<VlanIdType>();
         vlanList.add(new VlanIdType(Constants.VLAN_ID_TYPE));
-        
+
         endPointBuilder = new EndPointBuilder();
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID1));
         endPointBuilder.setRole(EvcUniRoleType.Root);
@@ -229,7 +228,7 @@ public class EvpLanIntegrationTest {
 
         final RpcResult<DeleteConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
         final Future<RpcResult<DeleteConnectivityServiceOutput>> future = mock(Future.class);
-        
+
         when(future.get()).thenReturn(rpcResult);
         when(rpcResult.isSuccessful()).thenReturn(true);
         when(prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput)).thenReturn(future);
@@ -239,7 +238,7 @@ public class EvpLanIntegrationTest {
 
         // then
         assertTrue(delResult.get().isSuccessful());
-        
+
         this.testCreateService();
     }
 
@@ -307,13 +306,13 @@ public class EvpLanIntegrationTest {
     public void testDeleteServiceBadInput() throws InterruptedException, ExecutionException {
 
         // having
-        String UUID = "cs:162052f6bb1:73aaf0f6";
+        String uuid = "cs:162052f6bb1:73aaf0f6";
 
         // when
         DeleteConnectivityServiceInput input = new DeleteConnectivityServiceInputBuilder().setServiceIdOrName(Constants.UUID).build();
 
         // then
-        assertNotEquals(UUID, input.getServiceIdOrName());
+        assertNotEquals(uuid, input.getServiceIdOrName());
 
     }
 

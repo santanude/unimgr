@@ -113,7 +113,7 @@ public class EpTreeIntegrationTest {
 
         CeVlansBuilder ceVlansBuilder = new CeVlansBuilder();
         ceVlansBuilder.setCeVlan(vlanIdTypes);
- 
+
         final List<EndPoint> endPointList = new ArrayList<EndPoint>();
         endPointBuilder = new EndPointBuilder();
         endPointBuilder.setUniId(new Identifier45(Constants.UNI_ID1));
@@ -185,7 +185,7 @@ public class EpTreeIntegrationTest {
         when(LegatoUtils.readEvc(any(DataBroker.class), any(LogicalDatastoreType.class), any(InstanceIdentifier.class))).thenReturn(optEvc);
         doNothing().when(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
         when(transaction.submit()).thenReturn(checkedFuture);
-        
+
         assertEquals(true,LegatoUtils.updateEvcInOperationalDB(evc, instanceIdentifier, dataBroker));
         verify(transaction).put(any(LogicalDatastoreType.class), any(InstanceIdentifier.class), any(Evc.class));
         verify(transaction).submit();
@@ -236,9 +236,9 @@ public class EpTreeIntegrationTest {
 
         // then
         assertTrue(result.get().isSuccessful());
-        
+
         this.testCreateService();
-        }
+    }
 
     @Test
     public void testUpdateServiceBadInput() throws InterruptedException, ExecutionException {
@@ -265,7 +265,7 @@ public class EpTreeIntegrationTest {
 
         final RpcResult<DeleteConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
         final Future<RpcResult<DeleteConnectivityServiceOutput>> future = mock(Future.class);
-        
+
         when(future.get()).thenReturn(rpcResult);
         when(rpcResult.isSuccessful()).thenReturn(true);
         when(prestoConnectivityService.deleteConnectivityService(input)).thenReturn(future);
@@ -300,14 +300,14 @@ public class EpTreeIntegrationTest {
     public void testDeleteServiceBadInput() throws InterruptedException, ExecutionException {
 
         // having
-        String UUID = "cs:162052f6bb1:73aaf0f6";
+        String uuid = "cs:162052f6bb1:73aaf0f6";
 
         // when
         DeleteConnectivityServiceInput input = new DeleteConnectivityServiceInputBuilder()
                 .setServiceIdOrName(Constants.UUID).build();
 
         // then
-        assertNotEquals(UUID, input.getServiceIdOrName());
+        assertNotEquals(uuid, input.getServiceIdOrName());
 
     }
 

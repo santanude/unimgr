@@ -18,10 +18,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.base.Optional;
-import com.google.common.util.concurrent.CheckedFuture;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
+import com.google.common.base.Optional;
+import com.google.common.util.concurrent.CheckedFuture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -303,13 +303,13 @@ public class EpLanIntegrationTest {
     public void testDeleteServiceBadInput() throws InterruptedException, ExecutionException {
 
         // having
-        String UUID = "cs:162052f6bb1:73aaf0f6";
+        String uuid = "cs:162052f6bb1:73aaf0f6";
 
         // when
         DeleteConnectivityServiceInput input = new DeleteConnectivityServiceInputBuilder().setServiceIdOrName(Constants.UUID).build();
 
         // then
-        assertNotEquals(UUID, input.getServiceIdOrName());
+        assertNotEquals(uuid, input.getServiceIdOrName());
 
     }
 

@@ -146,8 +146,8 @@ public class EvpTreeIntegrationTest {
     @SuppressWarnings({"unchecked"})
     @Test
     public void testCreateService() throws ReadFailedException, InterruptedException, ExecutionException {
-        
-        //having
+
+        // having
         assertNotNull(evc);
         evcDao = LegatoUtils.parseNodes(evc);
 
@@ -225,7 +225,7 @@ public class EvpTreeIntegrationTest {
 
         final RpcResult<DeleteConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
         final Future<RpcResult<DeleteConnectivityServiceOutput>> future = mock(Future.class);
-        
+
         when(future.get()).thenReturn(rpcResult);
         when(rpcResult.isSuccessful()).thenReturn(true);
         when(prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput)).thenReturn(future);
@@ -235,7 +235,7 @@ public class EvpTreeIntegrationTest {
 
         // then
         assertTrue(delResult.get().isSuccessful());
-        
+
         this.testCreateService();
     }
 
@@ -268,7 +268,7 @@ public class EvpTreeIntegrationTest {
 
         final RpcResult<DeleteConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
         final Future<RpcResult<DeleteConnectivityServiceOutput>> future = mock(Future.class);
-        
+
         when(future.get()).thenReturn(rpcResult);
         when(rpcResult.isSuccessful()).thenReturn(true);
         when(prestoConnectivityService.deleteConnectivityService(input)).thenReturn(future);
@@ -300,17 +300,18 @@ public class EvpTreeIntegrationTest {
         }));
 
     }
+
     @Test
     public void testDeleteServiceBadInput() throws InterruptedException, ExecutionException {
 
         // having
-        String UUID = "cs:162052f6bb1:73aaf0f6";
+        String uuid = "cs:162052f6bb1:73aaf0f6";
 
         // when
         DeleteConnectivityServiceInput input = new DeleteConnectivityServiceInputBuilder().setServiceIdOrName(Constants.UUID).build();
 
         // then
-        assertNotEquals(UUID, input.getServiceIdOrName());
+        assertNotEquals(uuid, input.getServiceIdOrName());
 
     }
 
