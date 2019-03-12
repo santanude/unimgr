@@ -148,7 +148,7 @@ public class EpLineIntegrationTest {
     @Test
     public void testCreateService() throws InterruptedException, ExecutionException,
             TransactionCommitFailedException, ResourceActivatorException {
-          //having
+        // having
         assertNotNull(evc);
         evcDao = LegatoUtils.parseNodes(evc);
 
@@ -161,17 +161,17 @@ public class EpLineIntegrationTest {
         
         CreateConnectivityServiceInput input = LegatoUtils.buildCreateConnectivityServiceInput(
                 evcDao, Constants.VLAN_ID, evc.getEndPoints().getEndPoint());
-        
+
         final RpcResult<CreateConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
         final Future<RpcResult<CreateConnectivityServiceOutput>> future = mock(Future.class);
-        
+
         when(future.get()).thenReturn(rpcResult);
         when(rpcResult.isSuccessful()).thenReturn(true);
         when(prestoConnectivityService.createConnectivityService(input)).thenReturn(future);
-        
-        //when
+
+        // when
         Future<RpcResult<CreateConnectivityServiceOutput>> result = this.prestoConnectivityService.createConnectivityService(input);
-        //then
+        // then
         assertTrue(result.get().isSuccessful());
 
         final Optional<Evc> optEvc = mock(Optional.class);
@@ -228,18 +228,18 @@ public class EpLineIntegrationTest {
         assertEquals(MefServiceType.Epl.getName(), evcDao.getSvcType());
         DeleteConnectivityServiceInput deleteConnectivityServiceInput = new DeleteConnectivityServiceInputBuilder().setServiceIdOrName(Constants.UUID).build();
 
-        final RpcResult<DeleteConnectivityServiceOutput> delRpcResult = mock(RpcResult.class);
-        final Future<RpcResult<DeleteConnectivityServiceOutput>> delFuture = mock(Future.class);
+        final RpcResult<DeleteConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
+        final Future<RpcResult<DeleteConnectivityServiceOutput>> future = mock(Future.class);
         
-        when(delFuture.get()).thenReturn(delRpcResult);
-        when(delRpcResult.isSuccessful()).thenReturn(true);
-        when(prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput)).thenReturn(delFuture);
+        when(future.get()).thenReturn(rpcResult);
+        when(rpcResult.isSuccessful()).thenReturn(true);
+        when(prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput)).thenReturn(future);
 
         // when
-        Future<RpcResult<DeleteConnectivityServiceOutput>> delResult = this.prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput);
+        Future<RpcResult<DeleteConnectivityServiceOutput>> result = this.prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput);
 
         // then
-        assertTrue(delResult.get().isSuccessful());
+        assertTrue(result.get().isSuccessful());
         
         this.testCreateService();
     }
@@ -299,6 +299,7 @@ public class EpLineIntegrationTest {
             }
         }));
     }
+
     @Test
     public void testDeleteServiceBadInput() throws InterruptedException, ExecutionException {
 

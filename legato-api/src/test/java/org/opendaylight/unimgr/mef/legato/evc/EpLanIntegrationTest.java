@@ -231,12 +231,12 @@ public class EpLanIntegrationTest {
         assertEquals(MefServiceType.Eplan.getName(), evcDao.getSvcType());
         DeleteConnectivityServiceInput deleteConnectivityServiceInput = new DeleteConnectivityServiceInputBuilder().setServiceIdOrName(Constants.UUID).build();
 
-        final RpcResult<DeleteConnectivityServiceOutput> delRpcResult = mock(RpcResult.class);
-        final Future<RpcResult<DeleteConnectivityServiceOutput>> delFuture = mock(Future.class);
+        final RpcResult<DeleteConnectivityServiceOutput> rpcResult = mock(RpcResult.class);
+        final Future<RpcResult<DeleteConnectivityServiceOutput>> future = mock(Future.class);
         
-        when(delFuture.get()).thenReturn(delRpcResult);
-        when(delRpcResult.isSuccessful()).thenReturn(true);
-        when(prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput)).thenReturn(delFuture);
+        when(future.get()).thenReturn(rpcResult);
+        when(rpcResult.isSuccessful()).thenReturn(true);
+        when(prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput)).thenReturn(future);
 
         // when
         Future<RpcResult<DeleteConnectivityServiceOutput>> delResult = this.prestoConnectivityService.deleteConnectivityService(deleteConnectivityServiceInput);
