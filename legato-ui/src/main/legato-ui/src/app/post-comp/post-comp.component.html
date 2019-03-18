@@ -3,15 +3,42 @@
 <form  (ngSubmit)='internalcreateEvcService()' [formGroup]='createEvcForm' novalidate class="form">
   <table>
   <tr>
-<td><label>Node 1</label></td>
+    <td>
+    <label>Service Name </label>
+      </td>
+    <td>
+        <input formControlName='evcId' type="text" class="form-control" placeholder="Enter Service Name" />
+    </td>
+  </tr><br>
+  <tr>
+      <td>
+      <label>Service Type </label>
+        </td>
+      <td>
+          <input type="radio" class="form-control" [(ngModel)]="serviceType"  name="serviceType"  formControlName='serviceType' value="EPL">EPL &nbsp;&nbsp;
+          <input type="radio" class="form-control" [(ngModel)]="serviceType"  name="serviceType" formControlName='serviceType' value="EVPL">EVPL &nbsp;&nbsp;
+          <input type="radio" class="form-control" [(ngModel)]="serviceType"  name="serviceType" formControlName='serviceType' value="EPLAN">EP-LAN &nbsp;&nbsp;
+          <input type="radio" class="form-control" [(ngModel)]="serviceType" name="serviceType" formControlName='serviceType' value="EVPLAN">EVP-LAN &nbsp;&nbsp;  
+      </td>
+    </tr><br>
+      <tr *ngIf="serviceType === 'EVPL' || serviceType === 'EVPLAN'">
+          <td>
+          <label>VLAN ID</label>
+            </td>
+          <td>
+          <input formControlName='vlanId' type="text" class="form-control" placeholder="Enter VLAN ID"/> 
+          </td>
+        </tr><br>
+      <tr>
+<td><label>End Point 1</label></td>
 <td><input formControlName='node1'
   type="text"
   class="form-control"
-  placeholder="Enter Node 1" /></td>
-  </tr>
+  placeholder="Enter Node 1"/></td>
+  </tr><br>
   <tr>
       <td>
-<label>Node 2</label>
+<label>End Point 2</label>
         </td>
 <td>
     <input formControlName='node2'
@@ -19,18 +46,8 @@
   class="form-control"
   placeholder="Enter Node 2" />
 </td>
-  </tr>
-  <tr>
-      <td>
-<label>Evc Id</label>
-        </td>
-<td>
-    <input formControlName='evcId'
-  type="text"
-  class="form-control"
-  placeholder="Enter Evc Id" />
-</td>
-  </tr>
+  </tr><br>
+  
   <tr>
       <div class="wrapper">
           <button class="button">Create Service</button>

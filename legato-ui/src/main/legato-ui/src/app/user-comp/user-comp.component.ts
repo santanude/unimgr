@@ -16,14 +16,31 @@ export class UserCompComponent implements OnInit {
   result$:Object;
   endPoint$:Object[];
   endPoints$:Object;
+  ceVlans$:Object;
+  ceVlan$:Object[];
+  vlanId$:Object;
+  vlan$:String;
+  evcType$:Object;
   constructor(private data :DataService) {
     this.data.getUsers().subscribe(
       data => { this.users$ = data;
        this.result$ = data['subscriber-services'];
        this.users1$=this.result$['evc'];
        this.evc$ =this.users1$[0]['evc-id'];
+       this.evcType$=this.users1$[0]['svc-type'];
        this.endPoints$=this.users1$[0]['end-points'];
-       this.endPoint$=this.endPoints$['end-point'];      
+       this.endPoint$=this.endPoints$['end-point']; 
+       this.ceVlans$=this.endPoint$[0]['ce-vlans'];
+       this.ceVlan$=this.ceVlans$['ce-vlan'];
+       this.vlanId$=this.ceVlan$[0];
+       if(this.evcType$==='epl' || this.evcType$==='eplan')
+       {
+         this.vlan$='';
+       }
+       else{
+         this.vlan$=this.vlanId$.toString();
+       }
+       this.evcType$=this.evcType$.toString().toUpperCase();
        });
         
 console.log(this.endPoint$);

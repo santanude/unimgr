@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,NgModule } from '@angular/core';
 import { FormGroup, FormControl, FormArray, Validators } from '@angular/forms';
 import { getDefaultService } from 'selenium-webdriver/opera';
 import {DataService} from '../data.service';
@@ -13,31 +13,45 @@ export class PostCompComponent implements OnInit {
   createEvcForm : FormGroup;
   // data :DataService;
   constructor(private data: DataService ) { }
-
+  serviceType: String;
   ngOnInit() {
   this.createEvcForm = new FormGroup({
     node1: new FormControl(),
     node2: new FormControl(),
-    evcId: new FormControl()
+    evcId: new FormControl(),
+    serviceType:new FormControl(),
+    vlanId : new FormControl()
 });
   }
  internalcreateEvcService()
  {
    console.log(this.createEvcForm.value['node1']);
    console.log(this.createEvcForm.value['node2']);
-
+   let connectionType: String;
+   let vlanId=this.createEvcForm.value['vlanId'];
+   if(this.createEvcForm.value['serviceType']==='EPL' || this.createEvcForm.value['serviceType']==='EVPL')
+   {
+    connectionType="point-to-point";
+   }
+   else{
+    connectionType="multipoint-to-multipoint";
+   }
+   if(this.createEvcForm.value['serviceType']==='EPL' || this.createEvcForm.value['serviceType']==='EPLAN')
+   {
+    vlanId='1';
+   }
    let rawdata = {};
 
    let arr = [];
    let cosName =[];
    let cosNames={};
-   cosName.push({"mef-legato-services:name":"EVPL"});
+   cosName.push({"mef-legato-services:name":this.createEvcForm.value['serviceType']});
    cosNames["mef-legato-services:cos-name"]=cosName;
    let endPoints={};
    let endPoint=[];
    let ceVlans={};
   let ceVlan=[];
-  ceVlan.push("301");
+  ceVlan.push(vlanId);
   ceVlans["mef-legato-services:ce-vlan"]=ceVlan;
   let bwpPerCos ={};
   let bwpFlowperCos=[];
@@ -148,7 +162,7 @@ cosEtntries["mef-legato-services:cos-entry"]=cosEntry;
     "mef-legato-services:cos-names":cosNames,
     "mef-legato-services:end-points":endPoints,
     "mef-legato-services:carrier-ethernet-sls":carrierEthernetsls,
-    "mef-legato-services:connection-type":"point-to-point",
+    "mef-legato-services:connection-type":connectionType,
     "mef-legato-services:admin-state":"true",
     "mef-legato-services:user-label":"U4",
     "mef-legato-services:max-frame-size": "1522",
@@ -159,7 +173,7 @@ cosEtntries["mef-legato-services:cos-entry"]=cosEntry;
     "mef-legato-services:unicast-frame-delivery": "unconditional",
     "mef-legato-services:multicast-frame-delivery": "unconditional",
     "mef-legato-services:broadcast-frame-delivery": "unconditional",
-    "mef-legato-services:svc-type": "epl"
+    "mef-legato-services:svc-type": this.createEvcForm.value['serviceType'].toLowerCase()
    }
 
    arr.push(obj);
