@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Xoriant Corporation and others. All rights reserved.
+ * Copyright (c) 2016 Cisco Systems and others. All rights reserved.
  *
  * This program and the accompanying materials are made available under 
  * the terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -14,14 +14,15 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907.InterfaceModeEnum;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations.InterfaceConfiguration;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations.InterfaceConfigurationBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations._interface.configuration.Encapsulation;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations._interface.configuration.EncapsulationBuilder;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations._interface.configuration.Mtus;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109.InterfaceConfiguration2;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109.InterfaceConfiguration2Builder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109._interface.configurations._interface.configuration.EthernetServiceBuilder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109._interface.configurations._interface.configuration.ethernet.service.Encapsulation;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109._interface.configurations._interface.configuration.ethernet.service.EncapsulationBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev170501.InterfaceConfiguration2;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev170501.InterfaceConfiguration2Builder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev170501._interface.configurations._interface.configuration.EthernetServiceBuilder;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.datatypes.rev151109.Match;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.datatypes.rev151109.VlanTagOrAny;
+
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626.InterfaceConfiguration4;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626.InterfaceConfiguration4Builder;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626._interface.configurations._interface.configuration.L2Transport;
@@ -106,7 +107,7 @@ public class InterfaceHelper {
 
         configurationBuilder
              .setInterfaceName(name)
-            // .setActive(new InterfaceActive("act"))
+             .setActive(new InterfaceActive("act"))
 //             .setShutdown(Boolean.FALSE)
              .setDescription("Create sub interface through ODL")
              .setInterfaceModeNonPhysical(InterfaceModeEnum.L2Transport);
@@ -122,13 +123,13 @@ public class InterfaceHelper {
 
     private void setEthernetService(InterfaceConfigurationBuilder configurationBuilder, ServicePort port) {
         Encapsulation encapsulation = new EncapsulationBuilder()
-           .setOuterRange1Low(new VlanTagOrAny(port.getVlanId()))
-           .setOuterTagType(Match.MatchDot1q)
+           //setOuterRange1Low(new VlanTagOrAny(port.getVlanId()))
+          // .setOuterTagType(Match.MatchDot1q)
            .build();
 
         InterfaceConfiguration2 augmentation = new InterfaceConfiguration2Builder()
                 .setEthernetService(new EthernetServiceBuilder()
-                    .setEncapsulation(encapsulation)
+                //    .setEncapsulation(encapsulation)
                     .build()
                 )
                 .build();
