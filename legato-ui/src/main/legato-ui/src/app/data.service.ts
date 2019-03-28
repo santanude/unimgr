@@ -14,46 +14,69 @@ export class DataService {
 
   getUsers(){
 
- 
+ console.log("******-port Details is-******"+window.location.port);
 const  headers = new  HttpHeaders().set("Authorization", "Basic YWRtaW46YWRtaW4=")
                                     .set("Content-Type","application/json");
-    console.log("In get User method")
-   return this.http.get('http://10.7.0.63:8181/restconf/config/mef-legato-services:mef-services/carrier-ethernet/subscriber-services',{headers});
-   //return this.http.get('http://127.0.0.1:8181/restconf/operational/tapi-common:context/tapi-topology:topology/mef:presto-nrp-topology',{headers});
+let url2:string;
+let port:string;
+port=window.location.port;
+if(port==='4200'){
+ url2= 'http://127.0.0.1:8181/restconf/operational/mef-legato-services:mef-services';
+}
+else{
+  url2='http://'+window.location.hostname+':'+window.location.port+'/restconf/operational/mef-legato-services:mef-services';
+}
+//url2='http://'+window.location.hostname+':'+window.location.port+'/restconf/config/mef-legato-services:mef-services';
+
+    console.log("In get User method" +url2);
+// return this.http.get('http://127.0.0.1:8181/restconf/config/mef-legato-services:mef-services',{headers});
+  return this.http.get(url2,{headers});
   }
   createEvcServcie(data)
   {
     let body=JSON.stringify(data);
     console.log(JSON.stringify(data));
    console. log("----------In createEvcService Service  method");
-  //  const  headers = new  HttpHeaders().set("Authorization", "Basic YWRtaW46YWRtaW4=")
-                                 //   .set("Content-Type","application/json");
-   // const httpOptions ={headers};
+    
+   let url2:string;
+   let port:string;
+   port=window.location.port;
+   if(port==='4200'){
+    url2= 'http://127.0.0.1:8181/restconf/config/mef-legato-services:mef-services/carrier-ethernet/subscriber-services';
+   }
+   else{
+     url2='http://'+window.location.hostname+':'+window.location.port+'/restconf/config/mef-legato-services:mef-services/carrier-ethernet/subscriber-services';
+   }
 
-return this.http.post('http://10.7.0.63:8181/restconf/config/mef-legato-services:mef-services/carrier-ethernet/subscriber-services',body,{headers : new  HttpHeaders({
+return this.http.post(url2,body,{headers : new  HttpHeaders({
   'Authorization' : 'Basic YWRtaW46YWRtaW4=',
   'Content-Type' : 'application/json'
 })});
 
+}
 
-/*.pipe(
-  catchError((error : any)=>{
-    console.log("error is "+error.status);
-    if (error.status === 500) {
-      return Observable.throw(new Error(error.status));
-  }
-  else if (error.status >= 400) {
-      return Observable.throw(new Error(error.status));
-  }
-  else if (error.status === 409) {
-      return Observable.throw(new Error(error.status));
-  }
-  else if (error.status === 406) {
-      return Observable.throw(new Error(error.status));
-  }
-  })
-);
-console. log("-------------In createEvcService Service  end method");
-  }*/
+deleteEvcServcie(rawData)
+{
+  let body=JSON.stringify(rawData);
+    console.log(JSON.stringify(rawData));
+   console. log("----------In createEvcService Service  method");
+  //  const  headers = new  HttpHeaders().set("Authorization", "Basic YWRtaW46YWRtaW4=")
+                                 //   .set("Content-Type","application/json");
+   // const httpOptions ={headers}
+
+ let url2:string;
+   let port:string;
+   port=window.location.port;
+   if(port==='4200'){
+    url2= 'http://127.0.0.1:8181/restconf/config/mef-legato-services:mef-services/carrier-ethernet/subscriber-services/evc/'+rawData;
+   }
+   else{
+     url2='http://'+window.location.hostname+':'+window.location.port+'/restconf/config/mef-legato-services:mef-services/carrier-ethernet/subscriber-services/evc/'+rawData;
+   }
+ console.log('*****delete url is************'+url2);
+return this.http.delete(url2,{headers : new  HttpHeaders({
+  'Authorization' : 'Basic YWRtaW46YWRtaW4=',
+  'Content-Type' : 'application/json'
+})});
 }
 }

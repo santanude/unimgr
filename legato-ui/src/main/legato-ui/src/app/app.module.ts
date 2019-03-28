@@ -8,13 +8,15 @@ import { UserCompComponent } from './user-comp/user-comp.component';
 import {HttpClientModule} from '@angular/common/http';
 import { PostCompComponent } from './post-comp/post-comp.component';
 import {ReactiveFormsModule} from '@angular/forms';
+import { PostSuccessCompComponent } from './post-success-comp/post-success-comp.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     GetCompComponent,
     UserCompComponent,
-    PostCompComponent
+    PostCompComponent,
+    PostSuccessCompComponent,
 
   ],
   imports: [

@@ -4,6 +4,8 @@ import { getDefaultService } from 'selenium-webdriver/opera';
 import {DataService} from '../data.service';
 import { Observable, Subject, asapScheduler, pipe, of, from, interval, merge, fromEvent } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import {Router} from '@angular/router';
+
 @Component({
   selector: 'app-post-comp',
   templateUrl: './post-comp.component.html',
@@ -12,7 +14,7 @@ import { catchError } from 'rxjs/operators';
 export class PostCompComponent implements OnInit {
   createEvcForm : FormGroup;
   // data :DataService;
-  constructor(private data: DataService ) { }
+  constructor(private data: DataService, private router: Router ) { }
   serviceType: String;
   ngOnInit() {
   this.createEvcForm = new FormGroup({
@@ -181,9 +183,14 @@ cosEtntries["mef-legato-services:cos-entry"]=cosEntry;
    rawdata["mef-legato-services:evc"] = arr;
    console.log("Row data is ---->", rawdata);
   (this.data.createEvcServcie(rawdata)).subscribe(
-    
+    data1 => {
+        this.router.navigateByUrl('/success');
+    },
+    data1=>
+    {
     (error: any)=> console.log(error)
-    
+    alert(data1.error.error);
+    }
   
   );
   

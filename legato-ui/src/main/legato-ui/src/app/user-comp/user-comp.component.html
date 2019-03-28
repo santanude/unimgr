@@ -1,15 +1,28 @@
-Evc Id : {{evc$}}
-<br/>
-<br/>
-Service Type : {{evcType$}}
-<br/>
-<br/>
-Vlan ID : {{vlan$}}
-<br/>
-<br/>
-End Point Uni-Id
-<ul>
-    <li *ngFor="let end of endPoint$">
-     {{end['uni-id']}}   
-    </li>
-</ul>
+
+<div>
+        <div>
+            <ul>
+                <li *ngFor="let d of data1$">
+
+                    <br />
+                   Evc Id :&nbsp;<b><I>{{d['evc-id']}}</I></b>&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                   &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button (click)="deleteEvc(d['evc-id'])">delete</button>
+                    <br />
+                    Service Type : {{d['svc-type'] | uppercase}}
+                    <br />
+                    End Points :
+                    <ol type="1">
+                    <div *ngFor="let end of d['end-points']['end-point']">
+                        <li>
+                        {{end["uni-id"]}}
+                        </li>
+                    </div>
+                </ol>
+                    Vlan Id :<span *ngIf="d['svc-type'] === 'evpl' || d['svc-type']==='evplan'">{{d["end-points"]["end-point"][0]["ce-vlans"]["ce-vlan"]}}</span>
+                    <br/>
+                    <br/>
+                </li>
+
+            </ul>
+        </div>
+    </div>
