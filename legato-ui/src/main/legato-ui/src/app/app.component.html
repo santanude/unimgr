@@ -18,9 +18,129 @@
   </li>
 </ul>-->
 <div id="container">
-  <app-get-comp></app-get-comp>
+  <!-- <app-get-comp></app-get-comp> -->
 
 <div id="content">
-<router-outlet></router-outlet>
+<!-- <router-outlet></router-outlet> -->
+<div style="width:200px">
+  <ul>
+    <li>
+        <a style="text-decoration: underline;text-decoration-color: rgb(18, 144, 228)" (click)="createService()">Create Service
+        </a>
+      </li>
+  <li>
+    <a  style="text-decoration: underline;text-decoration-color: rgb(26, 140, 216)" (click)="getService()">Get Service
+    </a>
+  </li>
+  </ul>
+</div>
+<div style="width: 600px">
+
+  <div *ngIf="getServiceEnable">
+    <div>
+        <ul>
+            <li *ngFor="let d of data1$">
+
+                <br />
+               Evc Id :&nbsp;<b><I>{{d['evc-id']}}</I></b>&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+               &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button (click)="deleteEvc(d['evc-id'])">delete</button>
+                <br />
+                Service Type : {{d['svc-type'] | uppercase}}
+                <br />
+                End Points :
+                <ol type="1">
+                <div *ngFor="let end of d['end-points']['end-point']">
+                    <li>
+                    {{end["uni-id"]}}
+                    </li>
+                </div>
+            </ol>
+                Vlan Id :<span *ngIf="d['svc-type'] === 'evpl' || d['svc-type']==='evplan'">{{d["end-points"]["end-point"][0]["ce-vlans"]["ce-vlan"]}}</span>
+                <br/>
+                <br/>
+            </li>
+
+        </ul>
+    </div>
+</div>
+<div style="width: 1000px">
+      <div *ngIf="createServiceEnable">
+     <div>
+        <div class="container">
+        <br />
+            <form  (ngSubmit)='internalcreateEvcService()' [formGroup]='createEvcForm' novalidate class="form">
+             <table>
+        <tr>
+          <td>
+          <label>Service Name </label>
+            </td>
+          <td>
+              <input formControlName='evcId' type="text" class="form-control" placeholder="Enter Service Name" init=''/>
+          </td>
+        </tr><br>
+        <tr>
+            <td>
+            <label>Service Type </label>
+              </td>
+            <td>
+                <input type="radio" class="form-control" [(ngModel)]="serviceType"  name="serviceType"  formControlName='serviceType' value="EPL">EPL &nbsp;&nbsp;
+                <input type="radio" class="form-control" [(ngModel)]="serviceType"  name="serviceType" formControlName='serviceType' value="EVPL">EVPL &nbsp;&nbsp;
+                <input type="radio" class="form-control" [(ngModel)]="serviceType"  name="serviceType" formControlName='serviceType' value="EPLAN">EP-LAN &nbsp;&nbsp;
+                <input type="radio" class="form-control" [(ngModel)]="serviceType" name="serviceType" formControlName='serviceType' value="EVPLAN">EVP-LAN &nbsp;&nbsp;  
+            </td>
+          </tr><br>
+            <tr *ngIf="serviceType === 'EVPL' || serviceType === 'EVPLAN'">
+                <td>
+                <label>VLAN ID</label>
+                  </td>
+                <td>
+                <input formControlName='vlanId' type="text" class="form-control" placeholder="Enter VLAN ID"/> 
+                </td>
+              </tr><br>
+            <tr>
+      <td><label>End Point 1</label></td>
+      <td><input formControlName='node1'
+        type="text"
+        class="form-control"
+        placeholder="Enter Node 1"/></td>
+        </tr><br>
+        <tr>
+            <td>
+      <label>End Point 2</label>
+              </td>
+      <td>
+          <input formControlName='node2'
+        type="text"
+        class="form-control"
+        placeholder="Enter Node 2" />
+      </td>
+        </tr><br>
+        
+        <tr>
+            <div class="wrapper" sytle="margin-left:30%">
+              <br/>&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+             
+                <button sytle=" margin-left:30%;position: absolute;"class="button">Create Service</button>
+            </div>
+        </tr>
+        </table>
+      </form>
+      </div>
 </div>
 </div>
+</div>
+
+<div  *ngIf="getSuccessEnable" >
+    <div class="container" style="align-content:center;height: 350px;width: 350px" >
+        <div class="row text-center">
+              <div class="col-sm-6 col-sm-offset-3">
+              <br><br> <h2 style="color:#0fad00;text-align:center"> Success</h2>
+           <p style="font-size:20px;color:#5C5C5C; text-align:center">Service Created Sucessfully </p><br>
+          <br><br>
+        </div>
+              
+        </div>
+      </div>
+    </div>
+</div>
+

@@ -26,7 +26,14 @@ export class UserCompComponent implements OnInit {
   vlan$:String;
   evcType$:Object;
   constructor(private data :DataService) {
-    this.data.getUsers().subscribe(
+    
+        
+//console.log(this.endPoint$);
+   }
+
+  ngOnInit() {
+     // this.fetchData();
+     this.data.getUsers().subscribe(
       data => { this.users$ = data;
       
       this.result1$ = data['mef-services'];
@@ -51,12 +58,6 @@ export class UserCompComponent implements OnInit {
        }
        this.evcType$=this.evcType$.toString().toUpperCase();*/
        });
-        
-//console.log(this.endPoint$);
-   }
-
-  ngOnInit() {
-     // this.fetchData();
   }
   
   deleteEvc(evcId)
@@ -66,7 +67,7 @@ export class UserCompComponent implements OnInit {
         
       (error: any)=> console.log(error)   
     );
-   // browser.sleep(100);
+   //  browser.sleep(100);
     location.reload();
   }
  /* fetchData(){
