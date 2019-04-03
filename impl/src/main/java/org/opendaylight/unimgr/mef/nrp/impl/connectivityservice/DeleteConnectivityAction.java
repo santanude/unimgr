@@ -68,6 +68,8 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
     @Override
     public RpcResult<DeleteConnectivityServiceOutput> call() {
         serviceId = new Uuid(input.getServiceIdOrName());
+        LOG.info("service ID =  ", serviceId);
+        
         NrpDao nrpDao = new NrpDao(service.getBroker().newReadOnlyTransaction());
 
         ConnectivityService cs =

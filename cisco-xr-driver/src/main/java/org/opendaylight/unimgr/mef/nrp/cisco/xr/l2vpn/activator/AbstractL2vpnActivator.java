@@ -161,11 +161,11 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
         if (isExclusive) {
             LOG.info("EPLINE Service update interface ");
-            transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(),  new InterfaceHelper().updateInterface(InterfaceHelper.getInterfaceName(port), isExclusive).build());
+            //transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(),  new InterfaceHelper().updateInterface(InterfaceHelper.getInterfaceName(port), isExclusive).build());
         } else {
             LOG.info("EVPLINE Service delete interface ");
-            transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
-            transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
+            //transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
+            //transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
         }
         transaction.submit().checkedGet();
     }
