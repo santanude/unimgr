@@ -63,17 +63,15 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
         Objects.requireNonNull(input);
         this.service = tapiConnectivityService;
         this.input = input;
+        LOG.info("DeleteConnectivityServiceInput ", this.input, ":::::::::::" + input);
     }
 
     @Override
     public RpcResult<DeleteConnectivityServiceOutput> call() {
         serviceId = new Uuid(input.getServiceIdOrName());
-        LOG.info("service ID =  ", input.getServiceIdOrName());
-        
         NrpDao nrpDao = new NrpDao(service.getBroker().newReadOnlyTransaction());
 
-        ConnectivityService cs =
-                nrpDao.getConnectivityService(input.getServiceIdOrName());
+        ConnectivityService cs = nrpDao.getConnectivityService(input.getServiceIdOrName());
         if (cs == null) {
             return RpcResultBuilder
                     .<DeleteConnectivityServiceOutput>failed()
@@ -96,8 +94,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
         Service response = new ServiceBuilder(cs).build();
 
         try {
-            LOG.info("ConnectivityService cs =  ", cs.toString(), " response " + response.toString());
-            ActivationTransaction tx = prepareTransaction(data,nrpDao, false, cs.getServiceType().getName());
+            ActivationTransaction tx = prepareTransaction(data,nrpDao, cs.isIsExclusive(), cs.getServiceType().getName());
 
             if (tx != null) {
                 ActivationTransaction.Result txResult = tx.deactivate();
