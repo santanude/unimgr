@@ -125,15 +125,15 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
     }
 
     @Override
-    public void deactivate(List<EndPoint> endPoints, String serviceId, String serviceType)
+    public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType)
             throws TransactionCommitFailedException, ResourceActivatorException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
 
         InstanceIdentifier<BridgeDomain> bridgeDomainId = deactivateBridgeDomain(outerName, innerName);
-        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port);
-        doDeactivate(port.getNode().getValue(), bridgeDomainId, interfaceConfigurationId);
+        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);
+        doDeactivate(port, bridgeDomainId, interfaceConfigurationId, isExclusive);
     }
 
     private InstanceIdentifier<BridgeDomain> deactivateBridgeDomain(String outerName, String innerName) {
@@ -145,25 +145,33 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
                 .build();
     }
 
-    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port) {
+    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive) {
         return InstanceIdentifier.builder(InterfaceConfigurations.class)
-                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), InterfaceHelper.getInterfaceName(port)))
+                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), isExclusive == true ? InterfaceHelper.getSubInterfaceName(port): InterfaceHelper.getInterfaceName(port)))
                 .build();
     }
 
 
-    protected void doDeactivate(String nodeName, InstanceIdentifier<BridgeDomain> bridgeDomainId,
-            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId) throws TransactionCommitFailedException {
+    protected void doDeactivate(ServicePort port, InstanceIdentifier<BridgeDomain> bridgeDomainId,
+            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId, boolean isExclusive) throws TransactionCommitFailedException {
 
-        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
+        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, port.getNode().getValue());
         if (!optional.isPresent()) {
-            LOG.error("Could not retrieve MountPoint for {}", nodeName);
+            LOG.error("Could not retrieve MountPoint for {}", port.getNode().getValue());
             return;
         }
-
+        
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
         transaction.delete(LogicalDatastoreType.CONFIGURATION, bridgeDomainId);
-        transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
+
+        if (isExclusive) {
+            LOG.info("EPLINE Service update interface ");
+            new InterfaceHelper().updateInterface(InterfaceHelper.getInterfaceName(port), isExclusive);
+        } else {
+            LOG.info("EVPLINE Service update interface ");
+            transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
+        }
+
         transaction.submit().checkedGet();
     }
 

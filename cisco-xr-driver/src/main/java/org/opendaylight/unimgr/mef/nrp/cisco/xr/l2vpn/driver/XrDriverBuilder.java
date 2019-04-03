@@ -160,7 +160,8 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
             BiConsumer<List<EndPoint>,AbstractL2vpnActivator> deactivate = (neighbors, activator) -> {
                         try {
-                            activator.deactivate(neighbors, serviceId, serviceType);
+                            LOG.info("XrBuilder :::: BiConsumer<List<EndPoint>,AbstractL2vpnActivator> deactivate, isExclusive:: ", isExclusive);
+                            activator.deactivate(neighbors, serviceId, isExclusive, serviceType);
                         } catch (TransactionCommitFailedException e) {
                             LOG.error("Deactivation error occured: {}", e.getMessage());
                         }
@@ -193,7 +194,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
             BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> deactivateBd = (neighbors, activator) -> {
                         try {
-                            activator.deactivate(neighbors, serviceId, serviceType);
+                            activator.deactivate(neighbors, serviceId, isExclusive, serviceType);
                         } catch (TransactionCommitFailedException | ResourceActivatorException e) {
                             LOG.error("Deactivation error occured: {}", e.getMessage());
                         }
