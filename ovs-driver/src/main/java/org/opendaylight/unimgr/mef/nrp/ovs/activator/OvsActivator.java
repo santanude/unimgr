@@ -126,8 +126,8 @@ public class OvsActivator implements ResourceActivator {
     }
 
 	@Override
-    public void deactivate(List<EndPoint> endPoints, String serviceName, boolean isExclusive, String serviceType) throws TransactionCommitFailedException, ResourceNotAvailableException {
-	    //boolean isExclusive = false;
+    public void deactivate(List<EndPoint> endPoints, String serviceName, String serviceType) throws TransactionCommitFailedException, ResourceNotAvailableException {
+	    boolean isExclusive = false;
         
 	    for (EndPoint endPoint:endPoints) {
         	deactivateEndpoint(endPoint, serviceName);

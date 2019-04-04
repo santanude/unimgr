@@ -57,6 +57,7 @@ public class EtreeUtilsTest {
     @Mock
     private EtreeUtils mock;
 
+    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
 
@@ -87,6 +88,7 @@ public class EtreeUtilsTest {
     @SuppressWarnings("unchecked")
 
     public void releaseTreeServiceVlanTest() throws Exception {
+        @SuppressWarnings("unused")
         Map<String, Integer> usedService1 = PowerMockito.spy(new Hashtable<String, Integer>());
         String str = "";
         Set<Entry<String, Integer>> set = usedService.entrySet();

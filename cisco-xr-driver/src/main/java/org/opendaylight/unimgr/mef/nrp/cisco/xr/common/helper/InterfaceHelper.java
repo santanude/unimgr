@@ -92,7 +92,7 @@ public class InterfaceHelper {
         }
 
       if (setL2Transport) {
-            setL2Configuration(configurationBuilder, true);
+            setL2Configuration(configurationBuilder);
         }
 
         configurations.add(configurationBuilder.build());
@@ -141,9 +141,9 @@ public class InterfaceHelper {
             .build();
     }
 
-    private void setL2Configuration(InterfaceConfigurationBuilder configurationBuilder, boolean isExclusive) {
+    private void setL2Configuration(InterfaceConfigurationBuilder configurationBuilder) {
         L2Transport l2transport = new L2TransportBuilder()
-            .setEnabled(isExclusive == true ? true : false)
+            .setEnabled(true)
             .build();
 
         InterfaceConfiguration3 augmentation = new InterfaceConfiguration3Builder()
@@ -151,17 +151,5 @@ public class InterfaceHelper {
             .build();
 
         configurationBuilder.addAugmentation(InterfaceConfiguration3.class, augmentation);
-    }
-
-    public InterfaceHelper updateInterface(InterfaceName name, boolean isExclusive) {
-        InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();
-
-        configurationBuilder.setInterfaceName(name)
-        .setActive(new InterfaceActive("act"));
-
-        setL2Configuration(configurationBuilder, isExclusive);
-
-        configurations.add(configurationBuilder.build());
-        return this;
     }
 }

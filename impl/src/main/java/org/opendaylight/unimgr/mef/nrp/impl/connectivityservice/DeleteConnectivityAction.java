@@ -94,8 +94,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
         Service response = new ServiceBuilder(cs).build();
 
         try {
-            LOG.info("ConnectivityService cs =  ", cs.toString(), " response " + response.toString());
-            ActivationTransaction tx = prepareTransaction(data,nrpDao, false, cs.getServiceType().getName());
+            ActivationTransaction tx = prepareTransaction(data,nrpDao, cs.getServiceType().getName());
 
             if (tx != null) {
                 ActivationTransaction.Result txResult = tx.deactivate();
@@ -133,7 +132,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
         tx.submit().checkedGet();
     }
 
-    private ActivationTransaction prepareTransaction(Map<Uuid, LinkedList<EndPoint>> data, NrpDao nrpDao, boolean isExclusive, String serviceType) {
+    private ActivationTransaction prepareTransaction(Map<Uuid, LinkedList<EndPoint>> data, NrpDao nrpDao, String serviceType) {
         assert data != null;
         ActivationTransaction tx = new ActivationTransaction();
         data.entrySet().stream().map(e -> {
@@ -146,8 +145,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
             if (!driver.isPresent()) {
                 throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", e.getKey()));
             }
-            LOG.info("Method prepareTransaction, isExclusive ::: ", isExclusive);
-            driver.get().initialize(e.getValue(), serviceId.getValue(), null, isExclusive, serviceType);
+            driver.get().initialize(e.getValue(), serviceId.getValue(), null, false, serviceType);
             LOG.debug("driver {} added to deactivation transaction", driver.get());
             return driver.get();
         }).forEach(tx::addDriver);

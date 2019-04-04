@@ -102,17 +102,15 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     }
 
     @Override
-    public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType) throws TransactionCommitFailedException {
-        LOG.info("Method deactivate(), isExclusive:: ", isExclusive);
-        
+    public void deactivate(List<EndPoint> endPoints, String serviceId, String serviceType) throws TransactionCommitFailedException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
 
         InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
-        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);
+        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port);
 
-        doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive);
+        doDeactivate(port.getNode().getValue(), xconnectId, interfaceConfigurationId);
     }
 
     // for now QoS is ignored
@@ -146,27 +144,19 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
        transaction.submit().checkedGet();
     }
 
-    protected void doDeactivate(ServicePort port,
+    protected void doDeactivate(String nodeName,
                                 InstanceIdentifier<P2pXconnect> xconnectId,
-                                InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId, boolean isExclusive) throws TransactionCommitFailedException {
+                                InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId) throws TransactionCommitFailedException {
 
-        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, port.getNode().getValue());
+        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
         if (!optional.isPresent()) {
-            LOG.error("Could not retrieve MountPoint for {}", port.getNode().getValue());
+            LOG.error("Could not retrieve MountPoint for {}", nodeName);
             return;
         }
 
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-        
-
-        if (isExclusive) {
-            LOG.info("EPLINE Service update interface ");
-            transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(),  new InterfaceHelper().updateInterface(InterfaceHelper.getInterfaceName(port), isExclusive).build());
-        } else {
-            LOG.info("EVPLINE Service delete interface ");
-            transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
-            transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
-        }
+        transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
+        transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
         transaction.submit().checkedGet();
     }
 
@@ -191,9 +181,9 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
                 .build();
     }
 
-    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive) {
+    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port) {
         return InstanceIdentifier.builder(InterfaceConfigurations.class)
-                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), isExclusive == true ? InterfaceHelper.getSubInterfaceName(port): InterfaceHelper.getInterfaceName(port)))
+                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), InterfaceHelper.getInterfaceName(port)))
                 .build();
     }
 
