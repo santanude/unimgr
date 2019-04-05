@@ -99,7 +99,8 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
             @Override
             public void deactivate() throws TransactionCommitFailedException {
-
+                LOG.info("XrDriverBuilder = isExclusive  {}", isExclusive);
+                
                 if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())) {
                     handleBdEndpoints(deactivateBd);
                 } else {
