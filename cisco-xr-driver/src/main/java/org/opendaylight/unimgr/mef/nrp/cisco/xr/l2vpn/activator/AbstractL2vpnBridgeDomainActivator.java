@@ -125,14 +125,14 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
     }
 
     @Override
-    public void deactivate(List<EndPoint> endPoints, String serviceId, String serviceType)
+    public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType)
             throws TransactionCommitFailedException, ResourceActivatorException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
 
         InstanceIdentifier<BridgeDomain> bridgeDomainId = deactivateBridgeDomain(outerName, innerName);
-        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port);
+        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);
         doDeactivate(port.getNode().getValue(), bridgeDomainId, interfaceConfigurationId);
     }
 
@@ -145,9 +145,9 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
                 .build();
     }
 
-    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port) {
+    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive) {
         return InstanceIdentifier.builder(InterfaceConfigurations.class)
-                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), InterfaceHelper.getInterfaceName(port)))
+                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), isExclusive==true ?  InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port)))
                 .build();
     }
 
