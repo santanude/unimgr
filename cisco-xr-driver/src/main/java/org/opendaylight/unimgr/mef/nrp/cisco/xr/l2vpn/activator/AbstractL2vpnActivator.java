@@ -107,7 +107,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         String outerName = getOuterName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
         LOG.info("deactivate()  isExclusive = {}", isExclusive);
-        
+        LOG.info("ServicePort port vlan = {}", port.getVlanId());
         InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
         InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);
         LOG.info("interfaceConfigurationId = {}", interfaceConfigurationId.toString());
@@ -183,7 +183,10 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     }
 
     private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive) {
-        LOG.info("deactivateInterface  = {}", "isExclusive :::::", isExclusive, " interface :: " , port.getInterfaceName(), "Vlan :::" , port.getVlanId());
+        LOG.info("deactivateInterface  = {}", "isExclusive :::::", isExclusive);
+        LOG.info(" interface :: " , port.getInterfaceName());
+        LOG.info("Vlan :::" , port.getVlanId());
+        
         return InstanceIdentifier.builder(InterfaceConfigurations.class)
                 .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), isExclusive==true ?  InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port)))
                 .build();
