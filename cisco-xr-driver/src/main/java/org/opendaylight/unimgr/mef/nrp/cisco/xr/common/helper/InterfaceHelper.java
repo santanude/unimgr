@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnActivator;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurationsBuilder;
@@ -32,6 +33,8 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109._interface.configurations._interface.configuration.L2TransportBuilder;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.InterfaceName;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper, designated to support interface configuration
@@ -39,6 +42,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
  * @author krzysztof.bijakowski@amartus.com
  */
 public class InterfaceHelper {
+    private static final Logger LOG = LoggerFactory.getLogger(InterfaceHelper.class);
     private List<InterfaceConfiguration> configurations;
 
     public static InterfaceName getInterfaceName(ServicePort port) {
@@ -53,13 +57,15 @@ public class InterfaceHelper {
 
     public static InterfaceName getSubInterfaceName(ServicePort port) {
         String interfaceName = port.getTp().getValue();
-
+        
+        LOG.info("interfaceName Before = {}", interfaceName);
+        
         if (interfaceName.contains(":")) {
             interfaceName = interfaceName.split(":")[1];
         }
         // adding vlan id with interface name
         interfaceName = interfaceName + "." + port.getVlanId();
-
+        LOG.info("interfaceName After = {}", interfaceName);
         return new InterfaceName(interfaceName);
     }
 
