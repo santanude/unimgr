@@ -72,7 +72,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
 
         ConnectivityService cs =
                 nrpDao.getConnectivityService(serviceId);
-        LOG.error("ConnectivityService cs = {}", cs.toString());
+        LOG.info("ConnectivityService cs = {}", cs.toString());
         
         if (cs == null) {
             return RpcResultBuilder
