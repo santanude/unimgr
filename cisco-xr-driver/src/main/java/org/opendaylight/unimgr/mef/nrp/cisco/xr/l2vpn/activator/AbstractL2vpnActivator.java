@@ -183,7 +183,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     }
 
     private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive) {
-        LOG.info("deactivateInterface  = {}", "isExclusive :::::", isExclusive);
+        LOG.info("deactivateInterface isExclusive :::::", isExclusive);
         LOG.info(" interface :: " , port.getInterfaceName());
         LOG.info("Vlan :::" , port.getVlanId());
         
