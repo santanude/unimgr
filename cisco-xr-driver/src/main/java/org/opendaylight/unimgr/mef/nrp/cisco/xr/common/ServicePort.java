@@ -82,12 +82,14 @@ public class ServicePort {
     }
 
     public static ServicePort toServicePort(EndPoint endPoint, TopologyId topologyId) {
+
         Uuid sip = endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId();
         NodeId nodeId = new NodeId(SipHandler.getDeviceName(sip));
         TpId tpId = new TpId(SipHandler.getPortName(sip));
         ServicePort servicePort = new ServicePort(topologyId,nodeId,tpId);
         if (hasVlan(endPoint)) {
-            LOG.info("(long) getVlan(endPoint)   = {}", (long) getVlan(endPoint));
+            LOG.info("(long) getVlan(endPoint)   = {}", endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource()
+                    .getCeVlanIdListAndUntag().getVlanId().get(0).getVlanId().getValue().intValue());
             servicePort.setVlanId((long) getVlan(endPoint));
         }
         return servicePort;
