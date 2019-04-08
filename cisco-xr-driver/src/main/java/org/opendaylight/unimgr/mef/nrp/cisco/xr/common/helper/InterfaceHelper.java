@@ -57,15 +57,13 @@ public class InterfaceHelper {
 
     public static InterfaceName getSubInterfaceName(ServicePort port) {
         String interfaceName = port.getTp().getValue();
-        
-        LOG.info("interfaceName Before = {}", interfaceName);
-        
+
         if (interfaceName.contains(":")) {
             interfaceName = interfaceName.split(":")[1];
         }
         // adding vlan id with interface name
-        interfaceName = interfaceName + "." + "301"/*port.getVlanId()*/;
-        LOG.info("interfaceName After = {}", interfaceName);
+        interfaceName = interfaceName + "." + port.getVlanId();
+        LOG.info("interfaceName  = {}", interfaceName);
         return new InterfaceName(interfaceName);
     }
 
