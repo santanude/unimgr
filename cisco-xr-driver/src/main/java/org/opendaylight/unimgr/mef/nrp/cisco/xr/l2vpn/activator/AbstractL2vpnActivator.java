@@ -107,7 +107,9 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         String outerName = getOuterName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
         LOG.info("deactivate()  isExclusive = {}", isExclusive);
-        LOG.info("ServicePort port vlan = {}", port.getVlanId());
+        LOG.info("endpoints = {}", endPoints.stream().findFirst().get().toString());
+        // LOG.info("ServicePort port vlan = {}", port.getVlanId());
+
         InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
         InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);
         LOG.info("interfaceConfigurationId = {}", interfaceConfigurationId.toString());
