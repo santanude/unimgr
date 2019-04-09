@@ -88,7 +88,7 @@ public class ServicePort {
         TpId tpId = new TpId(SipHandler.getPortName(sip));
         ServicePort servicePort = new ServicePort(topologyId,nodeId,tpId);
         if (hasVlan(endPoint)) {
-            servicePort.setVlanId((long) 301);
+            servicePort.setVlanId((long) getVlan(endPoint));
         }
         return servicePort;
     }
