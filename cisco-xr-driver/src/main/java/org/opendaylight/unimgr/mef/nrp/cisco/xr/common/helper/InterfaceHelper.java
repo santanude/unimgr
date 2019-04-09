@@ -62,8 +62,7 @@ public class InterfaceHelper {
             interfaceName = interfaceName.split(":")[1];
         }
         // adding vlan id with interface name
-        //interfaceName = interfaceName + "." + port.getVlanId();
-        interfaceName = interfaceName + "." + 301;
+        interfaceName = interfaceName + "." + port.getVlanId();
         LOG.info("interfaceName  = {}", interfaceName);
         return new InterfaceName(interfaceName);
     }
