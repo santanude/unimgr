@@ -113,7 +113,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
         InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);
         LOG.info("interfaceConfigurationId = {}", interfaceConfigurationId.toString());
-        doDeactivate(port.getNode().getValue(), xconnectId, interfaceConfigurationId);
+        doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive);
     }
 
     // for now QoS is ignored
@@ -147,22 +147,32 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
        transaction.submit().checkedGet();
     }
 
-    protected void doDeactivate(String nodeName,
+    protected void doDeactivate(ServicePort port,
                                 InstanceIdentifier<P2pXconnect> xconnectId,
-                                InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId) throws TransactionCommitFailedException {
+                                InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId, boolean isExclusive) throws TransactionCommitFailedException {
 
-        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
+        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, port.getNode().getValue());
         if (!optional.isPresent()) {
-            LOG.error("Could not retrieve MountPoint for {}", nodeName);
+            LOG.error("Could not retrieve MountPoint for {}", port.getNode().getValue());
             return;
         }
 
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
         transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
-        transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
+        if (!isExclusive) {
+            transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
+        } else {
+            /*InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(isExclusive);
+            transaction.merge(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId, interfaceConfigurations);*/
+            //InterfaceConfigurations interfaceConfigurations = activateInterface(port, port, mtu, isExclusive);
+            InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(port, isExclusive);
+            transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
+        }
+
         transaction.submit().checkedGet();
     }
 
+   
     protected abstract java.util.Optional<PolicyManager> activateQos(String name, ServicePort port);
 
     protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu, boolean isExclusive);

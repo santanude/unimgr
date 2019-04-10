@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.MtuUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnActivator;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
@@ -31,6 +32,7 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.InterfaceConfiguration3Builder;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109._interface.configurations._interface.configuration.L2Transport;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109._interface.configurations._interface.configuration.L2TransportBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.InterfaceName;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
@@ -95,7 +97,7 @@ public class InterfaceHelper {
         }
 
       if (setL2Transport) {
-            setL2Configuration(configurationBuilder);
+            setL2Configuration(configurationBuilder, true);
         }
 
         configurations.add(configurationBuilder.build());
@@ -144,9 +146,9 @@ public class InterfaceHelper {
             .build();
     }
 
-    private void setL2Configuration(InterfaceConfigurationBuilder configurationBuilder) {
+    private void setL2Configuration(InterfaceConfigurationBuilder configurationBuilder, boolean isExclusive) {
         L2Transport l2transport = new L2TransportBuilder()
-            .setEnabled(true)
+            .setEnabled(isExclusive == true ? true : false)
             .build();
 
         InterfaceConfiguration3 augmentation = new InterfaceConfiguration3Builder()
@@ -155,4 +157,22 @@ public class InterfaceHelper {
 
         configurationBuilder.addAugmentation(InterfaceConfiguration3.class, augmentation);
     }
+
+    public InterfaceHelper resetInterface(ServicePort port, boolean isExclusive) {
+        InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();
+
+        configurationBuilder.setInterfaceName(getInterfaceName(port));
+
+        if (isExclusive) {
+            setL2Configuration(configurationBuilder, false); // L2Transport should be disable
+        }
+
+        configurations.add(configurationBuilder.build());
+        return this;
+    }
+
+    public InterfaceConfigurations updateInterface(ServicePort port, boolean isExclusive) {
+        return new InterfaceHelper().resetInterface(port, isExclusive).build();
+    }
+
 }
