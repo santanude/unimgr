@@ -10,10 +10,8 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.MtuUtils;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnActivator;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurationsBuilder;
@@ -77,15 +75,15 @@ public class InterfaceHelper {
         configurations = new LinkedList<>();
     }
 
-    public InterfaceHelper addInterface(ServicePort port, Optional<Mtus> mtus, boolean setL2Transport, boolean updateL2Transport) {
-        return addInterface(getInterfaceName(port), mtus, setL2Transport, updateL2Transport);
+    public InterfaceHelper addInterface(ServicePort port, Optional<Mtus> mtus, boolean setL2Transport) {
+        return addInterface(getInterfaceName(port), mtus, setL2Transport);
     }
 
     public InterfaceHelper addSubInterface(ServicePort port, Optional<Mtus> mtus ) {
          return addSubInterface(getSubInterfaceName(port), mtus, port);
      }
 
-    public InterfaceHelper addInterface(InterfaceName name, Optional<Mtus> mtus, boolean setL2Transport, boolean updateL2Transport) {
+    public InterfaceHelper addInterface(InterfaceName name, Optional<Mtus> mtus, boolean setL2Transport) {
         InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();
 
         configurationBuilder
@@ -97,11 +95,7 @@ public class InterfaceHelper {
         }
 
         if (setL2Transport) {
-            if (updateL2Transport) {
-                setL2Configuration(configurationBuilder, false);
-            } else {
-                setL2Configuration(configurationBuilder, true);
-            }
+            setL2Configuration(configurationBuilder);
         }
 
         configurations.add(configurationBuilder.build());
@@ -150,9 +144,9 @@ public class InterfaceHelper {
             .build();
     }
 
-    private void setL2Configuration(InterfaceConfigurationBuilder configurationBuilder, boolean isExclusive) {
+    private void setL2Configuration(InterfaceConfigurationBuilder configurationBuilder) {
         L2Transport l2transport = new L2TransportBuilder()
-            .setEnabled(isExclusive == true ? true : false)
+            .setEnabled(true)
             .build();
 
         InterfaceConfiguration3 augmentation = new InterfaceConfiguration3Builder()
@@ -183,9 +177,9 @@ public class InterfaceHelper {
     public InterfaceConfigurations updateInterface(ServicePort port, long mtu, boolean isExclusive) {
         Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(port.getInterfaceName()));
 
-        return new InterfaceHelper().addInterface(port, Optional.of(mtus), isExclusive, true)
-                .build();
-        //return new InterfaceHelper().resetInterface(port, Optional.of(mtus), isExclusive).build();
+        return new InterfaceHelper().addInterface(port, Optional.of(mtus), false).build();
+        // return new InterfaceHelper().resetInterface(port, Optional.of(mtus),
+        // isExclusive).build();
     }
 
 }
