@@ -169,7 +169,8 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
             /*InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(isExclusive);
             transaction.merge(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId, interfaceConfigurations);*/
             //InterfaceConfigurations interfaceConfigurations = activateInterface(port, port, mtu, isExclusive);
-            InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(port, isExclusive);
+            
+            InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(port, mtu, isExclusive);
             transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
         }
 
