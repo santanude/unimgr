@@ -66,7 +66,7 @@ public class L2vpnP2pConnectActivator extends AbstractL2vpnActivator {
         boolean setL2Transport = (isExclusive) ? true : false;
 
         return new InterfaceHelper()
-            .addInterface(port, Optional.of(mtus), setL2Transport)
+            .addInterface(port, Optional.of(mtus), setL2Transport, false)
             .build();
     }
 
