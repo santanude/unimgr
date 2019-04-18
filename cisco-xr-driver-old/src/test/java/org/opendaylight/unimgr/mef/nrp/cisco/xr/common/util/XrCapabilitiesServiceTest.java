@@ -11,7 +11,7 @@ import com.google.common.base.Optional;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.util.XrCapabilitiesService;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesService;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 
 import static org.junit.Assert.*;
@@ -19,9 +19,9 @@ import static org.opendaylight.unimgr.utils.CapabilitiesService.Capability.Mode.
 import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.NodeTestUtils.mockDataBroker;
 import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.NodeTestUtils.mockNetconfNode;
 import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.NodeTestUtils.mockNode;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.util.XrCapabilitiesService.NodeCapability.NETCONF;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.util.XrCapabilitiesService.NodeCapability.NETCONF_CISCO_IOX_IFMGR;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.util.XrCapabilitiesService.NodeCapability.NETCONF_CISCO_IOX_L2VPN;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesService.NodeCapability.NETCONF;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesService.NodeCapability.NETCONF_CISCO_IOX_IFMGR;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesService.NodeCapability.NETCONF_CISCO_IOX_L2VPN;
 
 /**
  * @author bartosz.michalik@amartus.com

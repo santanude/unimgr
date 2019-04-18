@@ -9,7 +9,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.helper.L2vpnHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.L2vpn;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.Database;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.XconnectGroups;
