@@ -23,11 +23,13 @@
     <maven>3.1.1</maven>
   </prerequisites>
   <modules>
-   <module>odl-legato-ui</module> 
+    
     <module>features4-unimgr</module>
     <module>odl-unimgr</module>
     <module>odl-unimgr-rest</module>
-    <module>odl-unimgr-cisco-xr-driver</module>
+    <module>odl-legato-ui</module>
+    <module>odl-unimgr-cisco-xr-driver-old</module>
+    <module>odl-unimgr-cisco-xr-driver-new</module>
     <module>odl-unimgr-ovs-driver</module>
     <module>odl-unimgr-template-driver</module>
    <module>odl-unimgr-legato-api</module>
