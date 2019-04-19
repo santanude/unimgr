@@ -60,8 +60,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <module>legato-api</module>
         <module>nrp-api</module>
         <module>impl</module>
-<!--        <module>cisco-xr-driver-old</module>-->
-<!--        <module>cisco-xr-driver-new</module>-->
+	<module>cisco-xr-driver-old</module>
+	<module>cisco-xr-driver-new</module>
         <module>ovs-driver</module>
         <module>template-driver</module>
         <module>karaf</module>
