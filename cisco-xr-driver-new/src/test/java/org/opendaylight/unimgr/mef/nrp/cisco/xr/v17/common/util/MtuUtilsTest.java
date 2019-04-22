@@ -5,10 +5,10 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.util;
 
 import org.junit.Test;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.util.MtuUtils;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.util.MtuUtils;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations._interface.configuration.Mtus;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations._interface.configuration.mtus.Mtu;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;

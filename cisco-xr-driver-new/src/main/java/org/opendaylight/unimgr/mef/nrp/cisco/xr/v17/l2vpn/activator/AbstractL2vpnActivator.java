@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.l2vpn.activator;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.l2vpn.activator;
 
 import com.google.common.base.Optional;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -14,10 +14,10 @@ import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.MountPointHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.ServicePort;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.l2vpn.helper.L2vpnHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.MountPointHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.ServicePort;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.helper.InterfaceHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907.InterfaceActive;
@@ -38,7 +38,9 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.co
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.ServicePort.toServicePort;
+
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.ServicePort.toServicePort;
+
 import java.util.List;
 
 

@@ -5,9 +5,10 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.activator;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.activator;
 
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.ServicePort.toServicePort;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.ServicePort.toServicePort;
+
 import java.util.List;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
@@ -15,10 +16,10 @@ import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.MountPointHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.ServicePort;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.helper.L2vpnHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.MountPointHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.ServicePort;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.helper.InterfaceHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;

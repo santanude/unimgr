@@ -5,20 +5,20 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.l2vpn.activator;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.l2vpn.activator;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.FixedServiceNaming;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.ServicePort;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.helper.BandwidthProfileHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.util.LoopbackUtils;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.util.MtuUtils;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.l2vpn.helper.AttachmentCircuitHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.l2vpn.helper.L2vpnHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.l2vpn.helper.PseudowireHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.l2vpn.helper.XConnectHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.FixedServiceNaming;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.ServicePort;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.helper.BandwidthProfileHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.helper.InterfaceHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.util.LoopbackUtils;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.util.MtuUtils;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.l2vpn.helper.AttachmentCircuitHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.l2vpn.helper.L2vpnHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.l2vpn.helper.PseudowireHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.l2vpn.helper.XConnectHelper;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations._interface.configuration.Mtus;
@@ -28,9 +28,11 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.AttachmentCircuits;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.Pseudowires;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.helper.BandwidthProfileComposition.BwpApplicability.UNI;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.helper.BandwidthProfileComposition.BwpDirection.EGRESS;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.helper.BandwidthProfileComposition.BwpDirection.INGRESS;
+
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.helper.BandwidthProfileComposition.BwpApplicability.UNI;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.helper.BandwidthProfileComposition.BwpDirection.EGRESS;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.helper.BandwidthProfileComposition.BwpDirection.INGRESS;
+
 import java.util.Optional;
 
 

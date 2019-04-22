@@ -5,15 +5,15 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.helper;
 
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.ServicePort;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.helper.AttachmentCircuitHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.ServicePort;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.helper.InterfaceHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.helper.AttachmentCircuitHelper;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.AttachmentCircuits;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.attachment.circuits.AttachmentCircuit;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.InterfaceName;

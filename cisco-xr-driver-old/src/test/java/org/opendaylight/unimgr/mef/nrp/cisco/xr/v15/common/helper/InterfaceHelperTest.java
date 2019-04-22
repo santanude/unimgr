@@ -5,13 +5,13 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.helper;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.ServicePort;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.util.MtuUtils;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.ServicePort;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.helper.InterfaceHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.util.MtuUtils;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.Mtus;

@@ -5,7 +5,7 @@
  * the terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.newer;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.v17;
 
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
@@ -18,9 +18,9 @@ import org.opendaylight.controller.md.sal.binding.api.*;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.TopologyManager;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.util.XrCapabilitiesService;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.l2vpn.driver.XrDriverBuilder;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.helper.InterfaceHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.util.XrCapabilitiesService;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.l2vpn.driver.XrDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907.InterfaceConfigurations;
@@ -60,7 +60,8 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.util.XrCapabilitiesService.NodeCapability.*;
+
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.util.XrCapabilitiesService.NodeCapability.*;
 import static org.opendaylight.unimgr.utils.CapabilitiesService.Capability.Mode.AND;
 
 /**

@@ -6,7 +6,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common;
 
 import org.opendaylight.unimgr.mef.nrp.common.ServiceNaming;
 

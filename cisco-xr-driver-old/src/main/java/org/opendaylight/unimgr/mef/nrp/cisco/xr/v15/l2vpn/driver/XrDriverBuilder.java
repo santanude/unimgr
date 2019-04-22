@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.driver;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.driver;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -20,13 +20,13 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFaile
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.util.SipHandler;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.activator.AbstractL2vpnActivator;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.activator.AbstractL2vpnBridgeDomainActivator;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.activator.L2vpnBridgeDomainActivator;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.activator.L2vpnLocalConnectActivator;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.activator.L2vpnP2pConnectActivator;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.l2vpn.helper.PseudowireHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.util.SipHandler;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.activator.AbstractL2vpnActivator;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.activator.AbstractL2vpnBridgeDomainActivator;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.activator.L2vpnBridgeDomainActivator;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.activator.L2vpnLocalConnectActivator;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.activator.L2vpnP2pConnectActivator;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.helper.PseudowireHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.NrpConnectivityServiceAttrs;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ServiceType;

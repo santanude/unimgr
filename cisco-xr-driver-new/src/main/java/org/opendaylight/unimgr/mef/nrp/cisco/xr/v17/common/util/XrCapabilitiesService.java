@@ -5,11 +5,11 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.newer.common.util;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.util;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.unimgr.utils.CapabilitiesService;
-import org.opendaylight.unimgr.utils.NetconfConstants;
+import org.opendaylight.unimgr.utils.v17.NetconfConstants;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 
