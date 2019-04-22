@@ -29,6 +29,8 @@ public class XrCapabilitiesService extends CapabilitiesService {
                 checkForNetconfCapability(node, NetconfConstants.CAPABILITY_IOX_L2VPN)),
         NETCONF_CISCO_IOX_IFMGR((dbBroker, node) ->
                 checkForNetconfCapability(node,NetconfConstants.CAPABILITY_IOX_IFMGR)),
+        NETCONF_CISCO_IOX_L2ETH((dbBroker, node) ->
+                checkForNetconfCapability(node,NetconfConstants.CAPABILITY_IOX_L2ETH)),
         NETCONF_CISCO_IOX_POLICYMGR((dbBroker, node) ->
                 checkForNetconfCapability(node,NetconfConstants.CAPABILITY_IOX_ASR9K_POLICYMGR));
 
