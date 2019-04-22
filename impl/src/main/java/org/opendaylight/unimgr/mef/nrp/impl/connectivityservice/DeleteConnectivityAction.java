@@ -27,6 +27,8 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.unimgr.mef.nrp.impl.ActivationTransaction;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.EndPoint1;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.EndPoint2;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ServiceInterfacePointRef;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.Context1;
@@ -73,7 +75,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
         ConnectivityService cs =
                 nrpDao.getConnectivityService(serviceId);
         LOG.info("ConnectivityService cs = {}", cs.toString());
-        
+
         if (cs == null) {
             return RpcResultBuilder
                     .<DeleteConnectivityServiceOutput>failed()
@@ -192,8 +194,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
                         org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPoint endPoint =
                                 optEndPoint.orElse(null);
 
-
-                        EndPoint ep = new EndPoint(endPoint, null).setNepRef(TapiUtils.toSysNepRef(nodeId, nep.getUuid()));
+                        EndPoint ep = new EndPoint(endPoint, endPoint.getAugmentation(EndPoint1.class)).setNepRef(TapiUtils.toSysNepRef(nodeId, nep.getUuid()));
                         return new Pair(nodeId, ep);
                     });
                 }).collect(Collectors.toMap(Pair::getNodeId, p -> new LinkedList<>(Arrays.asList(p.getEndPoint())), (ol, nl) -> {

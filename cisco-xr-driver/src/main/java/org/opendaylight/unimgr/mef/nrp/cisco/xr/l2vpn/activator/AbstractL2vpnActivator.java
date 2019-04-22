@@ -7,17 +7,18 @@
  */
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
-import com.google.common.base.Optional;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort.toServicePort;
+import java.util.List;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
@@ -38,10 +39,7 @@ import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.co
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
-
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort.toServicePort;
+import com.google.common.base.Optional;
 
 
 /**
@@ -106,17 +104,14 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
-        LOG.info("deactivate()  isExclusive = {}", isExclusive);
-
-        // LOG.info("ServicePort port vlan = {}", port.getVlanId());
 
         InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
         InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = null;
         if(isExclusive) {
+            LOG.debug("Service has vlan validate isExclusive flag : ", isExclusive);
             interfaceConfigurationId = deactivateInterface(port, isExclusive);
         }
 
-        LOG.info("interfaceConfigurationId = {}", interfaceConfigurationId.toString());
         doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive);
     }
 
@@ -163,14 +158,10 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
         transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
-        if (!isExclusive) {
-            transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
-        } else {
-            /*InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(isExclusive);
-            transaction.merge(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId, interfaceConfigurations);*/
-            //InterfaceConfigurations interfaceConfigurations = activateInterface(port, port, mtu, isExclusive);
-            
-            InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(port, mtu, isExclusive);
+        transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
+
+        if (isExclusive) {
+            InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(port);
             transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
         }
 
@@ -200,7 +191,6 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     }
 
     private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive) {
-        port.setVlanId((long) 301);
 
         return InstanceIdentifier.builder(InterfaceConfigurations.class)
                 .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), isExclusive==true ?  InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port)))

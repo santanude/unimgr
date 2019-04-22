@@ -75,15 +75,15 @@ public class InterfaceHelper {
         configurations = new LinkedList<>();
     }
 
-    public InterfaceHelper addInterface(ServicePort port, Optional<Mtus> mtus, boolean setL2Transport, boolean updateL2Transport) {
-        return addInterface(getInterfaceName(port), mtus, setL2Transport, updateL2Transport);
+    public InterfaceHelper addInterface(ServicePort port, Optional<Mtus> mtus, boolean setL2Transport) {
+        return addInterface(getInterfaceName(port), mtus, setL2Transport);
     }
 
     public InterfaceHelper addSubInterface(ServicePort port, Optional<Mtus> mtus ) {
          return addSubInterface(getSubInterfaceName(port), mtus, port);
      }
 
-    public InterfaceHelper addInterface(InterfaceName name, Optional<Mtus> mtus, boolean setL2Transport, boolean updateL2Transport) {
+    public InterfaceHelper addInterface(InterfaceName name, Optional<Mtus> mtus, boolean setL2Transport) {
         InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();
 
         configurationBuilder
@@ -95,7 +95,7 @@ public class InterfaceHelper {
         }
 
         if (setL2Transport) {
-            setL2Configuration(configurationBuilder, updateL2Transport);
+            setL2Configuration(configurationBuilder);
         }
 
         configurations.add(configurationBuilder.build());
@@ -144,10 +144,10 @@ public class InterfaceHelper {
             .build();
     }
 
-    private void setL2Configuration(InterfaceConfigurationBuilder configurationBuilder,  boolean updateL2Transport) {
+    private void setL2Configuration(InterfaceConfigurationBuilder configurationBuilder) {
         L2Transport l2transport = new L2TransportBuilder()
-            .setEnabled(updateL2Transport == true ? false : true)
-            .build();
+                    .setEnabled(true)
+                    .build();
 
         InterfaceConfiguration3 augmentation = new InterfaceConfiguration3Builder()
             .setL2Transport(l2transport)
@@ -156,30 +156,18 @@ public class InterfaceHelper {
         configurationBuilder.addAugmentation(InterfaceConfiguration3.class, augmentation);
     }
 
-    /*public InterfaceHelper resetInterface(ServicePort port, Optional<Mtus> mtus, boolean isExclusive) {
+    public InterfaceHelper resetInterface(ServicePort port) {
         InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();
 
         configurationBuilder.setInterfaceName(getInterfaceName(port))
-        .setActive(new InterfaceActive("act"));
-        
-        if (mtus.isPresent()) {
-            configurationBuilder.setMtus(mtus.get());
-         }
-
-        if (isExclusive) {
-            setL2Configuration(configurationBuilder, false); // L2Transport should be disable
-        }
+                .setActive(new InterfaceActive("act")).setShutdown(Boolean.FALSE);
 
         configurations.add(configurationBuilder.build());
         return this;
     }
-*/
-    public InterfaceConfigurations updateInterface(ServicePort port, long mtu, boolean isExclusive) {
-        Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(port.getInterfaceName()));
 
-        return new InterfaceHelper().addInterface(port, Optional.of(mtus), true,  true).build();
-        // return new InterfaceHelper().resetInterface(port, Optional.of(mtus),
-        // isExclusive).build();
+    public InterfaceConfigurations updateInterface(ServicePort port) {
+         return new InterfaceHelper().resetInterface(port).build();
     }
 
 }
