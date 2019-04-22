@@ -15,7 +15,7 @@ import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.MdsalUtils;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.util.MdsalUtils;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortDirection;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;

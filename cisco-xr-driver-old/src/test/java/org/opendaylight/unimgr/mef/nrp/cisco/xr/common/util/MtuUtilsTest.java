@@ -8,7 +8,7 @@
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util;
 
 import org.junit.Test;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.MtuUtils;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.older.common.util.MtuUtils;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.Mtus;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.mtus.Mtu;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
