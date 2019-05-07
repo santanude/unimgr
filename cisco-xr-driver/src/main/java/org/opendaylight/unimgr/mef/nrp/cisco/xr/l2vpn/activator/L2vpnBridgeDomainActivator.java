@@ -108,6 +108,6 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
         return new InterfaceHelper()
         .addSubInterface(port, Optional.of(mtus))
         .build();
-}
+    }
 
 }

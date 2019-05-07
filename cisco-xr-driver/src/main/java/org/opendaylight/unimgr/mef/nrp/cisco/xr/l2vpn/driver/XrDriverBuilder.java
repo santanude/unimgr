@@ -30,6 +30,7 @@ import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.PseudowireHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.NrpConnectivityServiceAttrs;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ServiceType;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,16 +171,17 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             private void handleBdEndpoints(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action) {
                 endPoints.forEach(endPoint -> connectWithAllBdNeighbors(action,endPoint,endPoints));
             }
-            
+
             private void connectWithAllBdNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint endPoint, List<EndPoint> neighbors) {
                 neighbors.stream()
                         .filter(neighbor -> !neighbor.equals(endPoint))
+                        .filter(neighbor -> ! new NodeId(SipHandler.getDeviceName(neighbor.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId())).getValue().equals(new NodeId(SipHandler.getDeviceName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId())).getValue()))
                         .forEach(neighbor -> activateBdNeighbors(action,endPoint,neighbor));
             }
-            
+
             private void activateBdNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint portA, EndPoint portZ) {
                 List<EndPoint> endPointsToActivate = Arrays.asList(portA, portZ);
-
+                
                 action.accept(endPointsToActivate, bdActivator);
             }
 
@@ -193,7 +195,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
             BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> deactivateBd = (neighbors, activator) -> {
                         try {
-                            activator.deactivate(neighbors, serviceId, isExclusive, serviceType);
+                                activator.deactivate(neighbors, serviceId, isExclusive, serviceType);  
                         } catch (TransactionCommitFailedException | ResourceActivatorException e) {
                             LOG.error("Deactivation error occured: {}", e.getMessage());
                         }
