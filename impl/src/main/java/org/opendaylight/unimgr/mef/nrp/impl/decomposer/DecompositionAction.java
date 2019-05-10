@@ -157,7 +157,11 @@ class DecompositionAction {
             }
 
             Graph<Vertex, DefaultEdge> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
-
+            topo.getNode().removeIf(b -> null == b.getOwnedNodeEdgePoint());
+    
+           if (topo.getNode().isEmpty()) {
+               throw new FailureResult("Nodes don't have Node Edge Points details", TapiConstants.PRESTO_SYSTEM_TOPO);
+           }
             topo.getNode().stream().map(this::nodeToGraph).forEach(vs -> {
                 List<Vertex> vertices = vs.collect(Collectors.toList());
                 vertices.forEach(v -> sipToNep.put(v.getSip(), v));
