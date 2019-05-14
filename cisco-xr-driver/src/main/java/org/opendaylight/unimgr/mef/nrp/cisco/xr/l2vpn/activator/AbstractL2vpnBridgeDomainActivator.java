@@ -10,7 +10,6 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort.toServicePort;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
@@ -20,7 +19,7 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.SipHandler;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.CommonUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
@@ -40,7 +39,6 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResource;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +56,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
     protected DataBroker dataBroker;
     private MountPointService mountService;
     private List<Uuid> inls = new ArrayList<Uuid>();
-    private List<String> dels = new ArrayList<String>();
+    private List<String> dvls = new ArrayList<String>();
 
     protected AbstractL2vpnBridgeDomainActivator(DataBroker dataBroker, MountPointService mountService) {
         LOG.info(" L2vpn bridge domain activator initiated...");
@@ -171,8 +169,8 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
 
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
 
-        if (!isSameInterface(endpoint, inls)) {
-            if (!isSameDevice(endpoint, dels)) {
+        if (!CommonUtils.isSameInterface(endpoint, inls)) {
+            if (!CommonUtils.isSameDevice(endpoint, dvls)) {
                 transaction.delete(LogicalDatastoreType.CONFIGURATION, bridgeDomainId);
             }
             transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
@@ -192,54 +190,5 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
     protected abstract String getOuterName(String serviceId);
     protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu, boolean isExclusive);
     protected abstract InterfaceConfigurations createSubInterface(ServicePort portA, ServicePort portZ, long mtu);
-
-    /**
-     * Function is checking bridge domain configuration already deleted from XR-device. 
-     * @param endPoint
-     * @param ls
-     * @return boolean
-     */
-    public boolean isSameInterface(EndPoint endPoint, List<Uuid> ls) {
-        Uuid sip = endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId(); //sip:ciscoD1:GigabitEthernet0/0/0/1
-
-        if (ls.size() == 0) {
-            ls.add(sip);
-        } else if (ls.size() > 0) {
-            List<Uuid> listWithoutDuplicates =
-                    ls.stream().distinct().collect(Collectors.toList());
-
-            java.util.Optional<Uuid> preset = listWithoutDuplicates.stream()
-                    .filter(x -> x.equals(sip)).findFirst();
-
-            if (preset.isPresent()) {
-                return true;
-            }
-            ls.add(sip);
-        }
-
-        return false;
-    }
-
-    public boolean isSameDevice(EndPoint endPoint, List<String> ls) {
-        Uuid sip = endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId(); //sip:ciscoD1:GigabitEthernet0/0/0/1
-        NodeId nodeId = new NodeId(SipHandler.getDeviceName(sip));
-
-        if (ls.size() == 0) {
-            ls.add(nodeId.getValue());
-        } else if (ls.size() > 0) {
-            List<String> listWithoutDuplicates =
-                    ls.stream().distinct().collect(Collectors.toList());
-
-            java.util.Optional<String> preset = listWithoutDuplicates.stream()
-                    .filter(x -> x.equals(nodeId.getValue())).findFirst();
-
-            if (preset.isPresent()) {
-                return true;
-            }
-            ls.add(nodeId.getValue());
-        }
-
-        return false;
-    }
 
 }

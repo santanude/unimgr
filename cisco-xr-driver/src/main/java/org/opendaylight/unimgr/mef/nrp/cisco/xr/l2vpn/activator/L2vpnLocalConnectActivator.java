@@ -54,9 +54,11 @@ public class L2vpnLocalConnectActivator extends AbstractL2vpnActivator {
 
     @Override
     protected InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor, long mtu, boolean isExclusive) {
+        boolean setL2Transport = (isExclusive) ? true : false;
+
         return new InterfaceHelper()
-            .addInterface(port, Optional.empty(), true)
-            .addInterface(neighbor, Optional.empty(), true)
+            .addInterface(port, Optional.empty(), setL2Transport)
+            .addInterface(neighbor, Optional.empty(), setL2Transport)
             .build();
     }
 

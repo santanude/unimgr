@@ -78,11 +78,10 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                 this.isExclusive = isExclusive;
                 this.serviceType = serviceType;
 
+                PseudowireHelper.generatePseudowireId();
                 if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())) {
-                    PseudowireHelper.generatePseudowireId();
                     bdActivator = new L2vpnBridgeDomainActivator(dataBroker, mountPointService);
                 } else {
-                    PseudowireHelper.generatePseudowireId();
                     localActivator = new L2vpnLocalConnectActivator(dataBroker, mountPointService);
                     p2pActivator = new L2vpnP2pConnectActivator(dataBroker, mountPointService);
                 }
@@ -130,9 +129,9 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                     if (bridgeActivatedPairs==null) {
                         bridgeActivatedPairs = new ArrayList<>();
                     }
-                    if (isPairActivated(portA,portZ)) {
+                    /*if (isPairActivated(portA,portZ)) {
                         return;
-                    }
+                    }*/
                     action.accept(endPointsToActivate, localActivator);
                     bridgeActivatedPairs.add(new AbstractMap.SimpleEntry<>(portA, portZ));
                 } else {

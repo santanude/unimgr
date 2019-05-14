@@ -8,6 +8,7 @@
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
 import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort.toServicePort;
+import java.util.ArrayList;
 import java.util.List;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
@@ -18,6 +19,7 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.CommonUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
@@ -57,6 +59,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     protected DataBroker dataBroker;
 
     private MountPointService mountService;
+    private List<String> dvls = new ArrayList<String>();
 
     protected AbstractL2vpnActivator(DataBroker dataBroker, MountPointService mountService) {
         this.dataBroker = dataBroker;
@@ -69,8 +72,8 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         String outerName = getOuterName(serviceId);
         ServicePort port = null;
         ServicePort neighbor = null;
-        
-        for (EndPoint endPoint: endPoints) {
+
+        for (EndPoint endPoint : endPoints) {
             if (port==null) {
                 port = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
                 NrpCarrierEthConnectivityEndPointResource attrs = endPoint.getAttrs() == null ? null : endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
@@ -110,7 +113,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         LOG.debug("Is service has vlan ? validate isExclusive : ", isExclusive);
         InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId  = deactivateInterface(port, isExclusive);
 
-        doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive);
+        doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive, endPoints.stream().findFirst().get());
     }
 
     // for now QoS is ignored
@@ -146,16 +149,18 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     protected void doDeactivate(ServicePort port,
                                 InstanceIdentifier<P2pXconnect> xconnectId,
-                                InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId, boolean isExclusive) throws TransactionCommitFailedException {
+                                InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId, boolean isExclusive, EndPoint endpoint) throws TransactionCommitFailedException {
 
         Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, port.getNode().getValue());
         if (!optional.isPresent()) {
             LOG.error("Could not retrieve MountPoint for {}", port.getNode().getValue());
             return;
         }
-
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-        transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
+
+        if (!CommonUtils.isSameDevice(endpoint, dvls)) {
+            transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
+        }
         transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
 
         if (isExclusive) {
@@ -197,4 +202,8 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     protected abstract String getInnerName(String serviceId);
     protected abstract String getOuterName(String serviceId);
+
+    protected List<String> getList() {
+        return dvls;
+    }
 }
