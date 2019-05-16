@@ -23,12 +23,14 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.SipHandler;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnBridgeDomainActivator;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnBdLocalConnectActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnBridgeDomainActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnLocalConnectActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnP2pConnectActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.PseudowireHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.NrpConnectivityServiceAttrs;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ServiceType;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.slf4j.Logger;
@@ -47,6 +49,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
     private L2vpnLocalConnectActivator localActivator;
     private L2vpnP2pConnectActivator p2pActivator;
     private L2vpnBridgeDomainActivator bdActivator;
+    private L2vpnBdLocalConnectActivator localBdActivator;
 
     public XrDriverBuilder(DataBroker dataBroker, MountPointService mountPointService) {
         this.dataBroker = dataBroker;
@@ -80,6 +83,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
                 PseudowireHelper.generatePseudowireId();
                 if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())) {
+                    localBdActivator = new L2vpnBdLocalConnectActivator(dataBroker, mountPointService);
                     bdActivator = new L2vpnBridgeDomainActivator(dataBroker, mountPointService);
                 } else {
                     localActivator = new L2vpnLocalConnectActivator(dataBroker, mountPointService);
@@ -168,7 +172,25 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
             // L2vpn Bridge Domain configuration implementation
             private void handleBdEndpoints(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action) {
-                endPoints.forEach(endPoint -> connectWithAllBdNeighbors(action,endPoint,endPoints));
+                List<String> devlist = new ArrayList<String>();
+                endPoints.forEach(e -> {
+                    Uuid sip = e.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId(); //sip:ciscoD1:GigabitEthernet0/0/0/1
+                    NodeId nodeId = new NodeId(SipHandler.getDeviceName(sip));
+                    devlist.add(nodeId.getValue());
+                });
+
+                boolean allEqual = devlist.stream().distinct().limit(2).count() <= 1;
+                if(allEqual) {
+                    endPoints.forEach(endPoint -> connectWithAllBdNeighborsWithSameDevice(action,endPoint,endPoints));
+                } else {
+                    endPoints.forEach(endPoint -> connectWithAllBdNeighbors(action,endPoint,endPoints));
+                }
+            }
+
+            private void connectWithAllBdNeighborsWithSameDevice(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint endPoint, List<EndPoint> neighbors) {
+                neighbors.stream()
+                        .filter(neighbor -> !neighbor.equals(endPoint))
+                        .forEach(neighbor -> ignoreBdNeighbors(action,endPoint,neighbor));
             }
 
             private void connectWithAllBdNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint endPoint, List<EndPoint> neighbors) {
@@ -177,10 +199,17 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                         .filter(neighbor -> ! new NodeId(SipHandler.getDeviceName(neighbor.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId())).getValue().equals(new NodeId(SipHandler.getDeviceName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId())).getValue()))
                         .forEach(neighbor -> activateBdNeighbors(action,endPoint,neighbor));
             }
+            
+
+            private void ignoreBdNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint portA, EndPoint portZ) {
+                List<EndPoint> endPointsToActivate = Arrays.asList(portA, portZ);
+
+                action.accept(endPointsToActivate, localBdActivator);
+            }
 
             private void activateBdNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint portA, EndPoint portZ) {
                 List<EndPoint> endPointsToActivate = Arrays.asList(portA, portZ);
-                
+
                 action.accept(endPointsToActivate, bdActivator);
             }
 

@@ -55,8 +55,8 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
 
     protected DataBroker dataBroker;
     private MountPointService mountService;
-    private List<Uuid> inls = new ArrayList<Uuid>();
-    private List<String> dvls = new ArrayList<String>();
+    private static List<Uuid> inls = new ArrayList<Uuid>();
+    private static List<String> dvls = new ArrayList<String>();
 
     protected AbstractL2vpnBridgeDomainActivator(DataBroker dataBroker, MountPointService mountService) {
         LOG.info(" L2vpn bridge domain activator initiated...");
@@ -71,6 +71,8 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
         String outerName = getOuterName(serviceId);
         ServicePort port = null;
         ServicePort neighbor = null;
+        inls.clear();
+        dvls.clear();
 
         for (EndPoint endPoint : endPoints) {
             if (port == null) {
