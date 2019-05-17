@@ -174,16 +174,16 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             private void handleBdEndpoints(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action) {
                 List<String> devlist = new ArrayList<String>();
                 endPoints.forEach(e -> {
-                    Uuid sip = e.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId(); //sip:ciscoD1:GigabitEthernet0/0/0/1
+                    Uuid sip = e.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId();
                     NodeId nodeId = new NodeId(SipHandler.getDeviceName(sip));
                     devlist.add(nodeId.getValue());
                 });
 
                 boolean allEqual = devlist.stream().distinct().limit(2).count() <= 1;
-                if(allEqual) {
-                    endPoints.forEach(endPoint -> connectWithAllBdNeighborsWithSameDevice(action,endPoint,endPoints));
+                if (allEqual) {
+                    endPoints.forEach(endPoint -> connectWithAllBdNeighborsWithSameDevice(action,endPoint, endPoints));
                 } else {
-                    endPoints.forEach(endPoint -> connectWithAllBdNeighbors(action,endPoint,endPoints));
+                    endPoints.forEach(endPoint -> connectWithAllBdNeighbors(action, endPoint, endPoints));
                 }
             }
 
@@ -194,12 +194,11 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             }
 
             private void connectWithAllBdNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint endPoint, List<EndPoint> neighbors) {
-                neighbors.stream()
-                        .filter(neighbor -> !neighbor.equals(endPoint))
+                neighbors.stream().filter(neighbor -> !neighbor.equals(endPoint))
                         .filter(neighbor -> ! new NodeId(SipHandler.getDeviceName(neighbor.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId())).getValue().equals(new NodeId(SipHandler.getDeviceName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId())).getValue()))
-                        .forEach(neighbor -> activateBdNeighbors(action,endPoint,neighbor));
+                        .forEach(neighbor -> activateBdNeighbors(action, endPoint, neighbor));
             }
-            
+
 
             private void ignoreBdNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint portA, EndPoint portZ) {
                 List<EndPoint> endPointsToActivate = Arrays.asList(portA, portZ);
