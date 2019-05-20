@@ -32,8 +32,6 @@ public class L2vpnBdLocalConnectActivator extends AbstractL2vpnBridgeDomainActiv
 
     private static final Logger LOG = LoggerFactory.getLogger(L2vpnBdLocalConnectActivator.class);
 
-    private static final String GROUP_NAME = "local";
-
     public L2vpnBdLocalConnectActivator(DataBroker dataBroker, MountPointService mountService) {
         super(dataBroker, mountService);
     }
@@ -65,12 +63,12 @@ public class L2vpnBdLocalConnectActivator extends AbstractL2vpnBridgeDomainActiv
 
     @Override
     protected String getInnerName(String serviceId) {
-        return GROUP_NAME;
+        return replaceForbidenCharacters(serviceId);
     }
 
     @Override
     protected String getOuterName(String serviceId) {
-        return GROUP_NAME;
+        return replaceForbidenCharacters(serviceId);
     }
 
     @Override
@@ -90,6 +88,17 @@ public class L2vpnBdLocalConnectActivator extends AbstractL2vpnBridgeDomainActiv
         return new InterfaceHelper()
                 .addSubInterface(port, Optional.empty())
                 .build();
+    }
+
+    /**
+     * ASR 9000 can't accept colon in xconnect group name, so it have to be replaced with underscore.
+     * If any other restriction will be found, this is a good place to change serviceId name.
+     *
+     * @param serviceId old service id
+     * @return new service id
+     */
+    private String replaceForbidenCharacters(String serviceId) {
+        return serviceId.replace(":","_");
     }
 
 }

@@ -203,7 +203,4 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     protected abstract String getInnerName(String serviceId);
     protected abstract String getOuterName(String serviceId);
 
-    protected List<String> getList() {
-        return dvls;
-    }
 }
