@@ -39,6 +39,7 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResource;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ServiceType;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +72,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
         String outerName = getOuterName(serviceId);
         ServicePort port = null;
         ServicePort neighbor = null;
+        String portRole = null, neighborRole = null;
         inls.clear();
         dvls.clear();
 
@@ -82,24 +84,30 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
                     port.setEgressBwpFlow(attrs.getEgressBwpFlow());
                     port.setIngressBwpFlow(attrs.getIngressBwpFlow());
 
-                }
+                }portRole = endPoint.getEndpoint().getRole().name();
             } else {
                 neighbor = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
+                neighborRole = endPoint.getEndpoint().getRole().name();
             }
         }
+        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
+        BdPseudowires bdPseudowires = activateBdPseudowire(neighbor);
+        BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(outerName, innerName, port, neighbor, bdPseudowires, isExclusive);
+        L2vpn l2vpn = activateL2Vpn(bridgeDomainGroups);
 
-       InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
-       BdPseudowires bdPseudowires = activateBdPseudowire(neighbor);
-       BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(outerName, innerName, port, neighbor, bdPseudowires, isExclusive);
-       L2vpn l2vpn = activateL2Vpn(bridgeDomainGroups);
-
-        // create sub interface for tag based service
-        if (!isExclusive) {
-            InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
-            createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
+         // create sub interface for tag based service
+         if (!isExclusive) {
+             InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
+             createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
         }
 
-        doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn);
+        if (serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
+            if (portRole != neighborRole) {
+                doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn);
+            }
+        } else {
+            doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn);
+        }
     }
 
 

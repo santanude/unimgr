@@ -82,7 +82,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                 this.serviceType = serviceType;
 
                 PseudowireHelper.generatePseudowireId();
-                if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())) {
+                if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName()) || serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
                     localBdActivator = new L2vpnBdLocalConnectActivator(dataBroker, mountPointService);
                     bdActivator = new L2vpnBridgeDomainActivator(dataBroker, mountPointService);
                 } else {
@@ -94,7 +94,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             @Override
             public void activate() throws TransactionCommitFailedException {
 
-                if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())) {
+                if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName()) || serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
                     handleBdEndpoints(activateBd);
                 } else {
                     handleEndpoints(activate);
@@ -104,7 +104,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             @Override
             public void deactivate() throws TransactionCommitFailedException {
 
-                if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())) {
+                if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName()) || serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
                     handleBdEndpoints(deactivateBd);
                 } else {
                     handleEndpoints(deactivate);
