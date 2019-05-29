@@ -38,6 +38,7 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.bridge.domain.groups.bridge.domain.group.bridge.domains.bridge.domain.BdPseudowires;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResource;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortRole;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ServiceType;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -51,7 +52,7 @@ import com.google.common.base.Optional;
 public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActivator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractL2vpnBridgeDomainActivator.class);
-    private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
+    //private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
     private static final long mtu = 1500;
 
     protected DataBroker dataBroker;
@@ -78,18 +79,19 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
 
         for (EndPoint endPoint : endPoints) {
             if (port == null) {
-                port = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
+                port = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
                 NrpCarrierEthConnectivityEndPointResource attrs = endPoint.getAttrs() == null ? null : endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
                 if (attrs != null) {
                     port.setEgressBwpFlow(attrs.getEgressBwpFlow());
                     port.setIngressBwpFlow(attrs.getIngressBwpFlow());
-
-                }portRole = endPoint.getEndpoint().getRole().name();
+                }
+                portRole = endPoint.getEndpoint().getRole().name();
             } else {
-                neighbor = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
+                neighbor = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
                 neighborRole = endPoint.getEndpoint().getRole().name();
             }
         }
+
         InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
         BdPseudowires bdPseudowires = activateBdPseudowire(neighbor);
         BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(outerName, innerName, port, neighbor, bdPseudowires, isExclusive);
@@ -102,7 +104,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
         }
 
         if (serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
-            if (portRole != neighborRole) {
+            if (!(portRole == PortRole.LEAF.getName() && neighborRole == PortRole.LEAF.getName())) {
                 doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn);
             }
         } else {
@@ -145,7 +147,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
             throws TransactionCommitFailedException, ResourceActivatorException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
-        ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
+        ServicePort port = toServicePort(endPoints.stream().findFirst().get(), CommonUtils.NETCONF_TOPOLODY_NAME);
 
         InstanceIdentifier<BridgeDomain> bridgeDomainId = deactivateBridgeDomain(outerName, innerName);
         InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);

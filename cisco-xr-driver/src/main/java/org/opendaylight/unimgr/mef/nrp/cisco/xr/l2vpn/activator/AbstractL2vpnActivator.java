@@ -53,7 +53,7 @@ import com.google.common.base.Optional;
 public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractL2vpnActivator.class);
-    private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
+    //private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
     private static final long mtu = 1500;
 
     protected DataBroker dataBroker;
@@ -75,7 +75,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
         for (EndPoint endPoint : endPoints) {
             if (port==null) {
-                port = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
+                port = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
                 NrpCarrierEthConnectivityEndPointResource attrs = endPoint.getAttrs() == null ? null : endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
                 if(attrs != null) {
                     port.setEgressBwpFlow(attrs.getEgressBwpFlow());
@@ -83,7 +83,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
                 }
             } else {
-                neighbor = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
+                neighbor = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
             }
         }
 
@@ -106,7 +106,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType) throws TransactionCommitFailedException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);
-        ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
+        ServicePort port = toServicePort(endPoints.stream().findFirst().get(), CommonUtils.NETCONF_TOPOLODY_NAME);
 
         InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
 

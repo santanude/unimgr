@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CommonUtils {
     private static final Logger LOG = LoggerFactory.getLogger(CommonUtils.class);
+    public static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
 
     public static boolean isSameDevice(EndPoint endPoint, List<String> ls) {
         Uuid sip = endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId(); //sip:ciscoD1:GigabitEthernet0/0/0/1
