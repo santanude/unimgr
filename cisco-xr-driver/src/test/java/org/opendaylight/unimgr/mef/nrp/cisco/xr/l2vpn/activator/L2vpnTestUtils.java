@@ -10,6 +10,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -101,10 +102,7 @@ public class L2vpnTestUtils {
 
     public static void checkNeighbor(Neighbor neighbor) {
         assertNotNull(neighbor);
-        assertNotNull(neighbor.getXmlClass());
-        assertNotNull(neighbor.getNeighbor());
-        assertNotNull(neighbor.getMplsStaticLabels());
-    }
+       }
 
     public static void checkMplsStaticLabels(MplsStaticLabels mplsStaticLabels) {
         assertNotNull(mplsStaticLabels);
@@ -122,7 +120,7 @@ public class L2vpnTestUtils {
         assertNotNull(interfaceConfiguration.getActive());
         assertNotNull(interfaceConfiguration.getInterfaceModeNonPhysical());
         assertEquals(portNo,interfaceConfiguration.getInterfaceName().getValue());
-        assertTrue(interfaceConfiguration.isShutdown());
+        assertNull(interfaceConfiguration.isShutdown());
         if (mtu) {
             assertNotNull(interfaceConfiguration.getMtus());
             assertNotNull(interfaceConfiguration.getMtus().getMtu());
@@ -174,7 +172,7 @@ public class L2vpnTestUtils {
             L2vpnTestUtils.checkInterfaceConfigurations(interfaceConfigurations);
 
             List<InterfaceConfiguration> interfaceConfigurationList = interfaceConfigurations.getInterfaceConfiguration();
-            assertFalse(interfaceConfigurationList.stream().anyMatch(x -> x.getInterfaceName().getValue().equals(deactivatedPort)));
+            assertTrue(interfaceConfigurationList.stream().anyMatch(x -> x.getInterfaceName().getValue().equals(deactivatedPort)));
         } else {
             fail("InterfaceConfigurations was not found.");
         }
