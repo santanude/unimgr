@@ -186,10 +186,10 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
                 transaction.delete(LogicalDatastoreType.CONFIGURATION, bridgeDomainId);
             }
             transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
-            if (isExclusive) {
+           /* if (isExclusive) {
                 InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(port);
                 transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
-            }
+            }*/
         }
 
         transaction.submit().checkedGet();
