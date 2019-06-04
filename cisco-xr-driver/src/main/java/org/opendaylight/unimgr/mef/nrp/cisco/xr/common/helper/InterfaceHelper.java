@@ -156,18 +156,4 @@ public class InterfaceHelper {
         configurationBuilder.addAugmentation(InterfaceConfiguration3.class, augmentation);
     }
 
-    public InterfaceHelper resetInterface(ServicePort port) {
-        InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();
-
-        configurationBuilder.setInterfaceName(getInterfaceName(port))
-                .setActive(new InterfaceActive("act")).setShutdown(Boolean.FALSE);
-
-        configurations.add(configurationBuilder.build());
-        return this;
-    }
-
-    public InterfaceConfigurations updateInterface(ServicePort port) {
-         return new InterfaceHelper().resetInterface(port).build();
-    }
-
 }

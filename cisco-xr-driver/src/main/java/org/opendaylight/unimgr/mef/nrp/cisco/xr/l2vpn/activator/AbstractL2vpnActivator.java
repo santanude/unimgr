@@ -68,8 +68,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     @Override
     public void activate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType) throws TransactionCommitFailedException {
-        String innerName = getInnerName(serviceId);
-        String outerName = getOuterName(serviceId);
+        String innerOuterName = getInnerName(serviceId);
         ServicePort port = null;
         ServicePort neighbor = null;
 
@@ -87,10 +86,10 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
             }
         }
 
-        java.util.Optional<PolicyManager> qosConfig = activateQos(innerName, port);
+        java.util.Optional<PolicyManager> qosConfig = activateQos(innerOuterName, port);
         InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
         Pseudowires pseudowires = activatePseudowire(neighbor);
-        XconnectGroups xconnectGroups = activateXConnect(outerName, innerName, port, neighbor, pseudowires, isExclusive);
+        XconnectGroups xconnectGroups = activateXConnect(innerOuterName, innerOuterName, port, neighbor, pseudowires, isExclusive);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
 
         // create sub interface for tag based service
@@ -104,11 +103,10 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     @Override
     public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType) throws TransactionCommitFailedException {
-        String innerName = getInnerName(serviceId);
-        String outerName = getOuterName(serviceId);
+        String innerOuterName = getInnerName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(), CommonUtils.NETCONF_TOPOLODY_NAME);
 
-        InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(outerName, innerName);
+        InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(innerOuterName, innerOuterName);
 
         LOG.debug("Is service has vlan ? validate isExclusive : ", isExclusive);
         InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId  = deactivateInterface(port, isExclusive);
@@ -162,11 +160,6 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
             transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
         }
         transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
-
-        /*if (isExclusive) {
-            InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(port);
-            transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
-        }*/
 
         transaction.submit().checkedGet();
     }

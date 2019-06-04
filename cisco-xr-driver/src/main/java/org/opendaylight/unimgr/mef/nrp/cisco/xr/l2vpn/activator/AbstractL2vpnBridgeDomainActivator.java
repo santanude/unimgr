@@ -69,8 +69,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
     @Override
     public void activate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType)
             throws ResourceActivatorException, TransactionCommitFailedException {
-        String innerName = getInnerName(serviceId);
-        String outerName = getOuterName(serviceId);
+        String innerOuterName = getInnerName(serviceId);
         ServicePort port = null;
         ServicePort neighbor = null;
         String portRole = null, neighborRole = null;
@@ -94,7 +93,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
 
         InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
         BdPseudowires bdPseudowires = activateBdPseudowire(neighbor);
-        BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(outerName, innerName, port, neighbor, bdPseudowires, isExclusive);
+        BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(innerOuterName, innerOuterName, port, neighbor, bdPseudowires, isExclusive);
         L2vpn l2vpn = activateL2Vpn(bridgeDomainGroups);
 
          // create sub interface for tag based service
@@ -145,11 +144,10 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
     @Override
     public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType)
             throws TransactionCommitFailedException, ResourceActivatorException {
-        String innerName = getInnerName(serviceId);
-        String outerName = getOuterName(serviceId);
+        String innerOuterName = getInnerName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(), CommonUtils.NETCONF_TOPOLODY_NAME);
 
-        InstanceIdentifier<BridgeDomain> bridgeDomainId = deactivateBridgeDomain(outerName, innerName);
+        InstanceIdentifier<BridgeDomain> bridgeDomainId = deactivateBridgeDomain(innerOuterName, innerOuterName);
         InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);
         doDeactivate(port, bridgeDomainId, interfaceConfigurationId, isExclusive, endPoints.stream().findFirst().get());
     }
@@ -186,10 +184,6 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
                 transaction.delete(LogicalDatastoreType.CONFIGURATION, bridgeDomainId);
             }
             transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
-           /* if (isExclusive) {
-                InterfaceConfigurations interfaceConfigurations = new InterfaceHelper().updateInterface(port);
-                transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
-            }*/
         }
 
         transaction.submit().checkedGet();
