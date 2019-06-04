@@ -87,6 +87,7 @@ public class InterfaceHelper {
         configurationBuilder
             .setInterfaceName(name)
             .setActive(new InterfaceActive("act"));
+            //.setShutdown(Boolean.FALSE);
 
       if (mtus.isPresent()) {
             configurationBuilder.setMtus(mtus.get());
@@ -95,7 +96,6 @@ public class InterfaceHelper {
       if (setL2Transport) {
             setL2Configuration(configurationBuilder);
         }
-
 
         configurations.add(configurationBuilder.build());
         return this;
@@ -106,7 +106,7 @@ public class InterfaceHelper {
 
         configurationBuilder
              .setInterfaceName(name)
-            // .setActive(new InterfaceActive("act"))
+             .setActive(new InterfaceActive("act"))
 //             .setShutdown(Boolean.FALSE)
              .setDescription("Create sub interface through ODL")
              .setInterfaceModeNonPhysical(InterfaceModeEnum.L2Transport);
