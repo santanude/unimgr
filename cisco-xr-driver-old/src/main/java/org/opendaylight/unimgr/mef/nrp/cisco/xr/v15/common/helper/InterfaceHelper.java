@@ -1,13 +1,18 @@
 /*
- * Copyright (c) 2016 Cisco Systems Inc and others.  All rights reserved.
+ * Copyright (c) 2018 Xoriant Corporation and others. All rights reserved.
  *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * This program and the accompanying materials are made available under 
+ * the terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.helper;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.ServicePort;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.util.MtuUtils;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurationsBuilder;
@@ -26,13 +31,11 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.InterfaceConfiguration3Builder;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109._interface.configurations._interface.configuration.L2Transport;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109._interface.configurations._interface.configuration.L2TransportBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.InterfaceName;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper, designated to support interface configuration
@@ -40,6 +43,7 @@ import java.util.Optional;
  * @author krzysztof.bijakowski@amartus.com
  */
 public class InterfaceHelper {
+    private static final Logger LOG = LoggerFactory.getLogger(InterfaceHelper.class);
     private List<InterfaceConfiguration> configurations;
 
     public static InterfaceName getInterfaceName(ServicePort port) {
@@ -60,7 +64,6 @@ public class InterfaceHelper {
         }
         // adding vlan id with interface name
         interfaceName = interfaceName + "." + port.getVlanId();
-
         return new InterfaceName(interfaceName);
     }
 
@@ -77,9 +80,9 @@ public class InterfaceHelper {
         return addInterface(getInterfaceName(port), mtus, setL2Transport);
     }
 
-    public InterfaceHelper addSubInterface(ServicePort port, Optional<Mtus> mtus) {
-        return addSubInterface(getSubInterfaceName(port), mtus, port);
-    }
+    public InterfaceHelper addSubInterface(ServicePort port, Optional<Mtus> mtus ) {
+         return addSubInterface(getSubInterfaceName(port), mtus, port);
+     }
 
     public InterfaceHelper addInterface(InterfaceName name, Optional<Mtus> mtus, boolean setL2Transport) {
         InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();
@@ -92,33 +95,33 @@ public class InterfaceHelper {
             configurationBuilder.setMtus(mtus.get());
         }
 
-      if (setL2Transport) {
+        if (setL2Transport) {
             setL2Configuration(configurationBuilder);
         }
-
 
         configurations.add(configurationBuilder.build());
         return this;
     }
 
     public InterfaceHelper addSubInterface(InterfaceName name, Optional<Mtus> mtus, ServicePort port) {
-        InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();  
+       InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();  
 
-        configurationBuilder
-             .setInterfaceName(name)
-            // .setActive(new InterfaceActive("act"))
-//             .setShutdown(Boolean.FALSE)
-             .setDescription("Create sub interface through ODL")
-             .setInterfaceModeNonPhysical(InterfaceModeEnum.L2Transport);
-             // set ethernet service
-             setEthernetService(configurationBuilder, port);
+       configurationBuilder
+            .setInterfaceName(name)
+            .setActive(new InterfaceActive("act"))
+//            .setShutdown(Boolean.FALSE)
+            .setDescription("Create sub interface through ODL")
+            .setInterfaceModeNonPhysical(InterfaceModeEnum.L2Transport);
+            // set ethernet service
+            setEthernetService(configurationBuilder, port);
 
-             if (mtus.isPresent()) {
-            	 configurationBuilder.setMtus(mtus.get());
-             }
-        configurations.add(configurationBuilder.build());
-        return this;
-     }
+            if (mtus.isPresent()) {
+               configurationBuilder.setMtus(mtus.get());
+            }
+            configurations.add(configurationBuilder.build());
+
+            return this;
+    }
 
     private void setEthernetService(InterfaceConfigurationBuilder configurationBuilder, ServicePort port) {
         Encapsulation encapsulation = new EncapsulationBuilder()
@@ -144,8 +147,8 @@ public class InterfaceHelper {
 
     private void setL2Configuration(InterfaceConfigurationBuilder configurationBuilder) {
         L2Transport l2transport = new L2TransportBuilder()
-            .setEnabled(true)
-            .build();
+                    .setEnabled(true)
+                    .build();
 
         InterfaceConfiguration3 augmentation = new InterfaceConfiguration3Builder()
             .setL2Transport(l2transport)
@@ -153,4 +156,5 @@ public class InterfaceHelper {
 
         configurationBuilder.addAugmentation(InterfaceConfiguration3.class, augmentation);
     }
+
 }

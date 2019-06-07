@@ -9,6 +9,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.activator;
 
 import static org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.ServicePort.toServicePort;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
@@ -19,6 +20,7 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.helper.InterfaceHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.util.CommonUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
@@ -35,9 +37,11 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.bridge.domain.groups.bridge.domain.group.bridge.domains.BridgeDomain;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.bridge.domain.groups.bridge.domain.group.bridge.domains.BridgeDomainKey;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.bridge.domain.groups.bridge.domain.group.bridge.domains.bridge.domain.BdPseudowires;
-
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResource;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortRole;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ServiceType;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,12 +53,13 @@ import com.google.common.base.Optional;
 public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActivator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractL2vpnBridgeDomainActivator.class);
-    private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
+    //private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
     private static final long mtu = 1500;
 
     protected DataBroker dataBroker;
-
     private MountPointService mountService;
+    private static List<Uuid> inls = new ArrayList<Uuid>();
+    private static List<String> dvls = new ArrayList<String>();
 
     protected AbstractL2vpnBridgeDomainActivator(DataBroker dataBroker, MountPointService mountService) {
         LOG.info(" L2vpn bridge domain activator initiated...");
@@ -65,36 +70,46 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
     @Override
     public void activate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType)
             throws ResourceActivatorException, TransactionCommitFailedException {
-        String innerName = getInnerName(serviceId);
-        String outerName = getOuterName(serviceId);
+        String innerOuterName = getInnerName(serviceId);
         ServicePort port = null;
         ServicePort neighbor = null;
+        String portRole = null, neighborRole = null;
+        inls.clear();
+        dvls.clear();
 
         for (EndPoint endPoint : endPoints) {
             if (port == null) {
-                port = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
+                port = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
                 NrpCarrierEthConnectivityEndPointResource attrs = endPoint.getAttrs() == null ? null : endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
                 if (attrs != null) {
                     port.setEgressBwpFlow(attrs.getEgressBwpFlow());
                     port.setIngressBwpFlow(attrs.getIngressBwpFlow());
-
                 }
+                portRole = endPoint.getEndpoint().getRole().name();
             } else {
-                neighbor = toServicePort(endPoint, NETCONF_TOPOLODY_NAME);
+                neighbor = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
+                neighborRole = endPoint.getEndpoint().getRole().name();
             }
         }
-       InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
-       BdPseudowires bdPseudowires = activateBdPseudowire(neighbor);
-       BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(outerName, innerName, port, neighbor, bdPseudowires, isExclusive);
-       L2vpn l2vpn = activateL2Vpn(bridgeDomainGroups);
 
-        // create sub interface for tag based service
-        if (!isExclusive) {
-            InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
-            createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
+        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
+        BdPseudowires bdPseudowires = activateBdPseudowire(neighbor);
+        BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(innerOuterName, innerOuterName, port, neighbor, bdPseudowires, isExclusive);
+        L2vpn l2vpn = activateL2Vpn(bridgeDomainGroups);
+
+         // create sub interface for tag based service
+         if (!isExclusive) {
+             InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
+             createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
         }
 
-        doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn);
+        if (serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
+            if (!(portRole == PortRole.LEAF.getName() && neighborRole == PortRole.LEAF.getName())) {
+                doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn);
+            }
+        } else {
+            doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn);
+        }
     }
 
 
@@ -121,21 +136,21 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
             LOG.error("Could not retrieve MountPoint for {}", nodeName);
             return;
         }
+
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
         transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
         transaction.submit().checkedGet();
     }
 
     @Override
-    public void deactivate(List<EndPoint> endPoints, String serviceId, String serviceType)
+    public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType)
             throws TransactionCommitFailedException, ResourceActivatorException {
-        String innerName = getInnerName(serviceId);
-        String outerName = getOuterName(serviceId);
-        ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NETCONF_TOPOLODY_NAME);
+        String innerOuterName = getInnerName(serviceId);
+        ServicePort port = toServicePort(endPoints.stream().findFirst().get(), CommonUtils.NETCONF_TOPOLODY_NAME);
 
-        InstanceIdentifier<BridgeDomain> bridgeDomainId = deactivateBridgeDomain(outerName, innerName);
-        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port);
-        doDeactivate(port.getNode().getValue(), bridgeDomainId, interfaceConfigurationId);
+        InstanceIdentifier<BridgeDomain> bridgeDomainId = deactivateBridgeDomain(innerOuterName, innerOuterName);
+        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);
+        doDeactivate(port, bridgeDomainId, interfaceConfigurationId, isExclusive, endPoints.stream().findFirst().get());
     }
 
     private InstanceIdentifier<BridgeDomain> deactivateBridgeDomain(String outerName, String innerName) {
@@ -147,28 +162,33 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
                 .build();
     }
 
-    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port) {
+    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive) {
         return InstanceIdentifier.builder(InterfaceConfigurations.class)
-                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), InterfaceHelper.getInterfaceName(port)))
+                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), isExclusive == true ?  InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port)))
                 .build();
     }
 
 
-    protected void doDeactivate(String nodeName, InstanceIdentifier<BridgeDomain> bridgeDomainId,
-            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId) throws TransactionCommitFailedException {
+    protected void doDeactivate(ServicePort port, InstanceIdentifier<BridgeDomain> bridgeDomainId,
+            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId, boolean isExclusive, EndPoint endpoint) throws TransactionCommitFailedException {
 
-        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
+        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, port.getNode().getValue());
         if (!optional.isPresent()) {
-            LOG.error("Could not retrieve MountPoint for {}", nodeName);
+            LOG.error("Could not retrieve MountPoint for {}", port.getNode().getValue());
             return;
         }
 
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-        transaction.delete(LogicalDatastoreType.CONFIGURATION, bridgeDomainId);
-        transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
+
+        if (!CommonUtils.isSameInterface(endpoint, inls)) {
+            if (!CommonUtils.isSameDevice(endpoint, dvls)) {
+                transaction.delete(LogicalDatastoreType.CONFIGURATION, bridgeDomainId);
+            }
+            transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
+        }
+
         transaction.submit().checkedGet();
     }
-
 
     protected abstract BdPseudowires activateBdPseudowire(ServicePort neighbor);
     protected abstract BridgeDomainGroups activateBridgeDomain(String outerName, String innerName, ServicePort port, ServicePort neighbor, BdPseudowires bdPseudowires, boolean isExclusive);

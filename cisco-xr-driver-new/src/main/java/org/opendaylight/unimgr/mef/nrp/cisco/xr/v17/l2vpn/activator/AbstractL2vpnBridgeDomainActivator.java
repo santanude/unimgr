@@ -126,7 +126,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
     }
 
     @Override
-    public void deactivate(List<EndPoint> endPoints, String serviceId, String serviceType)
+    public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType)
             throws TransactionCommitFailedException, ResourceActivatorException {
         String innerName = getInnerName(serviceId);
         String outerName = getOuterName(serviceId);

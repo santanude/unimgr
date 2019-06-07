@@ -9,7 +9,6 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.util.SipHandler;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrm.connectivity.rev180321.carrier.eth.connectivity.end.point.resource.EgressBwpFlow;
@@ -19,6 +18,8 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TpId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -35,6 +36,8 @@ public class ServicePort {
     private IngressBwpFlow ingressBwpFlow;
     private EgressBwpFlow egressBwpFlow;
 
+    private static final Logger LOG = LoggerFactory.getLogger(ServicePort.class);
+    
     //netconf topology
     private final TopologyId topoId;
     //represents device ie dev-68 in netconf topology
@@ -77,6 +80,7 @@ public class ServicePort {
     }
 
     public static ServicePort toServicePort(EndPoint endPoint, TopologyId topologyId) {
+
         Uuid sip = endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId();
         NodeId nodeId = new NodeId(SipHandler.getDeviceName(sip));
         TpId tpId = new TpId(SipHandler.getPortName(sip));

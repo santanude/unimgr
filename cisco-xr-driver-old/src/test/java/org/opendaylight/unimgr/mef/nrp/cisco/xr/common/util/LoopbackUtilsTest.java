@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.util;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util;
 
 import static org.junit.Assert.assertEquals;
 
@@ -17,9 +17,9 @@ import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnTestUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.util.LoopbackUtils;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.activator.L2vpnTestUtils;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4AddressNoZone;

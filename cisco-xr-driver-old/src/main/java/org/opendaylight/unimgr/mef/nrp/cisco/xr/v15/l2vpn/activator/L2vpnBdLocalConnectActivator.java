@@ -12,46 +12,43 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.util.LoopbackUtils;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.common.util.MtuUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.helper.BdAttachmentCircuitHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.helper.BdPseudowireHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.helper.BridgeDomainHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.Mtus;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.L2vpn;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.BridgeDomainGroups;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.bridge.domain.groups.BridgeDomainGroup;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.bridge.domain.groups.bridge.domain.group.bridge.domains.bridge.domain.BdAttachmentCircuits;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.bridge.domain.groups.bridge.domain.group.bridge.domains.bridge.domain.BdPseudowires;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author arif.hussain@xoriant.com
  */
-public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivator {
+public class L2vpnBdLocalConnectActivator extends AbstractL2vpnBridgeDomainActivator {
 
-    private static final Logger LOG = LoggerFactory.getLogger(L2vpnBridgeDomainActivator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(L2vpnBdLocalConnectActivator.class);
 
-    public L2vpnBridgeDomainActivator(DataBroker dataBroker, MountPointService mountService) {
+    public L2vpnBdLocalConnectActivator(DataBroker dataBroker, MountPointService mountService) {
         super(dataBroker, mountService);
     }
 
-
     @Override
-    public L2vpn activateL2Vpn(BridgeDomainGroups bridgeDomainGroups) {
-        return L2vpnHelper.build(bridgeDomainGroups);
+    protected BdPseudowires activateBdPseudowire(ServicePort neighbor) {
+        return new BdPseudowireHelper().build();
     }
 
     @Override
-    public BridgeDomainGroups activateBridgeDomain(String outerName, String innerName,
+    protected BridgeDomainGroups activateBridgeDomain(String outerName, String innerName,
             ServicePort port, ServicePort neighbor, BdPseudowires bdPseudowires,
             boolean isExclusive) {
 
-        BdAttachmentCircuits bdattachmentCircuits = new BdAttachmentCircuitHelper().addPort(port, isExclusive).build();
+        BdAttachmentCircuits bdattachmentCircuits = new BdAttachmentCircuitHelper()
+                .addPort(port, isExclusive).addPort(neighbor, isExclusive).build();
+
         BridgeDomainGroup bridgeDomainGroup = new BridgeDomainHelper()
                 .appendBridgeDomain(innerName, bdattachmentCircuits, bdPseudowires)
                 .build(outerName);
@@ -60,10 +57,8 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
     }
 
     @Override
-    public BdPseudowires activateBdPseudowire(ServicePort neighbor) {
-
-        return new BdPseudowireHelper()
-                .addBdPseudowire(LoopbackUtils.getIpv4Address(neighbor, dataBroker)).build();
+    protected L2vpn activateL2Vpn(BridgeDomainGroups bridgeDomainGroups) {
+        return L2vpnHelper.build(bridgeDomainGroups);
     }
 
     @Override
@@ -76,8 +71,27 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
         return replaceForbidenCharacters(serviceId);
     }
 
+    @Override
+    protected InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor,
+            long mtu, boolean isExclusive) {
+        boolean setL2Transport = (isExclusive) ? true : false;
+
+        return new InterfaceHelper()
+            .addInterface(port, Optional.empty(), setL2Transport)
+            .addInterface(neighbor, Optional.empty(), setL2Transport)
+            .build();
+    }
+
+    @Override
+    protected InterfaceConfigurations createSubInterface(ServicePort port, ServicePort portZ,
+            long mtu) {
+        return new InterfaceHelper()
+                .addSubInterface(port, Optional.empty())
+                .build();
+    }
+
     /**
-     * ASR 9000 can't accept colon in bridgeDomain group name, so it have to be replaced with underscore.
+     * ASR 9000 can't accept colon in xconnect group name, so it have to be replaced with underscore.
      * If any other restriction will be found, this is a good place to change serviceId name.
      *
      * @param serviceId old service id
@@ -85,29 +99,6 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
      */
     private String replaceForbidenCharacters(String serviceId) {
         return serviceId.replace(":","_");
-    }
-
-    @Override
-    protected InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor,
-            long mtu, boolean isExclusive) {
-        String interfraceName = port.getInterfaceName();
-        Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(interfraceName));
-
-        boolean setL2Transport = (isExclusive) ? true : false;
-        if (isExclusive)
-            LOG.info(" Enable L2Trasportation for port basesd service");
-
-        return new InterfaceHelper().addInterface(port, Optional.of(mtus), setL2Transport).build();
-    }
-
-    @Override
-    public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor, long mtu) {
-        String mtuOwnerName = "sub_vlan";
-        Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(mtuOwnerName));
-
-        return new InterfaceHelper()
-        .addSubInterface(port, Optional.of(mtus))
-        .build();
     }
 
 }

@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.activator;
+package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -107,7 +107,7 @@ public class L2vpnLocalConnectionActivatorTest extends AbstractDataBrokerTest{
 
     private void deactivate() {
         try {
-            l2VpnLocalConnectActivator.deactivate(endPoints,serviceId, ServiceType.POINTTOPOINTCONNECTIVITY.getName());
+            l2VpnLocalConnectActivator.deactivate(endPoints,serviceId, true, ServiceType.POINTTOPOINTCONNECTIVITY.getName());
         } catch (TransactionCommitFailedException e) {
             fail("Error during deactivation : " + e.getMessage());
         }
