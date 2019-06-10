@@ -27,6 +27,7 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
 import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
 import org.opendaylight.unimgr.mef.nrp.impl.ActivationTransaction;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.EndPoint1;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.ServiceInterfacePointRef;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.Context1;
@@ -94,7 +95,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
         Service response = new ServiceBuilder(cs).build();
 
         try {
-            ActivationTransaction tx = prepareTransaction(data,nrpDao, cs.getServiceType().getName());
+            ActivationTransaction tx = prepareTransaction(data,nrpDao, cs.isIsExclusive(), cs.getServiceType().getName());
 
             if (tx != null) {
                 ActivationTransaction.Result txResult = tx.deactivate();
@@ -132,7 +133,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
         tx.submit().checkedGet();
     }
 
-    private ActivationTransaction prepareTransaction(Map<Uuid, LinkedList<EndPoint>> data, NrpDao nrpDao, String serviceType) {
+    private ActivationTransaction prepareTransaction(Map<Uuid, LinkedList<EndPoint>> data, NrpDao nrpDao, boolean isExclusive, String serviceType) {
         assert data != null;
         ActivationTransaction tx = new ActivationTransaction();
         data.entrySet().stream().map(e -> {
@@ -145,7 +146,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
             if (!driver.isPresent()) {
                 throw new IllegalStateException(MessageFormat.format("driver {} cannot be created", e.getKey()));
             }
-            driver.get().initialize(e.getValue(), serviceId.getValue(), null, false, serviceType);
+            driver.get().initialize(e.getValue(), serviceId.getValue(), null, isExclusive, serviceType);
             LOG.debug("driver {} added to deactivation transaction", driver.get());
             return driver.get();
         }).forEach(tx::addDriver);
@@ -191,7 +192,7 @@ public class DeleteConnectivityAction implements Callable<RpcResult<DeleteConnec
                                 optEndPoint.orElse(null);
 
 
-                        EndPoint ep = new EndPoint(endPoint, null).setNepRef(TapiUtils.toSysNepRef(nodeId, nep.getUuid()));
+                        EndPoint ep = new EndPoint(endPoint, endPoint.getAugmentation(EndPoint1.class)).setNepRef(TapiUtils.toSysNepRef(nodeId, nep.getUuid()));
                         return new Pair(nodeId, ep);
                     });
                 }).collect(Collectors.toMap(Pair::getNodeId, p -> new LinkedList<>(Arrays.asList(p.getEndPoint())), (ol, nl) -> {
