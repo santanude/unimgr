@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class XrDriverBuilder implements ActivationDriverBuilder {
 
-    public static final String XR_NODE = "xr-node";
+    public static final String XR_NODE = "xr-node-new";
 
     private static final Logger LOG = LoggerFactory.getLogger(XrDriverBuilder.class);
     private DataBroker dataBroker;
