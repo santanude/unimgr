@@ -69,7 +69,7 @@ public class OvsDriver implements ActivationDriverBuilder {
 
             @Override
             public void deactivate() throws TransactionCommitFailedException, ResourceNotAvailableException {
-                activator.deactivate(endPoints,serviceId, serviceType);
+                activator.deactivate(endPoints,serviceId, true, serviceType);
             }
 
             @Override

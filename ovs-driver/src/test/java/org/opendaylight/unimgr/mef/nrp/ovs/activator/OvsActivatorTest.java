@@ -122,7 +122,7 @@ public class OvsActivatorTest extends AbstractDataBrokerTest{
 
         //when
         try {
-            ovsActivator.deactivate(endPoints, serviceId, ServiceType.POINTTOPOINTCONNECTIVITY.getName());
+            ovsActivator.deactivate(endPoints, serviceId, true, ServiceType.POINTTOPOINTCONNECTIVITY.getName());
         } catch (TransactionCommitFailedException e) {
             fail(e.getMessage());
         } catch (ResourceNotAvailableException e) {

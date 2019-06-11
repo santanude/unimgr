@@ -14,13 +14,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <reference id="topologyManager" interface="org.opendaylight.unimgr.mef.nrp.api.TopologyManager" />
 
   <service id="xrDriverService" interface="org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder">
-    <bean class="org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.driver.XrDriverBuilder">
+    <bean class="org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.l2vpn.driver.XrDriverBuilder">
       <argument ref="dataBroker" />
       <argument ref="mountPointService" />
     </bean>
   </service>
 
-  <bean id="topologyHandler" class="org.opendaylight.unimgr.mef.nrp.cisco.xr.TopologyDataHandler" init-method="init" destroy-method="close">
+  <bean id="topologyHandler" class="org.opendaylight.unimgr.mef.nrp.cisco.xr.v15.TopologyDataHandler" init-method="init" destroy-method="close">
     <argument ref="dataBroker" />
     <argument ref="mountPointService" />
     <argument ref="topologyManager" />
