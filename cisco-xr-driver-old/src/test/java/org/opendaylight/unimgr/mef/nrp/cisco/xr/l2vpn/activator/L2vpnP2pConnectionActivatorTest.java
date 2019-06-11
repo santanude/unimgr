@@ -125,7 +125,7 @@ public class L2vpnP2pConnectionActivatorTest extends AbstractDataBrokerTest {
             L2vpnTestUtils.checkXConnectGroup(xconnectGroup,"EUR16-"+serviceId);
 
             P2pXconnect p2pXconnect = xconnectGroup.getP2pXconnects().getP2pXconnect().get(0);
-            L2vpnTestUtils.checkP2pXconnect(p2pXconnect,"EUR16-p2p-"+serviceId);
+            L2vpnTestUtils.checkP2pXconnect(p2pXconnect,"EUR16-"+serviceId);
 
             AttachmentCircuit attachmentCircuit = p2pXconnect.getAttachmentCircuits().getAttachmentCircuit().get(0);
             L2vpnTestUtils.checkAttachmentCircuit(attachmentCircuit,portNo1);
