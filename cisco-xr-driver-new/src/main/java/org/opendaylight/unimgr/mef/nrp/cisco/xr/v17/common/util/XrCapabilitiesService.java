@@ -9,7 +9,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.v17.common.util;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.unimgr.utils.CapabilitiesService;
-import org.opendaylight.unimgr.utils.v17.NetconfConstants;
+import org.opendaylight.unimgr.utils.NetconfConstants;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 
@@ -29,8 +29,6 @@ public class XrCapabilitiesService extends CapabilitiesService {
                 checkForNetconfCapability(node, NetconfConstants.CAPABILITY_IOX_L2VPN)),
         NETCONF_CISCO_IOX_IFMGR((dbBroker, node) ->
                 checkForNetconfCapability(node,NetconfConstants.CAPABILITY_IOX_IFMGR)),
-        NETCONF_CISCO_IOX_L2ETH((dbBroker, node) ->
-                checkForNetconfCapability(node,NetconfConstants.CAPABILITY_IOX_L2ETH)),
         NETCONF_CISCO_IOX_POLICYMGR((dbBroker, node) ->
                 checkForNetconfCapability(node,NetconfConstants.CAPABILITY_IOX_ASR9K_POLICYMGR));
 

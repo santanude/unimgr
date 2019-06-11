@@ -104,8 +104,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     public void init() {
-        //LOG.debug("initializing topology handler for {}", XrDriverBuilder.XR_NODE);
-        System.out.println("initializing topology handler for " + XrDriverBuilder.XR_NODE);
+        LOG.debug("initializing topology handler for {}", XrDriverBuilder.XR_NODE);
         initializeWithRetrial(MAX_RETRIALS);
     }
 
@@ -178,7 +177,7 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
                     if (n == null)
                         return false;
                     return capabilitiesService.node(n).isSupporting(AND, NETCONF,
-                            NETCONF_CISCO_IOX_IFMGR, NETCONF_CISCO_IOX_L2VPN, NETCONF_CISCO_IOX_L2ETH);
+                            NETCONF_CISCO_IOX_IFMGR, NETCONF_CISCO_IOX_L2VPN);
                 }).collect(Collectors.toList());
         try {
             onAddedNodes(addedNodes);
