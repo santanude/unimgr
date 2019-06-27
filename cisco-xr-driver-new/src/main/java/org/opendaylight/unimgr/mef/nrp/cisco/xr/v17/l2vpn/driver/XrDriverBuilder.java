@@ -78,10 +78,8 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                 this.serviceType = serviceType;
 
                 if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())) {
-                    PseudowireHelper.generatePseudowireId();
                     bdActivator = new L2vpnBridgeDomainActivator(dataBroker, mountPointService);
                 } else {
-                    PseudowireHelper.generatePseudowireId();
                     localActivator = new L2vpnLocalConnectActivator(dataBroker, mountPointService);
                     p2pActivator = new L2vpnP2pConnectActivator(dataBroker, mountPointService);
                 }
@@ -89,7 +87,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
             @Override
             public void activate() throws TransactionCommitFailedException {
-
+                PseudowireHelper.generatePseudowireId();
                 if (serviceType != null && serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())) {
                     handleBdEndpoints(activateBd);
                 } else {

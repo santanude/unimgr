@@ -84,7 +84,6 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                 this.isExclusive = isExclusive;
                 this.serviceType = serviceType;
 
-                PseudowireHelper.generatePseudowireId();
                 if (serviceType != null
                         && (serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())
                         || serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()))) {
@@ -98,7 +97,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
             @Override
             public void activate() throws TransactionCommitFailedException {
-
+                PseudowireHelper.generatePseudowireId();
                 if (serviceType != null
                         && (serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())
                         || serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()))) {
