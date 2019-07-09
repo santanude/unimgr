@@ -1,0 +1,92 @@
+module mef-legato-customer-locations{
+
+    //The yang version - today only 1 version exists. If omitted defaults to 1.
+    yang-version 
+	1; 
+
+    //a unique namespace for this toaster module, to uniquely identify it from other modules that may have the same name.
+    namespace 
+	"urn:mef:yang:mef-legato-locations";
+
+    //a shorter prefix that represents the namespace for references used below
+    prefix 
+	locations;
+
+    //defines the primary contact of this yang file.
+    contact
+    	"santanu de <santanu.de@xoriant.com>";
+
+    //provides a description of this .yang file.
+    description
+    	"YANG version of the toplogy location.";
+
+    //defines the dates of revisions for this yang file
+    revision "2019-02-02" {
+      description
+        "map between locations and UNI";
+      }
+
+	container customers {
+		list customer {
+			key "customer-id";
+			leaf customer-id {
+				type string
+				{
+					length "0 .. 255";
+				}
+				config true;
+				mandatory true;
+				description
+					"The id of the customer.";
+			}
+			
+			container locations {
+				list location {
+										
+					leaf location-id {
+						type uint16 {
+							range "1..4094";
+						}
+						config true;
+						mandatory true;
+						description
+							"Id of location";
+					}
+					
+					leaf location {
+						type string
+						{
+							length "0 .. 255";
+						}
+						config true;
+						mandatory true;
+						description
+							"The location of the device.";
+					}
+					
+					leaf deviceId {
+						type string
+						{
+							length "0 .. 255";
+						}
+						config true;
+						mandatory true;
+						description
+							"The id/name of the device.";
+					}
+					
+					leaf UNI {
+						type string
+						{
+							length "0 .. 255";
+						}
+						config true;
+						mandatory true;
+						description
+							"The User Network Interface.";
+					}
+				}
+			}
+		}
+	}
+}
