@@ -55,11 +55,11 @@ public class L2vpnP2pConnectionActivatorTest extends AbstractDataBrokerTest {
     private Optional<DataBroker> optBroker;
     private Long mtu;
     private String deviceName = "localhost";
-    private String portNo1="80";
-    private String portNo2="8080";
+    private String portNo1="8080";
+    private String portNo2="8081";
     private String serviceId = "serviceId";
     private List<EndPoint> endPoints;
-
+    private List<EndPoint> endPoints1;
     @Before
     public void setUp() {
         //given
@@ -71,6 +71,8 @@ public class L2vpnP2pConnectionActivatorTest extends AbstractDataBrokerTest {
 
         mtu = Long.valueOf(1500);
         endPoints = L2vpnTestUtils.mockEndpoints(deviceName,deviceName,portNo1,portNo2);
+        endPoints1 = L2vpnTestUtils.mockEndpoints(deviceName,deviceName,portNo2,portNo1);
+
     }
 
     @Test
@@ -79,6 +81,8 @@ public class L2vpnP2pConnectionActivatorTest extends AbstractDataBrokerTest {
         try {
         	PseudowireHelper.generatePseudowireId();
             l2VpnP2PConnectActivator.activate(endPoints,serviceId, true, ServiceType.POINTTOPOINTCONNECTIVITY.getName());
+            l2VpnP2PConnectActivator.activate(endPoints1,serviceId, true, ServiceType.POINTTOPOINTCONNECTIVITY.getName());
+
         } catch (TransactionCommitFailedException e) {
             fail("Error during activation : " + e.getMessage());
         }
@@ -103,7 +107,7 @@ public class L2vpnP2pConnectionActivatorTest extends AbstractDataBrokerTest {
         deactivate();
 
         //then
-        L2vpnTestUtils.checkDeactivated(optBroker,portNo1);
+        L2vpnTestUtils.checkDeactivated(optBroker,portNo2);
     }
 
     private void deactivate() {
@@ -121,7 +125,7 @@ public class L2vpnP2pConnectionActivatorTest extends AbstractDataBrokerTest {
             L2vpnTestUtils.checkL2vpn(l2vpn);
 
             XconnectGroup xconnectGroup = l2vpn.getDatabase().getXconnectGroups().getXconnectGroup().get(0);
-            L2vpnTestUtils.checkXConnectGroup(xconnectGroup,"EUR16-"+serviceId);
+            L2vpnTestUtils.checkXConnectGroup(xconnectGroup,"EUR16-p2p-"+serviceId);
 
             P2pXconnect p2pXconnect = xconnectGroup.getP2pXconnects().getP2pXconnect().get(0);
             L2vpnTestUtils.checkP2pXconnect(p2pXconnect,"EUR16-p2p-"+serviceId);
@@ -146,15 +150,24 @@ public class L2vpnP2pConnectionActivatorTest extends AbstractDataBrokerTest {
         if (driverInterfaceConfigurations.get().isPresent()) {
             InterfaceConfigurations interfaceConfigurations = driverInterfaceConfigurations.get().get();
             L2vpnTestUtils.checkInterfaceConfigurations(interfaceConfigurations);
+            
+            
+            List<InterfaceConfiguration> interfaceConfigurationList = interfaceConfigurations.getInterfaceConfiguration();
+            interfaceConfigurationList.sort(
+                    (InterfaceConfiguration ic1, InterfaceConfiguration ic2)
+                            -> ic1.getInterfaceName().getValue().compareTo(ic2.getInterfaceName().getValue()));
 
-            InterfaceConfiguration interfaceConfiguration = interfaceConfigurations.getInterfaceConfiguration().get(0);
-            L2vpnTestUtils.checkInterfaceConfiguration(interfaceConfiguration,portNo1,true);
+           //InterfaceConfiguration interfaceConfiguration = interfaceConfigurations.getInterfaceConfiguration().get(0);
+            L2vpnTestUtils.checkInterfaceConfiguration(interfaceConfigurationList.get(0),portNo1,false);
+            //L2vpnTestUtils.checkInterfaceConfiguration(interfaceConfigurationList.get(1),portNo2,false);
 
-            Mtu mtu1 = interfaceConfiguration.getMtus().getMtu().get(0);
+            Mtu mtu1 = interfaceConfigurationList.get(0).getMtus().getMtu().get(0);
             L2vpnTestUtils.checkMtu(mtu1,mtu);
-        } else {
+            /*Mtu mtu2 = interfaceConfigurationList.get(1).getMtus().getMtu().get(0);
+            L2vpnTestUtils.checkMtu(mtu2,mtu);
+*/        } else {
             fail("InterfaceConfigurations was not found.");
-        }
+        }//
     }
 
 }
