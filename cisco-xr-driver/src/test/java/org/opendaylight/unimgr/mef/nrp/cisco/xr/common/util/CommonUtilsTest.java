@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Xoriant Corporation and others. All rights reserved.
+ * Copyright (c) 2016 Cisco Systems Inc and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -9,10 +9,8 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
@@ -29,49 +27,50 @@ import org.powermock.api.support.membermodification.MemberModifier;
  *
  */
 public class CommonUtilsTest {
-	public static final String methodName1 = "isSameDevice";
-	public static final String methodName2 = "isSameInterface";
-	public static final String uuid="sip:ciscoD1:GigabitEthernet0/0/0/1";
-	private EndPoint ep;
-	private CommonUtils util;
+    public static final String methodName1 = "isSameDevice";
+    public static final String methodName2 = "isSameInterface";
+    public static final String uuid = "sip:ciscoD1:GigabitEthernet0/0/0/1";
+    private EndPoint ep;
+    private CommonUtils util;
 
-	@Before
-	public void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
 
-		ConnectivityServiceEndPoint cep = new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPointBuilder()
-				.setServiceInterfacePoint(
-						TapiUtils.toSipRef(new Uuid(uuid), ServiceInterfacePoint.class))
-				.setDirection(PortDirection.BIDIRECTIONAL).build();
-		ep = new EndPoint(cep, null);
-		util = new CommonUtils();
-	}
+        ConnectivityServiceEndPoint cep =
+                new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPointBuilder()
+                        .setServiceInterfacePoint(
+                                TapiUtils.toSipRef(new Uuid(uuid), ServiceInterfacePoint.class))
+                        .setDirection(PortDirection.BIDIRECTIONAL).build();
+        ep = new EndPoint(cep, null);
+        util = new CommonUtils();
+    }
 
-	@Test
-	public void isSameDeviceTest() {
-		MemberModifier.suppress(MemberMatcher.method(CommonUtils.class, methodName1));
+    @Test
+    public void isSameDeviceTest() {
+        MemberModifier.suppress(MemberMatcher.method(CommonUtils.class, methodName1));
 
-		List<String> ls = new ArrayList<String>();
+        List<String> ls = new ArrayList<String>();
 
-		assertFalse(util.isSameDevice(ep, ls));
-		
-		ls.add("ciscoD1");
-		
-		assertTrue(util.isSameDevice(ep, ls));
+        assertFalse(util.isSameDevice(ep, ls));
 
-	}
+        ls.add("ciscoD1");
 
-	@Test
-	public void isSameInterfaceTest() {
-		MemberModifier.suppress(MemberMatcher.method(CommonUtils.class, methodName2));
-		
-		List<Uuid> ls = new ArrayList<Uuid>();
-		
-		assertFalse(util.isSameInterface(ep, ls));
-		
-		ls.add(new Uuid(uuid));
-		
-		assertTrue(util.isSameInterface(ep, ls));
+        assertTrue(util.isSameDevice(ep, ls));
 
-	}
+    }
+
+    @Test
+    public void isSameInterfaceTest() {
+        MemberModifier.suppress(MemberMatcher.method(CommonUtils.class, methodName2));
+
+        List<Uuid> ls = new ArrayList<Uuid>();
+
+        assertFalse(util.isSameInterface(ep, ls));
+
+        ls.add(new Uuid(uuid));
+
+        assertTrue(util.isSameInterface(ep, ls));
+
+    }
 }
 

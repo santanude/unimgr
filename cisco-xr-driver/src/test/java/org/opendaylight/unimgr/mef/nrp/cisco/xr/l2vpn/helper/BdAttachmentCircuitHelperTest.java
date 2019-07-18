@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Xoriant Corporation and others. All rights reserved.
+ * Copyright (c) 2016 Cisco Systems Inc and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -17,7 +17,6 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Port
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ConnectivityServiceEndPoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.end.point.ServiceInterfacePoint;
-
 import junit.framework.Assert;
 
 /**
@@ -26,35 +25,38 @@ import junit.framework.Assert;
  */
 public class BdAttachmentCircuitHelperTest {
 
-	private BdAttachmentCircuitHelper bdAttachmentCircuitHelper;
-	private EndPoint ep1;
-	private ServicePort port;
-	private static final String uuid1 = "sip:ciscoD1:GigabitEthernet0/0/0/1";
-	private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
+    private BdAttachmentCircuitHelper bdAttachmentCircuitHelper;
+    private EndPoint ep1;
+    private ServicePort port;
+    private static final String uuid1 = "sip:ciscoD1:GigabitEthernet0/0/0/1";
+    private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
 
-	@Before
-	public void setUp() throws Exception {
-		bdAttachmentCircuitHelper = new BdAttachmentCircuitHelper();
-		
-	}
+    @Before
+    public void setUp() throws Exception {
+        bdAttachmentCircuitHelper = new BdAttachmentCircuitHelper();
 
-	@Test
-	public void testAddPort() {
-		ConnectivityServiceEndPoint cep = new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPointBuilder()
-				.setServiceInterfacePoint(TapiUtils.toSipRef(new Uuid(uuid1), ServiceInterfacePoint.class))
-				.setDirection(PortDirection.BIDIRECTIONAL).build();
-		ep1 = new EndPoint(cep, null);
-		port = ServicePort.toServicePort(ep1, NETCONF_TOPOLODY_NAME);
-		port.setVlanId(301l);
-		BdAttachmentCircuitHelper bdAttachmentCircuitHelper1 = bdAttachmentCircuitHelper.addPort(port, false);
-		Assert.assertNotNull(bdAttachmentCircuitHelper1);
+    }
 
-	}
+    @Test
+    public void testAddPort() {
+        ConnectivityServiceEndPoint cep =
+                new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPointBuilder()
+                        .setServiceInterfacePoint(
+                                TapiUtils.toSipRef(new Uuid(uuid1), ServiceInterfacePoint.class))
+                        .setDirection(PortDirection.BIDIRECTIONAL).build();
+        ep1 = new EndPoint(cep, null);
+        port = ServicePort.toServicePort(ep1, NETCONF_TOPOLODY_NAME);
+        port.setVlanId(301l);
+        BdAttachmentCircuitHelper bdAttachmentCircuitHelper1 =
+                bdAttachmentCircuitHelper.addPort(port, false);
+        Assert.assertNotNull(bdAttachmentCircuitHelper1);
 
-	@Test
-	public void testBuild() {
-		BdAttachmentCircuits bdAttachmentCircuits = bdAttachmentCircuitHelper.build();
-		Assert.assertNotNull(bdAttachmentCircuits);
-	}
+    }
+
+    @Test
+    public void testBuild() {
+        BdAttachmentCircuits bdAttachmentCircuits = bdAttachmentCircuitHelper.build();
+        Assert.assertNotNull(bdAttachmentCircuits);
+    }
 
 }
