@@ -85,6 +85,17 @@ module mef-legato-customer-locations{
 						description
 							"The User Network Interface.";
 					}
+
+					leaf definition {
+                                                type string
+                                                {
+                                                        length "0 .. 2000";
+                                                }
+                                                config true;
+                                                mandatory true;
+                                                description
+                                                        "To capture device position in UI";
+                                        }
 				}
 			}
 		}
