@@ -8,6 +8,7 @@
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
 import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort.toServicePort;
+
 import java.util.ArrayList;
 import java.util.List;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -45,8 +46,9 @@ import com.google.common.base.Optional;
 
 
 /**
- * Abstarct activator of VPLS-based L2 VPN on IOS-XR devices. It is responsible for handling activation and deactivation
- * process of VPN configuration and it provides generic transaction designated for this purpose.
+ * Abstarct activator of VPLS-based L2 VPN on IOS-XR devices. It is responsible for handling
+ * activation and deactivation process of VPN configuration and it provides generic transaction
+ * designated for this purpose.
  *
  * @author krzysztof.bijakowski@amartus.com
  */
@@ -66,16 +68,18 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     }
 
     @Override
-    public void activate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType) throws TransactionCommitFailedException {
+    public void activate(List<EndPoint> endPoints, String serviceId, boolean isExclusive,
+            String serviceType) throws TransactionCommitFailedException {
         String innerOuterName = getInnerName(serviceId);
         ServicePort port = null;
         ServicePort neighbor = null;
 
         for (EndPoint endPoint : endPoints) {
-            if (port==null) {
+            if (port == null) {
                 port = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
-                NrpCarrierEthConnectivityEndPointResource attrs = endPoint.getAttrs() == null ? null : endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
-                if(attrs != null) {
+                NrpCarrierEthConnectivityEndPointResource attrs = endPoint.getAttrs() == null ? null
+                        : endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
+                if (attrs != null) {
                     port.setEgressBwpFlow(attrs.getEgressBwpFlow());
                     port.setIngressBwpFlow(attrs.getIngressBwpFlow());
 
@@ -86,38 +90,45 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         }
 
         java.util.Optional<PolicyManager> qosConfig = activateQos(innerOuterName, port);
-        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
+        InterfaceConfigurations interfaceConfigurations =
+                activateInterface(port, neighbor, mtu, isExclusive);
         Pseudowires pseudowires = activatePseudowire(neighbor);
-        XconnectGroups xconnectGroups = activateXConnect(innerOuterName, innerOuterName, port, neighbor, pseudowires, isExclusive);
+        XconnectGroups xconnectGroups = activateXConnect(innerOuterName, innerOuterName, port,
+                neighbor, pseudowires, isExclusive);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
 
         // create sub interface for tag based service
         if (!isExclusive) {
-          InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
-          createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
+            InterfaceConfigurations subInterfaceConfigurations =
+                    createSubInterface(port, neighbor, mtu);
+            createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
         }
 
         doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, qosConfig);
     }
 
     @Override
-    public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, String serviceType) throws TransactionCommitFailedException {
+    public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive,
+            String serviceType) throws TransactionCommitFailedException {
         String innerOuterName = getInnerName(serviceId);
-        ServicePort port = toServicePort(endPoints.stream().findFirst().get(), CommonUtils.NETCONF_TOPOLODY_NAME);
+        ServicePort port = toServicePort(endPoints.stream().findFirst().get(),
+                CommonUtils.NETCONF_TOPOLODY_NAME);
 
-        InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(innerOuterName, innerOuterName);
+        InstanceIdentifier<P2pXconnect> xconnectId =
+                deactivateXConnect(innerOuterName, innerOuterName);
 
         LOG.debug("Is service has vlan ? validate isExclusive : ", isExclusive);
-        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId  = deactivateInterface(port, isExclusive);
+        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId =
+                deactivateInterface(port, isExclusive);
 
-        doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive, endPoints.stream().findFirst().get());
+        doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive,
+                endPoints.stream().findFirst().get());
     }
 
     // for now QoS is ignored
-    protected void doActivate(String nodeName,
-                              InterfaceConfigurations interfaceConfigurations,
-                              L2vpn l2vpn,
-                              java.util.Optional<PolicyManager> qosConfig) throws TransactionCommitFailedException {
+    protected void doActivate(String nodeName, InterfaceConfigurations interfaceConfigurations,
+            L2vpn l2vpn, java.util.Optional<PolicyManager> qosConfig)
+            throws TransactionCommitFailedException {
 
         Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
         if (!optional.isPresent()) {
@@ -126,29 +137,33 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         }
 
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-        transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
+        transaction.merge(LogicalDatastoreType.CONFIGURATION,
+                InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
         transaction.merge(LogicalDatastoreType.CONFIGURATION, L2vpnHelper.getL2vpnId(), l2vpn);
         transaction.submit().checkedGet();
     }
 
     protected void createSubInterface(String nodeName,
-                                      InterfaceConfigurations interfaceConfigurations) throws TransactionCommitFailedException {
+            InterfaceConfigurations interfaceConfigurations)
+            throws TransactionCommitFailedException {
 
-       Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
-       if (!optional.isPresent()) {
-         LOG.error("Could not retrieve MountPoint for {}", nodeName);
-         return;
-       }
-       WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-       transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
-       transaction.submit().checkedGet();
+        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
+        if (!optional.isPresent()) {
+            LOG.error("Could not retrieve MountPoint for {}", nodeName);
+            return;
+        }
+        WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
+        transaction.merge(LogicalDatastoreType.CONFIGURATION,
+                InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
+        transaction.submit().checkedGet();
     }
 
-    protected void doDeactivate(ServicePort port,
-                                InstanceIdentifier<P2pXconnect> xconnectId,
-                                InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId, boolean isExclusive, EndPoint endpoint) throws TransactionCommitFailedException {
+    protected void doDeactivate(ServicePort port, InstanceIdentifier<P2pXconnect> xconnectId,
+            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
+            boolean isExclusive, EndPoint endpoint) throws TransactionCommitFailedException {
 
-        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, port.getNode().getValue());
+        Optional<DataBroker> optional =
+                MountPointHelper.getDataBroker(mountService, port.getNode().getValue());
         if (!optional.isPresent()) {
             LOG.error("Could not retrieve MountPoint for {}", port.getNode().getValue());
             return;
@@ -163,36 +178,46 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         transaction.submit().checkedGet();
     }
 
-   
+
     protected abstract java.util.Optional<PolicyManager> activateQos(String name, ServicePort port);
 
-    protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu, boolean isExclusive);
+    protected abstract InterfaceConfigurations activateInterface(ServicePort portA,
+            ServicePort portZ, long mtu, boolean isExclusive);
 
-    protected abstract InterfaceConfigurations createSubInterface(ServicePort portA, ServicePort portZ, long mtu);
+    protected abstract InterfaceConfigurations createSubInterface(ServicePort portA,
+            ServicePort portZ, long mtu);
 
     protected abstract Pseudowires activatePseudowire(ServicePort neighbor);
 
-    protected abstract XconnectGroups activateXConnect(String outerName, String innerName, ServicePort portA, ServicePort portZ, Pseudowires pseudowires, boolean isExclusive);
+    protected abstract XconnectGroups activateXConnect(String outerName, String innerName,
+            ServicePort portA, ServicePort portZ, Pseudowires pseudowires, boolean isExclusive);
 
     protected abstract L2vpn activateL2Vpn(XconnectGroups xconnectGroups);
 
     private InstanceIdentifier<P2pXconnect> deactivateXConnect(String outerName, String innerName) {
-        return InstanceIdentifier.builder(L2vpn.class)
-                .child(Database.class)
+        return InstanceIdentifier.builder(L2vpn.class).child(Database.class)
                 .child(XconnectGroups.class)
                 .child(XconnectGroup.class, new XconnectGroupKey(new CiscoIosXrString(outerName)))
-                .child(P2pXconnects.class).child(P2pXconnect.class, new P2pXconnectKey(new CiscoIosXrString(innerName)))
+                .child(P2pXconnects.class)
+                .child(P2pXconnect.class, new P2pXconnectKey(new CiscoIosXrString(innerName)))
                 .build();
     }
 
-    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive) {
+    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port,
+            boolean isExclusive) {
 
-        return InstanceIdentifier.builder(InterfaceConfigurations.class)
-                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), isExclusive == true ?  InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port)))
+        return InstanceIdentifier
+                .builder(
+                        InterfaceConfigurations.class)
+                .child(InterfaceConfiguration.class,
+                        new InterfaceConfigurationKey(new InterfaceActive("act"),
+                                isExclusive == true ? InterfaceHelper.getInterfaceName(port)
+                                        : InterfaceHelper.getSubInterfaceName(port)))
                 .build();
     }
 
     protected abstract String getInnerName(String serviceId);
+
     protected abstract String getOuterName(String serviceId);
 
 }

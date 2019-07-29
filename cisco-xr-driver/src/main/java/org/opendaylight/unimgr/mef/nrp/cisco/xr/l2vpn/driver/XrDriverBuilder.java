@@ -7,6 +7,8 @@
  */
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.driver;
 
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort.toServicePort;
+
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +23,6 @@ import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort.toServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.CommonUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.SipHandler;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnActivator;
@@ -60,24 +61,25 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
     protected ActivationDriver getDriver() {
         final ActivationDriver driver = new ActivationDriver() {
-            List<Map.Entry<EndPoint,EndPoint>> bridgeActivatedPairs = null;
+            List<Map.Entry<EndPoint, EndPoint>> bridgeActivatedPairs = null;
             List<EndPoint> endPoints;
             String serviceId;
             boolean isExclusive;
             String serviceType;
-       
+
             @Override
             public void commit() {
-                //ignore for the moment
+                // ignore for the moment
             }
 
             @Override
             public void rollback() {
-                //ignore for the moment
+                // ignore for the moment
             }
 
             @Override
-            public void initialize(List<EndPoint> endPoints, String serviceId, NrpConnectivityServiceAttrs context, boolean isExclusive, String serviceType) {
+            public void initialize(List<EndPoint> endPoints, String serviceId,
+                    NrpConnectivityServiceAttrs context, boolean isExclusive, String serviceType) {
                 this.endPoints = endPoints;
                 this.serviceId = serviceId;
                 this.isExclusive = isExclusive;
@@ -85,8 +87,10 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
                 if (serviceType != null
                         && (serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())
-                        || serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()))) {
-                    localBdActivator = new L2vpnBdLocalConnectActivator(dataBroker, mountPointService);
+                                || serviceType.equals(
+                                        ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()))) {
+                    localBdActivator =
+                            new L2vpnBdLocalConnectActivator(dataBroker, mountPointService);
                     bdActivator = new L2vpnBridgeDomainActivator(dataBroker, mountPointService);
                 } else {
                     localActivator = new L2vpnLocalConnectActivator(dataBroker, mountPointService);
@@ -99,7 +103,8 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                 PseudowireHelper.generatePseudowireId();
                 if (serviceType != null
                         && (serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())
-                        || serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()))) {
+                                || serviceType.equals(
+                                        ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()))) {
                     handleBdEndpoints(activateBd);
                 } else {
                     handleEndpoints(activate);
@@ -111,7 +116,8 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
                 if (serviceType != null
                         && (serviceType.equals(ServiceType.MULTIPOINTCONNECTIVITY.getName())
-                        || serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()))) {
+                                || serviceType.equals(
+                                        ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName()))) {
                     handleBdEndpoints(deactivateBd);
                 } else {
                     handleEndpoints(deactivate);
@@ -123,26 +129,31 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                 return 0;
             }
 
-            private void handleEndpoints(BiConsumer<List<EndPoint>,AbstractL2vpnActivator> action) {
-                endPoints.forEach(endPoint -> connectWithAllNeighbors(action,endPoint,endPoints));
+            private void handleEndpoints(
+                    BiConsumer<List<EndPoint>, AbstractL2vpnActivator> action) {
+                endPoints.forEach(endPoint -> connectWithAllNeighbors(action, endPoint, endPoints));
             }
 
-            private void connectWithAllNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnActivator> action, EndPoint endPoint, List<EndPoint> neighbors) {
-                neighbors.stream()
-                        .filter(neighbor -> !neighbor.equals(endPoint))
-                        .forEach(neighbor -> activateNeighbors(action,endPoint,neighbor));
+            private void connectWithAllNeighbors(
+                    BiConsumer<List<EndPoint>, AbstractL2vpnActivator> action, EndPoint endPoint,
+                    List<EndPoint> neighbors) {
+                neighbors.stream().filter(neighbor -> !neighbor.equals(endPoint))
+                        .forEach(neighbor -> activateNeighbors(action, endPoint, neighbor));
             }
 
-            private void activateNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnActivator> action, EndPoint portA, EndPoint portZ) {
-                List<EndPoint> endPointsToActivate = Arrays.asList(portA,portZ);
+            private void activateNeighbors(
+                    BiConsumer<List<EndPoint>, AbstractL2vpnActivator> action, EndPoint portA,
+                    EndPoint portZ) {
+                List<EndPoint> endPointsToActivate = Arrays.asList(portA, portZ);
 
-                if (SipHandler.isTheSameDevice(portA.getEndpoint().getServiceInterfacePoint(),portZ.getEndpoint().getServiceInterfacePoint())) {
-                    if (bridgeActivatedPairs==null) {
+                if (SipHandler.isTheSameDevice(portA.getEndpoint().getServiceInterfacePoint(),
+                        portZ.getEndpoint().getServiceInterfacePoint())) {
+                    if (bridgeActivatedPairs == null) {
                         bridgeActivatedPairs = new ArrayList<>();
                     }
-                    /*if (isPairActivated(portA,portZ)) {
-                        return;
-                    }*/
+                    /*
+                     * if (isPairActivated(portA,portZ)) { return; }
+                     */
                     action.accept(endPointsToActivate, localActivator);
                     bridgeActivatedPairs.add(new AbstractMap.SimpleEntry<>(portA, portZ));
                 } else {
@@ -151,25 +162,26 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
             }
 
             private boolean isPairActivated(EndPoint a, EndPoint z) {
-                return bridgeActivatedPairs.stream()
-                        .anyMatch( entry -> {
-                            if ( (entry.getKey().equals(a) && entry.getValue().equals(z))
-                                    || (entry.getKey().equals(z) && entry.getValue().equals(a))) {
-                                return true;
-                            }
-                            return false;
-                        });
+                return bridgeActivatedPairs.stream().anyMatch(entry -> {
+                    if ((entry.getKey().equals(a) && entry.getValue().equals(z))
+                            || (entry.getKey().equals(z) && entry.getValue().equals(a))) {
+                        return true;
+                    }
+                    return false;
+                });
             }
 
-            BiConsumer<List<EndPoint>,AbstractL2vpnActivator> activate = (neighbors, activator) -> {
-                try {
-                    activator.activate(neighbors, serviceId, isExclusive, serviceType);
-                } catch (TransactionCommitFailedException e) {
-                    LOG.error("Activation error occured: {}",e.getMessage());
-                }
-            };
+            BiConsumer<List<EndPoint>, AbstractL2vpnActivator> activate =
+                    (neighbors, activator) -> {
+                        try {
+                            activator.activate(neighbors, serviceId, isExclusive, serviceType);
+                        } catch (TransactionCommitFailedException e) {
+                            LOG.error("Activation error occured: {}", e.getMessage());
+                        }
+                    };
 
-            BiConsumer<List<EndPoint>,AbstractL2vpnActivator> deactivate = (neighbors, activator) -> {
+            BiConsumer<List<EndPoint>, AbstractL2vpnActivator> deactivate =
+                    (neighbors, activator) -> {
                         try {
                             activator.deactivate(neighbors, serviceId, isExclusive, serviceType);
                         } catch (TransactionCommitFailedException e) {
@@ -178,7 +190,8 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                     };
 
             // L2vpn bridge domain configuration implementation
-            private void handleBdEndpoints(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action) {
+            private void handleBdEndpoints(
+                    BiConsumer<List<EndPoint>, AbstractL2vpnBridgeDomainActivator> action) {
                 List<String> devlist = new ArrayList<String>();
 
                 endPoints.forEach(e -> {
@@ -188,38 +201,54 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
 
                 boolean isUniqueDevice = devlist.stream().distinct().limit(2).count() <= 1;
                 if (isUniqueDevice) {
-                    endPoints.forEach(endPoint -> connectWithAllBdNeighborsWithSameDevice(action,endPoint, endPoints));
+                    endPoints.forEach(endPoint -> connectWithAllBdNeighborsWithSameDevice(action,
+                            endPoint, endPoints));
                 } else {
-                    endPoints.forEach(endPoint -> connectWithAllBdNeighbors(action, endPoint, endPoints));
+                    endPoints.forEach(
+                            endPoint -> connectWithAllBdNeighbors(action, endPoint, endPoints));
                 }
             }
 
-            private void connectWithAllBdNeighborsWithSameDevice(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint endPoint, List<EndPoint> neighbors) {
-                neighbors.stream()
-                        .filter(neighbor -> !neighbor.equals(endPoint))
-                        .forEach(neighbor -> ignoreBdNeighbors(action,endPoint,neighbor));
+            private void connectWithAllBdNeighborsWithSameDevice(
+                    BiConsumer<List<EndPoint>, AbstractL2vpnBridgeDomainActivator> action,
+                    EndPoint endPoint, List<EndPoint> neighbors) {
+                neighbors.stream().filter(neighbor -> !neighbor.equals(endPoint))
+                        .forEach(neighbor -> ignoreBdNeighbors(action, endPoint, neighbor));
             }
 
-            private void connectWithAllBdNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint endPoint, List<EndPoint> neighbors) {
+            private void connectWithAllBdNeighbors(
+                    BiConsumer<List<EndPoint>, AbstractL2vpnBridgeDomainActivator> action,
+                    EndPoint endPoint, List<EndPoint> neighbors) {
                 neighbors.stream().filter(neighbor -> !neighbor.equals(endPoint))
-                        .filter(neighbor -> ! new NodeId(SipHandler.getDeviceName(neighbor.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId())).getValue().equals(new NodeId(SipHandler.getDeviceName(endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId())).getValue()))
+                        .filter(neighbor -> !new NodeId(
+                                SipHandler.getDeviceName(neighbor.getEndpoint()
+                                        .getServiceInterfacePoint().getServiceInterfacePointId()))
+                                                .getValue()
+                                                .equals(new NodeId(SipHandler.getDeviceName(endPoint
+                                                        .getEndpoint().getServiceInterfacePoint()
+                                                        .getServiceInterfacePointId())).getValue()))
                         .forEach(neighbor -> activateBdNeighbors(action, endPoint, neighbor));
             }
 
 
-            private void ignoreBdNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint portA, EndPoint portZ) {
+            private void ignoreBdNeighbors(
+                    BiConsumer<List<EndPoint>, AbstractL2vpnBridgeDomainActivator> action,
+                    EndPoint portA, EndPoint portZ) {
                 List<EndPoint> endPointsToActivate = Arrays.asList(portA, portZ);
 
                 action.accept(endPointsToActivate, localBdActivator);
             }
 
-            private void activateBdNeighbors(BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> action, EndPoint portA, EndPoint portZ) {
+            private void activateBdNeighbors(
+                    BiConsumer<List<EndPoint>, AbstractL2vpnBridgeDomainActivator> action,
+                    EndPoint portA, EndPoint portZ) {
                 List<EndPoint> endPointsToActivate = Arrays.asList(portA, portZ);
 
                 action.accept(endPointsToActivate, bdActivator);
             }
 
-            BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> activateBd = (neighbors, activator) -> {
+            BiConsumer<List<EndPoint>, AbstractL2vpnBridgeDomainActivator> activateBd =
+                    (neighbors, activator) -> {
                         try {
                             activator.activate(neighbors, serviceId, isExclusive, serviceType);
                         } catch (TransactionCommitFailedException | ResourceActivatorException e) {
@@ -227,11 +256,12 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                         }
                     };
 
-            BiConsumer<List<EndPoint>,AbstractL2vpnBridgeDomainActivator> deactivateBd = (neighbors, activator) -> {
+            BiConsumer<List<EndPoint>, AbstractL2vpnBridgeDomainActivator> deactivateBd =
+                    (neighbors, activator) -> {
                         try {
-                                activator.deactivate(neighbors, serviceId, isExclusive, serviceType);  
+                            activator.deactivate(neighbors, serviceId, isExclusive, serviceType);
                         } catch (TransactionCommitFailedException | ResourceActivatorException e) {
-                            LOG.info("Deactivation error occured: {}",e);
+                            LOG.info("Deactivation error occured: {}", e);
                             LOG.error("Deactivation error occured: {}", e.getMessage());
                         }
                     };
