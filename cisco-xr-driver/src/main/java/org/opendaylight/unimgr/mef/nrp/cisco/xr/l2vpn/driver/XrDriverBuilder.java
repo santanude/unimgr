@@ -231,6 +231,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                         try {
                                 activator.deactivate(neighbors, serviceId, isExclusive, serviceType);  
                         } catch (TransactionCommitFailedException | ResourceActivatorException e) {
+                            LOG.info("Deactivation error occured: {}",e);
                             LOG.error("Deactivation error occured: {}", e.getMessage());
                         }
                     };

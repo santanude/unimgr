@@ -94,9 +94,9 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
         Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(interfraceName));
 
         boolean setL2Transport = (isExclusive) ? true : false;
-        if (isExclusive)
+        if (isExclusive) {
             LOG.info(" Enable L2Trasportation for port basesd service");
-
+        }
         return new InterfaceHelper().addInterface(port, Optional.of(mtus), setL2Transport).build();
     }
 

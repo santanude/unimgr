@@ -52,8 +52,7 @@ import com.google.common.base.Optional;
 public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActivator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractL2vpnBridgeDomainActivator.class);
-    //private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
-    private static final long mtu = 1500;
+    private static final long MTU = 1500;
 
     protected DataBroker dataBroker;
     private MountPointService mountService;
@@ -91,19 +90,19 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
             }
         }
 
-        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, mtu, isExclusive);
+        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, MTU, isExclusive);
         BdPseudowires bdPseudowires = activateBdPseudowire(neighbor);
         BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(innerOuterName, innerOuterName, port, neighbor, bdPseudowires, isExclusive);
         L2vpn l2vpn = activateL2Vpn(bridgeDomainGroups);
 
          // create sub interface for tag based service
          if (!isExclusive) {
-             InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, mtu);
+             InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, MTU);
              createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
         }
 
         if (serviceType != null && serviceType.equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
-            if (!(portRole == PortRole.LEAF.getName() && neighborRole == PortRole.LEAF.getName())) {
+            if (!(portRole!=null && portRole.equals(PortRole.LEAF.getName()) && neighborRole!=null && neighborRole.equals(PortRole.LEAF.getName()))) {
                 doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn);
             }
         } else {
@@ -163,7 +162,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
 
     private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive) {
         return InstanceIdentifier.builder(InterfaceConfigurations.class)
-                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), isExclusive == true ?  InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port)))
+                .child(InterfaceConfiguration.class, new InterfaceConfigurationKey(new InterfaceActive("act"), isExclusive ?  InterfaceHelper.getInterfaceName(port) : InterfaceHelper.getSubInterfaceName(port)))
                 .build();
     }
 

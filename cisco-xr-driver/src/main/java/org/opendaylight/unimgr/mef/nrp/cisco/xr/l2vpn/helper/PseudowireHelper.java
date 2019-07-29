@@ -70,10 +70,6 @@ public class PseudowireHelper {
     }
 
     private List<Neighbor> createNeighbor(Ipv4AddressNoZone address) {
-        PseudowireLabelRange label = new PseudowireLabelRange(pseudowireId);
-
-        MplsStaticLabels mplsStaticLabels = new MplsStaticLabelsBuilder().setLocalStaticLabel(label)
-                .setRemoteStaticLabel(label).build();
 
         Neighbor neighbor = new NeighborBuilder().setNeighbor(address)
                 // .setMplsStaticLabels(mplsStaticLabels)

@@ -53,7 +53,6 @@ import com.google.common.base.Optional;
 public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractL2vpnActivator.class);
-    //private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
     private static final long mtu = 1500;
 
     protected DataBroker dataBroker;
