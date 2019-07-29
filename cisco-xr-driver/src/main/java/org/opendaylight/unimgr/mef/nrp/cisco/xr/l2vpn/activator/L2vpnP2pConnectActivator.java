@@ -107,6 +107,7 @@ public class L2vpnP2pConnectActivator extends AbstractL2vpnActivator {
 
     @Override
     protected String getInnerName(String serviceId) {
+
          return replaceForbidenCharacters(serviceId);
     }
 
