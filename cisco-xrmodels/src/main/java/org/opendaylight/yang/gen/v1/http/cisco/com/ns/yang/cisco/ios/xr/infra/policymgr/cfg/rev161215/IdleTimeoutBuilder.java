@@ -1,5 +1,4 @@
-package org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518;
-
+package org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215;
 
 /**
  * The purpose of generated class in src/main/java for Union types is to create new instances of unions from a string representation.
