@@ -63,6 +63,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     protected AbstractL2vpnActivator(DataBroker dataBroker, MountPointService mountService) {
         this.dataBroker = dataBroker;
         this.mountService = mountService;
+        dvls.clear();
     }
 
     @Override

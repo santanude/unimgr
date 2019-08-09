@@ -63,6 +63,8 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
         LOG.info(" L2vpn bridge domain activator initiated...");
         this.dataBroker = dataBroker;
         this.mountService = mountService;
+        inls.clear();
+        dvls.clear();
     }
 
     @Override
@@ -72,8 +74,6 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
         ServicePort port = null;
         ServicePort neighbor = null;
         String portRole = null, neighborRole = null;
-        inls.clear();
-        dvls.clear();
 
         for (EndPoint endPoint : endPoints) {
             if (port == null) {
