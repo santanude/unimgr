@@ -1,6 +1,5 @@
 package org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.datatypes.rev151109;
 
-
 /**
  * The purpose of generated class in src/main/java for Union types is to create new instances of unions from a string representation.
  * In some cases it is very difficult to automate it since there can be unions such as (uint32 - uint16), or (string - uint32).

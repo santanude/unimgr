@@ -40,7 +40,6 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
         super(dataBroker, mountService);
     }
 
-
     @Override
     public L2vpn activateL2Vpn(BridgeDomainGroups bridgeDomainGroups) {
         return L2vpnHelper.build(bridgeDomainGroups);
@@ -51,7 +50,8 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
             ServicePort port, ServicePort neighbor, BdPseudowires bdPseudowires,
             boolean isExclusive) {
 
-        BdAttachmentCircuits bdattachmentCircuits = new BdAttachmentCircuitHelper().addPort(port, isExclusive).build();
+        BdAttachmentCircuits bdattachmentCircuits =
+                new BdAttachmentCircuitHelper().addPort(port, isExclusive).build();
         BridgeDomainGroup bridgeDomainGroup = new BridgeDomainHelper()
                 .appendBridgeDomain(innerName, bdattachmentCircuits, bdPseudowires)
                 .build(outerName);
@@ -77,14 +77,15 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
     }
 
     /**
-     * ASR 9000 can't accept colon in bridgeDomain group name, so it have to be replaced with underscore.
-     * If any other restriction will be found, this is a good place to change serviceId name.
+     * ASR 9000 can't accept colon in bridgeDomain group name, so it have to be replaced with
+     * underscore. If any other restriction will be found, this is a good place to change serviceId
+     * name.
      *
      * @param serviceId old service id
      * @return new service id
      */
     private String replaceForbidenCharacters(String serviceId) {
-        return serviceId.replace(":","_");
+        return serviceId.replace(":", "_");
     }
 
     @Override
@@ -101,13 +102,12 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
     }
 
     @Override
-    public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor, long mtu) {
+    public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor,
+            long mtu) {
         String mtuOwnerName = "sub_vlan";
         Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(mtuOwnerName));
 
-        return new InterfaceHelper()
-        .addSubInterface(port, Optional.of(mtus))
-        .build();
+        return new InterfaceHelper().addSubInterface(port, Optional.of(mtus)).build();
     }
 
 }

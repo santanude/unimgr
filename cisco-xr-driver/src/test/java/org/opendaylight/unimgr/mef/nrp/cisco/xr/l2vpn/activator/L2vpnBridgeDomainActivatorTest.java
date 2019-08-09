@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Cisco Systems Inc and others.  All rights reserved.
+ * Copyright (c) 2018 Xoriant Corporation and others. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -8,7 +8,9 @@
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
 import static org.junit.Assert.assertEquals;
+
 import java.util.List;
+import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -31,7 +33,6 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ConnectivityServiceEndPoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.end.point.ServiceInterfacePoint;
 import org.powermock.api.mockito.PowerMockito;
-import junit.framework.Assert;
 
 /**
  * @author Om.SAwasthi@Xoriant.Com

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Cisco Systems Inc and others.  All rights reserved.
+ * Copyright (c) 2018 Xoriant Corporation and others. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -9,6 +9,9 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+
+import com.google.common.base.Optional;
+import com.google.common.util.concurrent.CheckedFuture;
 import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,8 +38,7 @@ import org.powermock.api.support.membermodification.MemberMatcher;
 import org.powermock.api.support.membermodification.MemberModifier;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import com.google.common.base.Optional;
-import com.google.common.util.concurrent.CheckedFuture;
+
 
 /**
  * @author Om.SAwasthi@Xoriant.Com
@@ -46,8 +48,8 @@ import com.google.common.util.concurrent.CheckedFuture;
 @RunWith(PowerMockRunner.class)
 public class AbstractL2vpnBridgeDomainActivatorTest {
 
-    public static final String uuid1 = "sip:ciscoD1:GigabitEthernet0/0/0/1";
-    public static final String uuid2 = "sip:ciscoD2:GigabitEthernet0/0/0/1";
+    public static final String UUID1 = "sip:ciscoD1:GigabitEthernet0/0/0/1";
+    public static final String UUID2 = "sip:ciscoD2:GigabitEthernet0/0/0/1";
     private EndPoint ep1;
     private EndPoint ep2;
     private AbstractL2vpnBridgeDomainActivator absl2vpnBridgeDomain;
@@ -70,7 +72,7 @@ public class AbstractL2vpnBridgeDomainActivatorTest {
         ConnectivityServiceEndPoint cep =
                 new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPointBuilder()
                         .setServiceInterfacePoint(
-                                TapiUtils.toSipRef(new Uuid(uuid1), ServiceInterfacePoint.class))
+                                TapiUtils.toSipRef(new Uuid(UUID1), ServiceInterfacePoint.class))
                         .setDirection(PortDirection.BIDIRECTIONAL).setRole(PortRole.LEAF).build();
         // .setbuild();
 
@@ -78,7 +80,7 @@ public class AbstractL2vpnBridgeDomainActivatorTest {
         ConnectivityServiceEndPoint cep1 =
                 new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPointBuilder()
                         .setServiceInterfacePoint(
-                                TapiUtils.toSipRef(new Uuid(uuid2), ServiceInterfacePoint.class))
+                                TapiUtils.toSipRef(new Uuid(UUID2), ServiceInterfacePoint.class))
                         .setDirection(PortDirection.BIDIRECTIONAL).setRole(PortRole.LEAF).build();
         ep2 = new EndPoint(cep1, null);
         endPoints.add(ep1);

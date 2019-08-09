@@ -30,7 +30,7 @@ public class PseudowireHelperTest {
         Ipv4AddressNoZone neighborAddress = new Ipv4AddressNoZone("1.2.3.4");
 
         //when
-	Pseudowires actual = new PseudowireHelper().addPseudowire(neighborAddress).build();
+        Pseudowires actual = new PseudowireHelper().addPseudowire(neighborAddress).build();
         //then
         assertNotNull(actual);
 

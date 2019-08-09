@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Cisco Systems Inc and others.  All rights reserved.
+ * Copyright (c) 2018 Xoriant Corporation and others. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -7,6 +7,7 @@
  */
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper;
 
+import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
@@ -17,7 +18,6 @@ import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Port
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ConnectivityServiceEndPoint;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.end.point.ServiceInterfacePoint;
-import junit.framework.Assert;
 
 /**
  * @author Om.SAwasthi@Xoriant.Com
@@ -28,7 +28,7 @@ public class BdAttachmentCircuitHelperTest {
     private BdAttachmentCircuitHelper bdAttachmentCircuitHelper;
     private EndPoint ep1;
     private ServicePort port;
-    private static final String uuid1 = "sip:ciscoD1:GigabitEthernet0/0/0/1";
+    private static final String UUID1 = "sip:ciscoD1:GigabitEthernet0/0/0/1";
     private static final String NETCONF_TOPOLODY_NAME = "topology-netconf";
 
     @Before
@@ -42,7 +42,7 @@ public class BdAttachmentCircuitHelperTest {
         ConnectivityServiceEndPoint cep =
                 new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPointBuilder()
                         .setServiceInterfacePoint(
-                                TapiUtils.toSipRef(new Uuid(uuid1), ServiceInterfacePoint.class))
+                                TapiUtils.toSipRef(new Uuid(UUID1), ServiceInterfacePoint.class))
                         .setDirection(PortDirection.BIDIRECTIONAL).build();
         ep1 = new EndPoint(cep, null);
         port = ServicePort.toServicePort(ep1, NETCONF_TOPOLODY_NAME);

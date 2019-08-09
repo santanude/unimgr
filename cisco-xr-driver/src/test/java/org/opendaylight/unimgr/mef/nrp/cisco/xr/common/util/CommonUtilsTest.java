@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Cisco Systems Inc and others.  All rights reserved.
+ * Copyright (c) 2018 Xoriant Corporation and others. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -9,6 +9,7 @@ package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
@@ -27,9 +28,9 @@ import org.powermock.api.support.membermodification.MemberModifier;
  *
  */
 public class CommonUtilsTest {
-    public static final String methodName1 = "isSameDevice";
-    public static final String methodName2 = "isSameInterface";
-    public static final String uuid = "sip:ciscoD1:GigabitEthernet0/0/0/1";
+    public static final String METHODNAME1 = "isSameDevice";
+    public static final String METHODNAME2 = "isSameInterface";
+    public static final String UUID = "sip:ciscoD1:GigabitEthernet0/0/0/1";
     private EndPoint ep;
     private CommonUtils util;
 
@@ -39,7 +40,7 @@ public class CommonUtilsTest {
         ConnectivityServiceEndPoint cep =
                 new org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.connectivity.service.EndPointBuilder()
                         .setServiceInterfacePoint(
-                                TapiUtils.toSipRef(new Uuid(uuid), ServiceInterfacePoint.class))
+                                TapiUtils.toSipRef(new Uuid(UUID), ServiceInterfacePoint.class))
                         .setDirection(PortDirection.BIDIRECTIONAL).build();
         ep = new EndPoint(cep, null);
         util = new CommonUtils();
@@ -47,7 +48,7 @@ public class CommonUtilsTest {
 
     @Test
     public void isSameDeviceTest() {
-        MemberModifier.suppress(MemberMatcher.method(CommonUtils.class, methodName1));
+        MemberModifier.suppress(MemberMatcher.method(CommonUtils.class, METHODNAME1));
 
         List<String> ls = new ArrayList<String>();
 
@@ -61,13 +62,13 @@ public class CommonUtilsTest {
 
     @Test
     public void isSameInterfaceTest() {
-        MemberModifier.suppress(MemberMatcher.method(CommonUtils.class, methodName2));
+        MemberModifier.suppress(MemberMatcher.method(CommonUtils.class, METHODNAME2));
 
         List<Uuid> ls = new ArrayList<Uuid>();
 
         assertFalse(util.isSameInterface(ep, ls));
 
-        ls.add(new Uuid(uuid));
+        ls.add(new Uuid(UUID));
 
         assertTrue(util.isSameInterface(ep, ls));
 
