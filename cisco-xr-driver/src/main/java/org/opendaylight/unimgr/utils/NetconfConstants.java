@@ -18,4 +18,6 @@ public interface NetconfConstants {
 
     String CAPABILITY_IOX_INFRA_POLICYMGR =
         "(http://cisco.com/ns/yang/Cisco-IOS-XR-infra-policymgr-cfg?revision=2016-12-15)Cisco-IOS-XR-infra-policymgr-cfg";
+
+    String NETCONF_TOPOLODY_NAME = "topology-netconf";
 }

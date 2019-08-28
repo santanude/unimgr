@@ -7,12 +7,15 @@
  */
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
 import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -139,5 +142,16 @@ public class AbstractL2vpnBridgeDomainActivatorTest {
         PowerMockito.when(transaction.submit()).thenReturn(checkedFuture);
 
         absl2vpnBridgeDomain.deactivate(endPoints, serviceId, isExclusive, serviceType);
+    }
+
+    @Test
+    public void isSameInterfaceTest() {
+
+        List<Uuid> ls = new ArrayList<Uuid>();
+        assertFalse(absl2vpnBridgeDomain.isSameInterface(ep1, ls));
+
+        ls.add(new Uuid(UUID1));
+        assertTrue(absl2vpnBridgeDomain.isSameInterface(ep1, ls));
+
     }
 }

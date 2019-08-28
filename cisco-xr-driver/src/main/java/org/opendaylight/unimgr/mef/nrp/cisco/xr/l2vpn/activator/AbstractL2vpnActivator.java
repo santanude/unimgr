@@ -20,9 +20,9 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.CommonUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
+import org.opendaylight.unimgr.utils.NetconfConstants;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
@@ -76,7 +76,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
         for (EndPoint endPoint : endPoints) {
             if (port == null) {
-                port = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
+                port = toServicePort(endPoint, NetconfConstants.NETCONF_TOPOLODY_NAME);
                 NrpCarrierEthConnectivityEndPointResource attrs = endPoint.getAttrs() == null ? null
                         : endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
                 if (attrs != null) {
@@ -85,7 +85,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
                 }
             } else {
-                neighbor = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
+                neighbor = toServicePort(endPoint, NetconfConstants.NETCONF_TOPOLODY_NAME);
             }
         }
 
@@ -111,7 +111,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
     public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, ServiceType serviceType) throws TransactionCommitFailedException {
         String innerOuterName = getInnerName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(),
-                CommonUtils.NETCONF_TOPOLODY_NAME);
+                NetconfConstants.NETCONF_TOPOLODY_NAME);
 
         InstanceIdentifier<P2pXconnect> xconnectId =
                 deactivateXConnect(innerOuterName, innerOuterName);
@@ -169,7 +169,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         }
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
 
-        if (!CommonUtils.isSameDevice(endpoint, dvls)) {
+        if (!ServicePort.isSameDevice(endpoint, dvls)) {
             transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
         }
         transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);

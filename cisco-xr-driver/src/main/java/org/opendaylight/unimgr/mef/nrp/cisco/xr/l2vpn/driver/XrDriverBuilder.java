@@ -23,7 +23,6 @@ import org.opendaylight.unimgr.mef.nrp.api.ActivationDriver;
 import org.opendaylight.unimgr.mef.nrp.api.ActivationDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.CommonUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.SipHandler;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.AbstractL2vpnBridgeDomainActivator;
@@ -33,6 +32,7 @@ import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnLocalConnec
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator.L2vpnP2pConnectActivator;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.PseudowireHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
+import org.opendaylight.unimgr.utils.NetconfConstants;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.NrpConnectivityServiceAttrs;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ServiceType;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
@@ -195,7 +195,7 @@ public class XrDriverBuilder implements ActivationDriverBuilder {
                 List<String> devlist = new ArrayList<String>();
 
                 endPoints.forEach(e -> {
-                    ServicePort port = toServicePort(e, CommonUtils.NETCONF_TOPOLODY_NAME);
+                    ServicePort port = toServicePort(e, NetconfConstants.NETCONF_TOPOLODY_NAME);
                     devlist.add(port.getNode().getValue());
                 });
 

@@ -12,6 +12,7 @@ import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort.toServ
 import com.google.common.base.Optional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
@@ -21,10 +22,10 @@ import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.CommonUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivatorException;
+import org.opendaylight.unimgr.utils.NetconfConstants;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
@@ -80,7 +81,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
 
         for (EndPoint endPoint : endPoints) {
             if (port == null) {
-                port = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
+                port = toServicePort(endPoint, NetconfConstants.NETCONF_TOPOLODY_NAME);
                 NrpCarrierEthConnectivityEndPointResource attrs = endPoint.getAttrs() == null ? null
                         : endPoint.getAttrs().getNrpCarrierEthConnectivityEndPointResource();
                 if (attrs != null) {
@@ -89,7 +90,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
                 }
                 portRole = endPoint.getEndpoint().getRole().name();
             } else {
-                neighbor = toServicePort(endPoint, CommonUtils.NETCONF_TOPOLODY_NAME);
+                neighbor = toServicePort(endPoint, NetconfConstants.NETCONF_TOPOLODY_NAME);
                 neighborRole = endPoint.getEndpoint().getRole().name();
             }
         }
@@ -159,7 +160,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
             throws TransactionCommitFailedException, ResourceActivatorException {
         String innerOuterName = getInnerName(serviceId);
         ServicePort port = toServicePort(endPoints.stream().findFirst().get(),
-                CommonUtils.NETCONF_TOPOLODY_NAME);
+                NetconfConstants.NETCONF_TOPOLODY_NAME);
 
         InstanceIdentifier<BridgeDomain> bridgeDomainId =
                 deactivateBridgeDomain(innerOuterName, innerOuterName);
@@ -206,14 +207,42 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
 
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
 
-        if (!CommonUtils.isSameInterface(endpoint, inls)) {
-            if (!CommonUtils.isSameDevice(endpoint, dvls)) {
+        if (!isSameInterface(endpoint, inls)) {
+            if (!ServicePort.isSameDevice(endpoint, dvls)) {
                 transaction.delete(LogicalDatastoreType.CONFIGURATION, bridgeDomainId);
             }
             transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
         }
 
         transaction.submit().checkedGet();
+    }
+
+    /**
+     * Function is checking bridge domain configuration already deleted from XR-device.
+     * 
+     * @param endPoint
+     * @param ls
+     * @return boolean
+     */
+    protected static boolean isSameInterface(EndPoint endPoint, List<Uuid> ls) {
+        Uuid sip = endPoint.getEndpoint().getServiceInterfacePoint().getServiceInterfacePointId(); //sip:ciscoD1:GigabitEthernet0/0/0/1
+
+        if (ls.size() == 0) {
+            ls.add(sip);
+        } else if (ls.size() > 0) {
+            List<Uuid> listWithoutDuplicates =
+                    ls.stream().distinct().collect(Collectors.toList());
+
+            java.util.Optional<Uuid> preset = listWithoutDuplicates.stream()
+                    .filter(x -> x.equals(sip)).findFirst();
+
+            if (preset.isPresent()) {
+                return true;
+            }
+            ls.add(sip);
+        }
+
+        return false;
     }
 
     protected abstract BdPseudowires activateBdPseudowire(ServicePort neighbor);
