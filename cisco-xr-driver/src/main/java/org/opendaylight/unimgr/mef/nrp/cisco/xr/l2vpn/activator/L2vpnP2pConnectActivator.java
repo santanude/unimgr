@@ -7,33 +7,34 @@
  */
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileComposition.BwpApplicability.UNI;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileComposition.BwpDirection.EGRESS;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileComposition.BwpDirection.INGRESS;
+import java.util.List;
+import java.util.Optional;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.FixedServiceNaming;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.LoopbackUtils;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.MtuUtils;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.AttachmentCircuitHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.PseudowireHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.XConnectHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.FixedServiceNaming;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.Mtus;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.L2vpn;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.XconnectGroups;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.XconnectGroup;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.P2pXconnect;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.AttachmentCircuits;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.Pseudowires;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
-
-import java.util.Optional;
-
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileComposition.BwpApplicability.UNI;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileComposition.BwpDirection.EGRESS;
-import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileComposition.BwpDirection.INGRESS;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 
 /**
@@ -59,32 +60,23 @@ public class L2vpnP2pConnectActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    public InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor, long mtu, boolean isExclusive) {
-        String interfraceName = port.getInterfaceName();
-        Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(interfraceName));
-        // Enable L2Trasportation for port basesd service
-        boolean setL2Transport = (isExclusive) ? true : false;
+    public InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor,
+            long mtu, boolean isExclusive) {
 
-        return new InterfaceHelper()
-            .addInterface(port, Optional.of(mtus), setL2Transport)
-            .build();
+        return new InterfaceActivator().activateInterface(port, neighbor, mtu, isExclusive);
     }
 
     @Override
-        public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor, long mtu) {
-            String mtuOwnerName = "sub_vlan";
-            Mtus mtus = new MtuUtils().generateMtus(mtu, new CiscoIosXrString(mtuOwnerName));
+    public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor,
+            long mtu) {
 
-            return new InterfaceHelper()
-            .addSubInterface(port, Optional.of(mtus))
-            .build();
+        return new InterfaceActivator().createSubInterface(port, neighbor, mtu);
     }
 
     @Override
     public Pseudowires activatePseudowire(ServicePort neighbor) {
         return new PseudowireHelper()
-             .addPseudowire(LoopbackUtils.getIpv4Address(neighbor, dataBroker))
-             .build();
+                .addPseudowire(LoopbackUtils.getIpv4Address(neighbor, dataBroker)).build();
     }
 
     @Override
@@ -126,4 +118,38 @@ public class L2vpnP2pConnectActivator extends AbstractL2vpnActivator {
     private String replaceForbidenCharacters(String serviceId) {
         return serviceId.replace(":","_");
     }
+
+    @Override
+    protected void doActivate(String nodeName, InterfaceConfigurations interfaceConfigurations,
+            L2vpn l2vpn, MountPointService mountService, Optional<PolicyManager> qosConfig)
+            throws TransactionCommitFailedException {
+
+        new TransactionActivator().activate(nodeName, interfaceConfigurations, l2vpn, mountService,
+                qosConfig);
+
+    }
+
+    @Override
+    protected void createSubInterface(String nodeName,
+            InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
+            throws TransactionCommitFailedException {
+
+        new TransactionActivator().createSubInterface(nodeName, subInterfaceConfigurations,
+                mountService2);
+    }
+
+    @Override
+    protected InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port,
+            boolean isExclusive) {
+        return new InterfaceActivator().deactivateInterface(port, isExclusive);
+    }
+
+    @Override
+    protected void doDeactivate(ServicePort port, InstanceIdentifier<P2pXconnect> xconnectId,
+            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
+            boolean isExclusive, EndPoint endPoint, MountPointService mountService2, List<String> dvls, List<Uuid> inls) throws TransactionCommitFailedException {
+        
+        new TransactionActivator().doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive, endPoint, mountService, dvls, inls);
+    }
+
 }

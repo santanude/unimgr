@@ -8,26 +8,18 @@
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.activator;
 
 import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort.toServicePort;
-
 import java.util.ArrayList;
 import java.util.List;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
-import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.MountPointHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
-import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.L2vpnHelper;
 import org.opendaylight.unimgr.mef.nrp.common.ResourceActivator;
 import org.opendaylight.unimgr.utils.NetconfConstants;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.PolicyManager;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationKey;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.PolicyManager;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.L2vpn;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.Database;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.XconnectGroups;
@@ -39,11 +31,11 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.p2p.xconnect.Pseudowires;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.CiscoIosXrString;
 import org.opendaylight.yang.gen.v1.urn.mef.yang.nrp._interface.rev180321.nrp.connectivity.service.end.point.attrs.NrpCarrierEthConnectivityEndPointResource;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.connectivity.rev180307.ServiceType;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.base.Optional;
 
 
 /**
@@ -53,19 +45,24 @@ import com.google.common.base.Optional;
  *
  * @author krzysztof.bijakowski@amartus.com
  */
+
 public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractL2vpnActivator.class);
     private static final long mtu = 1500;
 
     protected DataBroker dataBroker;
-
-    private MountPointService mountService;
-    private List<String> dvls = new ArrayList<String>();
+    protected MountPointService mountService;
+    protected static List<String> dvls = new ArrayList<String>();
+    protected static List<Uuid> inls = new ArrayList<Uuid>();
 
     protected AbstractL2vpnActivator(DataBroker dataBroker, MountPointService mountService) {
+        LOG.info(" L2vpn XConnect activator initiated...");
+
         this.dataBroker = dataBroker;
         this.mountService = mountService;
+        inls.clear();
+        dvls.clear();
     }
 
     @Override
@@ -101,11 +98,21 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         if (!isExclusive) {
             InterfaceConfigurations subInterfaceConfigurations =
                     createSubInterface(port, neighbor, mtu);
-            createSubInterface(port.getNode().getValue(), subInterfaceConfigurations);
+            createSubInterface(port.getNode().getValue(), subInterfaceConfigurations, mountService);
         }
 
-        doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, qosConfig);
+        doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, mountService,
+                qosConfig);
     }
+
+
+    protected abstract void doActivate(String node, InterfaceConfigurations interfaceConfigurations,
+            L2vpn l2vpn, MountPointService mountService2,
+            java.util.Optional<PolicyManager> qosConfig) throws TransactionCommitFailedException;
+
+    protected abstract void createSubInterface(String value,
+            InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
+            throws TransactionCommitFailedException;
 
     @Override
     public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, ServiceType serviceType) throws TransactionCommitFailedException {
@@ -121,62 +128,8 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
                 deactivateInterface(port, isExclusive);
 
         doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive,
-                endPoints.stream().findFirst().get());
+                endPoints.stream().findFirst().get(), mountService, dvls, inls);
     }
-
-    // for now QoS is ignored
-    protected void doActivate(String nodeName, InterfaceConfigurations interfaceConfigurations,
-            L2vpn l2vpn, java.util.Optional<PolicyManager> qosConfig)
-            throws TransactionCommitFailedException {
-
-        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
-        if (!optional.isPresent()) {
-            LOG.error("Could not retrieve MountPoint for {}", nodeName);
-            return;
-        }
-
-        WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-        transaction.merge(LogicalDatastoreType.CONFIGURATION,
-                InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
-        transaction.merge(LogicalDatastoreType.CONFIGURATION, L2vpnHelper.getL2vpnId(), l2vpn);
-        transaction.submit().checkedGet();
-    }
-
-    protected void createSubInterface(String nodeName,
-            InterfaceConfigurations interfaceConfigurations)
-            throws TransactionCommitFailedException {
-
-        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
-        if (!optional.isPresent()) {
-            LOG.error("Could not retrieve MountPoint for {}", nodeName);
-            return;
-        }
-        WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-        transaction.merge(LogicalDatastoreType.CONFIGURATION,
-                InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
-        transaction.submit().checkedGet();
-    }
-
-    protected void doDeactivate(ServicePort port, InstanceIdentifier<P2pXconnect> xconnectId,
-            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
-            boolean isExclusive, EndPoint endpoint) throws TransactionCommitFailedException {
-
-        Optional<DataBroker> optional =
-                MountPointHelper.getDataBroker(mountService, port.getNode().getValue());
-        if (!optional.isPresent()) {
-            LOG.error("Could not retrieve MountPoint for {}", port.getNode().getValue());
-            return;
-        }
-        WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-
-        if (!ServicePort.isSameDevice(endpoint, dvls)) {
-            transaction.delete(LogicalDatastoreType.CONFIGURATION, xconnectId);
-        }
-        transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
-
-        transaction.submit().checkedGet();
-    }
-
 
     protected abstract java.util.Optional<PolicyManager> activateQos(String name, ServicePort port);
 
@@ -202,21 +155,18 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
                 .build();
     }
 
-    private InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port,
-            boolean isExclusive) {
-
-        return InstanceIdentifier
-                .builder(
-                        InterfaceConfigurations.class)
-                .child(InterfaceConfiguration.class,
-                        new InterfaceConfigurationKey(new InterfaceActive("act"),
-                                isExclusive == true ? InterfaceHelper.getInterfaceName(port)
-                                        : InterfaceHelper.getSubInterfaceName(port)))
-                .build();
-    }
-
     protected abstract String getInnerName(String serviceId);
 
     protected abstract String getOuterName(String serviceId);
+
+    protected abstract InstanceIdentifier<InterfaceConfiguration> deactivateInterface(
+            ServicePort port, boolean isExclusive);
+
+    protected abstract void doDeactivate(ServicePort port,
+            InstanceIdentifier<P2pXconnect> xconnectId,
+            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
+            boolean isExclusive, EndPoint endPoint, MountPointService mountService2,
+            List<String> dvls, List<Uuid> inls) throws TransactionCommitFailedException;
+
 
 }
