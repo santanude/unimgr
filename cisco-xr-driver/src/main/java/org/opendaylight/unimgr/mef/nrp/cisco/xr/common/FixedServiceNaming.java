@@ -26,4 +26,9 @@ public class FixedServiceNaming implements ServiceNaming {
         return "EUR16-" + id;
     }
 
+    @Override
+    public String replaceForbidenCharacters(String id) {
+        return id.replace(":", "_");
+    }
+
 }

@@ -38,7 +38,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 
 /**
- * Activator of VPLS-based L2 VPN using cross connect connection on IOS-XR devices
+ * Activator of VPLS-based L2 VPN using cross connect connection on IOS-XR devices.
  *
  * @author krzysztof.bijakowski@amartus.com
  */
@@ -60,73 +60,20 @@ public class L2vpnP2pConnectActivator extends AbstractL2vpnActivator {
     }
 
     @Override
-    public InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor,
-            long mtu, boolean isExclusive) {
-
-        return new InterfaceActivator().activateInterface(port, neighbor, mtu, isExclusive);
-    }
-
-    @Override
-    public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor,
-            long mtu) {
-
-        return new InterfaceActivator().createSubInterface(port, neighbor, mtu);
-    }
-
-    @Override
-    public Pseudowires activatePseudowire(ServicePort neighbor) {
-        return new PseudowireHelper()
-                .addPseudowire(LoopbackUtils.getIpv4Address(neighbor, dataBroker)).build();
-    }
-
-    @Override
-    public XconnectGroups activateXConnect(String outerName, String innerName, ServicePort port, ServicePort neighbor, Pseudowires pseudowires, boolean isExclusive) {
-        AttachmentCircuits attachmentCircuits = new AttachmentCircuitHelper()
-             .addPort(port, isExclusive)
-             .build();
-
-        XconnectGroup xconnectGroup = new XConnectHelper()
-             .appendXConnect(innerName, attachmentCircuits, pseudowires)
-             .build(outerName);
-
-        return XConnectHelper.createXConnectGroups(xconnectGroup);
-    }
-
-    @Override
-    public L2vpn activateL2Vpn(XconnectGroups xconnectGroups) {
-        return L2vpnHelper.build(xconnectGroups);
-    }
-
-    @Override
     protected String getInnerName(String serviceId) {
-
-         return replaceForbidenCharacters(serviceId);
+        return namingProvider.replaceForbidenCharacters(serviceId);
     }
 
     @Override
     protected String getOuterName(String serviceId) {
-        return replaceForbidenCharacters(serviceId);
-    }
-
-    /**
-     * ASR 9000 can't accept colon in xconnect group name, so it have to be replaced with underscore.
-     * If any other restriction will be found, this is a good place to change serviceId name.
-     *
-     * @param serviceId old service id
-     * @return new service id
-     */
-    private String replaceForbidenCharacters(String serviceId) {
-        return serviceId.replace(":","_");
+        return namingProvider.replaceForbidenCharacters(serviceId);
     }
 
     @Override
-    protected void doActivate(String nodeName, InterfaceConfigurations interfaceConfigurations,
-            L2vpn l2vpn, MountPointService mountService, Optional<PolicyManager> qosConfig)
-            throws TransactionCommitFailedException {
+    protected InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor,
+            long mtu, boolean isExclusive) {
 
-        new TransactionActivator().activate(nodeName, interfaceConfigurations, l2vpn, mountService,
-                qosConfig);
-
+        return new InterfaceActivator().activate(port, neighbor, mtu, isExclusive);
     }
 
     @Override
@@ -134,22 +81,66 @@ public class L2vpnP2pConnectActivator extends AbstractL2vpnActivator {
             InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
             throws TransactionCommitFailedException {
 
-        new TransactionActivator().createSubInterface(nodeName, subInterfaceConfigurations,
-                mountService2);
+        new TransactionActivator().activateSubInterface(nodeName, subInterfaceConfigurations, mountService2);
+    }
+
+    @Override
+    protected InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor,
+            long mtu) {
+
+        return new InterfaceActivator().buildSubInterface(port, neighbor, mtu);
+    }
+
+    @Override
+    protected Pseudowires activatePseudowire(ServicePort neighbor) {
+
+        return new PseudowireHelper()
+                .addPseudowire(LoopbackUtils.getIpv4Address(neighbor, dataBroker)).build();
+    }
+
+    @Override
+    protected XconnectGroups activateXConnect(String outerName, String innerName, ServicePort port,
+            ServicePort portZ, Pseudowires pseudowires, boolean isExclusive) {
+
+        AttachmentCircuits attachmentCircuits = new AttachmentCircuitHelper()
+                .addPort(port, isExclusive)
+                .build();
+
+           XconnectGroup xconnectGroup = new XConnectHelper()
+                .appendXConnect(innerName, attachmentCircuits, pseudowires)
+                .build(outerName);
+
+           return XConnectHelper.createXConnectGroups(xconnectGroup);
+    }
+
+    @Override
+    protected L2vpn activateL2Vpn(XconnectGroups xconnectGroups) {
+
+        return L2vpnHelper.build(xconnectGroups);
+    }
+
+    @Override
+    protected void doActivate(String nodeName, InterfaceConfigurations interfaceConfigurations,
+            L2vpn l2vpn, MountPointService mountService2, Optional<PolicyManager> qosConfig)
+            throws TransactionCommitFailedException {
+
+        new TransactionActivator().activate(nodeName, interfaceConfigurations, l2vpn, mountService, qosConfig);
     }
 
     @Override
     protected InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port,
             boolean isExclusive) {
-        return new InterfaceActivator().deactivateInterface(port, isExclusive);
+
+        return new InterfaceActivator().deactivate(port, isExclusive);
     }
 
     @Override
     protected void doDeactivate(ServicePort port, InstanceIdentifier<P2pXconnect> xconnectId,
             InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
-            boolean isExclusive, EndPoint endPoint, MountPointService mountService2, List<String> dvls, List<Uuid> inls) throws TransactionCommitFailedException {
-        
-        new TransactionActivator().doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive, endPoint, mountService, dvls, inls);
+            boolean isExclusive, EndPoint endPoint, MountPointService mountService2,
+            List<String> dvls, List<Uuid> inls) throws TransactionCommitFailedException {
+
+        new TransactionActivator().deactivate(port, xconnectId, interfaceConfigurationId, isExclusive, endPoint, mountService, dvls, inls);
     }
 
 }

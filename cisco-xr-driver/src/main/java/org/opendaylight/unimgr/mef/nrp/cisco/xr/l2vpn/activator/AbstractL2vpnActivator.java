@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractL2vpnActivator implements ResourceActivator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractL2vpnActivator.class);
-    private static final long mtu = 1500;
+    private static final long MTU = 1500;
 
     protected DataBroker dataBroker;
     protected MountPointService mountService;
@@ -87,64 +87,54 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
         }
 
         java.util.Optional<PolicyManager> qosConfig = activateQos(innerOuterName, port);
-        InterfaceConfigurations interfaceConfigurations =
-                activateInterface(port, neighbor, mtu, isExclusive);
+        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, MTU, isExclusive);
         Pseudowires pseudowires = activatePseudowire(neighbor);
-        XconnectGroups xconnectGroups = activateXConnect(innerOuterName, innerOuterName, port,
-                neighbor, pseudowires, isExclusive);
+        XconnectGroups xconnectGroups = activateXConnect(innerOuterName, innerOuterName, port, neighbor, pseudowires, isExclusive);
         L2vpn l2vpn = activateL2Vpn(xconnectGroups);
 
         // create sub interface for tag based service
         if (!isExclusive) {
-            InterfaceConfigurations subInterfaceConfigurations =
-                    createSubInterface(port, neighbor, mtu);
+            InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, MTU);
             createSubInterface(port.getNode().getValue(), subInterfaceConfigurations, mountService);
         }
 
-        doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, mountService,
-                qosConfig);
+        doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, mountService, qosConfig);
     }
-
-
-    protected abstract void doActivate(String node, InterfaceConfigurations interfaceConfigurations,
-            L2vpn l2vpn, MountPointService mountService2,
-            java.util.Optional<PolicyManager> qosConfig) throws TransactionCommitFailedException;
-
-    protected abstract void createSubInterface(String value,
-            InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
-            throws TransactionCommitFailedException;
 
     @Override
     public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, ServiceType serviceType) throws TransactionCommitFailedException {
         String innerOuterName = getInnerName(serviceId);
-        ServicePort port = toServicePort(endPoints.stream().findFirst().get(),
-                NetconfConstants.NETCONF_TOPOLODY_NAME);
+        ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NetconfConstants.NETCONF_TOPOLODY_NAME);
 
-        InstanceIdentifier<P2pXconnect> xconnectId =
-                deactivateXConnect(innerOuterName, innerOuterName);
-
+        InstanceIdentifier<P2pXconnect> xconnectId = deactivateXConnect(innerOuterName, innerOuterName);
         LOG.debug("Is service has vlan ? validate isExclusive : ", isExclusive);
-        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId =
-                deactivateInterface(port, isExclusive);
-
-        doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive,
-                endPoints.stream().findFirst().get(), mountService, dvls, inls);
+        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);
+        doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive, endPoints.stream().findFirst().get(), mountService, dvls, inls);
     }
 
     protected abstract java.util.Optional<PolicyManager> activateQos(String name, ServicePort port);
 
-    protected abstract InterfaceConfigurations activateInterface(ServicePort portA,
-            ServicePort portZ, long mtu, boolean isExclusive);
+    protected abstract String getInnerName(String serviceId);
 
-    protected abstract InterfaceConfigurations createSubInterface(ServicePort portA,
-            ServicePort portZ, long mtu);
+    protected abstract String getOuterName(String serviceId);
+
+    protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu, boolean isExclusive);
+
+    protected abstract void createSubInterface(String value, InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
+            throws TransactionCommitFailedException;
+
+    protected abstract InterfaceConfigurations createSubInterface(ServicePort portA, ServicePort portZ, long mtu);
 
     protected abstract Pseudowires activatePseudowire(ServicePort neighbor);
 
-    protected abstract XconnectGroups activateXConnect(String outerName, String innerName,
-            ServicePort portA, ServicePort portZ, Pseudowires pseudowires, boolean isExclusive);
+    protected abstract XconnectGroups activateXConnect(String outerName, String innerName, ServicePort portA, ServicePort portZ, Pseudowires pseudowires, boolean isExclusive);
 
     protected abstract L2vpn activateL2Vpn(XconnectGroups xconnectGroups);
+
+    protected abstract void doActivate(String node, InterfaceConfigurations interfaceConfigurations, L2vpn l2vpn, MountPointService mountService2,
+            java.util.Optional<PolicyManager> qosConfig) throws TransactionCommitFailedException;
+
+    protected abstract InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive);
 
     private InstanceIdentifier<P2pXconnect> deactivateXConnect(String outerName, String innerName) {
         return InstanceIdentifier.builder(L2vpn.class).child(Database.class)
@@ -155,18 +145,7 @@ public abstract class AbstractL2vpnActivator implements ResourceActivator {
                 .build();
     }
 
-    protected abstract String getInnerName(String serviceId);
-
-    protected abstract String getOuterName(String serviceId);
-
-    protected abstract InstanceIdentifier<InterfaceConfiguration> deactivateInterface(
-            ServicePort port, boolean isExclusive);
-
-    protected abstract void doDeactivate(ServicePort port,
-            InstanceIdentifier<P2pXconnect> xconnectId,
-            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
-            boolean isExclusive, EndPoint endPoint, MountPointService mountService2,
-            List<String> dvls, List<Uuid> inls) throws TransactionCommitFailedException;
-
+    protected abstract void doDeactivate(ServicePort port, InstanceIdentifier<P2pXconnect> xconnectId, InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
+            boolean isExclusive, EndPoint endPoint, MountPointService mountService2, List<String> dvls, List<Uuid> inls) throws TransactionCommitFailedException;
 
 }

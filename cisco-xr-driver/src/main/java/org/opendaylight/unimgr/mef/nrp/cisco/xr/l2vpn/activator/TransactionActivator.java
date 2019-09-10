@@ -32,8 +32,7 @@ public class TransactionActivator {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionActivator.class);
 
     // for now QoS is ignored
-    protected void activate(String nodeName, InterfaceConfigurations interfaceConfigurations,
-            L2vpn l2vpn, MountPointService mountService,
+    protected void activate(String nodeName, InterfaceConfigurations interfaceConfigurations, L2vpn l2vpn, MountPointService mountService,
             java.util.Optional<PolicyManager> qosConfig) throws TransactionCommitFailedException {
 
         Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
@@ -43,15 +42,13 @@ public class TransactionActivator {
         }
 
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-        transaction.merge(LogicalDatastoreType.CONFIGURATION,
-                InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
+        transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
         transaction.merge(LogicalDatastoreType.CONFIGURATION, L2vpnHelper.getL2vpnId(), l2vpn);
         transaction.submit().checkedGet();
     }
 
 
-    protected void createSubInterface(String nodeName,
-            InterfaceConfigurations interfaceConfigurations, MountPointService mountService)
+    protected void activateSubInterface(String nodeName, InterfaceConfigurations interfaceConfigurations, MountPointService mountService)
             throws TransactionCommitFailedException {
 
         Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, nodeName);
@@ -61,19 +58,16 @@ public class TransactionActivator {
         }
 
         WriteTransaction transaction = optional.get().newWriteOnlyTransaction();
-        transaction.merge(LogicalDatastoreType.CONFIGURATION,
-                InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
+        transaction.merge(LogicalDatastoreType.CONFIGURATION, InterfaceHelper.getInterfaceConfigurationsId(), interfaceConfigurations);
         transaction.submit().checkedGet();
     }
 
 
-    protected void doDeactivate(ServicePort port, InstanceIdentifier<?> ids,
-            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
-            boolean isExclusive, EndPoint endpoint, MountPointService mountService,
-            List<String> dvls, List<Uuid> inls) throws TransactionCommitFailedException {
+    protected void deactivate(ServicePort port, InstanceIdentifier<?> ids, InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
+            boolean isExclusive, EndPoint endpoint, MountPointService mountService, List<String> dvls, List<Uuid> inls) 
+                    throws TransactionCommitFailedException {
 
-        Optional<DataBroker> optional =
-                MountPointHelper.getDataBroker(mountService, port.getNode().getValue());
+        Optional<DataBroker> optional = MountPointHelper.getDataBroker(mountService, port.getNode().getValue());
         if (!optional.isPresent()) {
             LOG.error("Could not retrieve MountPoint for {}", port.getNode().getValue());
             return;
@@ -83,11 +77,13 @@ public class TransactionActivator {
 
         if (ids.getTargetType().equals(
                 org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.xconnect.groups.xconnect.group.p2p.xconnects.P2pXconnect.class)) {
+
             if (!ServicePort.isSameDevice(endpoint, dvls)) {
                 transaction.delete(LogicalDatastoreType.CONFIGURATION, ids);
             }
             transaction.delete(LogicalDatastoreType.CONFIGURATION, interfaceConfigurationId);
         } else {
+
             if (!AbstractL2vpnBridgeDomainActivator.isSameInterface(endpoint, inls)) {
                 if (!ServicePort.isSameDevice(endpoint, dvls)) {
                     transaction.delete(LogicalDatastoreType.CONFIGURATION, ids);

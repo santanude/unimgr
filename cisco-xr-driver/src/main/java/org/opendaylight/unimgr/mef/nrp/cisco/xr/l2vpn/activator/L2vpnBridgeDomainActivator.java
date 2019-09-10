@@ -16,6 +16,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.FixedServiceNaming;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.LoopbackUtils;
@@ -34,32 +35,70 @@ import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cf
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.l2vpn.database.bridge.domain.groups.bridge.domain.group.bridge.domains.bridge.domain.BdPseudowires;
 import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author arif.hussain@xoriant.com
  */
 public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivator {
 
-    private static final Logger LOG = LoggerFactory.getLogger(L2vpnBridgeDomainActivator.class);
+    private final FixedServiceNaming namingProvider;
 
     public L2vpnBridgeDomainActivator(DataBroker dataBroker, MountPointService mountService) {
         super(dataBroker, mountService);
+        namingProvider = new FixedServiceNaming();
     }
 
     @Override
-    public L2vpn activateL2Vpn(BridgeDomainGroups bridgeDomainGroups) {
-        return L2vpnHelper.build(bridgeDomainGroups);
+    protected Optional<PolicyManager> activateQos(String name, ServicePort port) {
+        return new BandwidthProfileHelper(port).addPolicyMap(name, INGRESS, UNI)
+                .addPolicyMap(name, EGRESS, UNI).build();
     }
 
     @Override
-    public BridgeDomainGroups activateBridgeDomain(String outerName, String innerName,
+    protected String getInnerName(String serviceId) {
+        return namingProvider.replaceForbidenCharacters(serviceId);
+    }
+
+    @Override
+    protected String getOuterName(String serviceId) {
+        return namingProvider.replaceForbidenCharacters(serviceId);
+    }
+
+    @Override
+    protected InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ,
+            long mtu, boolean isExclusive) {
+
+        return new InterfaceActivator().activate(portA, portZ, mtu, isExclusive);
+    }
+
+    @Override
+    protected void createSubInterface(String nodeName,
+            InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
+            throws TransactionCommitFailedException {
+
+        new TransactionActivator().activateSubInterface(nodeName, subInterfaceConfigurations, mountService2);
+    }
+
+    @Override
+    protected InterfaceConfigurations createSubInterface(ServicePort portA, ServicePort portZ,
+            long mtu) {
+
+        return new InterfaceActivator().buildSubInterface(portA, portZ, mtu);
+    }
+
+    @Override
+    protected BdPseudowires activateBdPseudowire(ServicePort neighbor) {
+
+        return new BridgeDomainPseudowireHelper()
+                .addBdPseudowire(LoopbackUtils.getIpv4Address(neighbor, dataBroker)).build();
+    }
+
+    @Override
+    protected BridgeDomainGroups activateBridgeDomain(String outerName, String innerName,
             ServicePort port, ServicePort neighbor, BdPseudowires bdPseudowires,
             boolean isExclusive) {
 
-        BdAttachmentCircuits bdattachmentCircuits =
-                new BridgeDomainAttachmentCircuitHelper().addPort(port, isExclusive).build();
+        BdAttachmentCircuits bdattachmentCircuits = new BridgeDomainAttachmentCircuitHelper().addPort(port, isExclusive).build();
         BridgeDomainGroup bridgeDomainGroup = new BridgeDomainHelper()
                 .appendBridgeDomain(innerName, bdattachmentCircuits, bdPseudowires)
                 .build(outerName);
@@ -68,75 +107,24 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
     }
 
     @Override
-    public BdPseudowires activateBdPseudowire(ServicePort neighbor) {
+    protected L2vpn activateL2Vpn(BridgeDomainGroups bridgeDomainGroups) {
 
-        return new BridgeDomainPseudowireHelper()
-                .addBdPseudowire(LoopbackUtils.getIpv4Address(neighbor, dataBroker)).build();
-    }
-
-    @Override
-    protected String getInnerName(String serviceId) {
-        return replaceForbidenCharacters(serviceId);
-    }
-
-    @Override
-    protected String getOuterName(String serviceId) {
-        return replaceForbidenCharacters(serviceId);
-    }
-
-    /**
-     * ASR 9000 can't accept colon in bridgeDomain group name, so it have to be replaced with
-     * underscore. If any other restriction will be found, this is a good place to change serviceId
-     * name.
-     *
-     * @param serviceId old service id
-     * @return new service id
-     */
-    private String replaceForbidenCharacters(String serviceId) {
-        return serviceId.replace(":", "_");
-    }
-
-    @Override
-    protected InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor,
-            long mtu, boolean isExclusive) {
-
-        return new InterfaceActivator().activateInterface(port, neighbor, mtu, isExclusive);
-    }
-
-    @Override
-    public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor,
-            long mtu) {
-
-        return new InterfaceActivator().createSubInterface(port, neighbor, mtu);
+        return L2vpnHelper.build(bridgeDomainGroups);
     }
 
     @Override
     protected void doActivate(String node, InterfaceConfigurations interfaceConfigurations,
-            L2vpn l2vpn, MountPointService mountService2, Optional<PolicyManager> qosConfig) throws TransactionCommitFailedException {
+            L2vpn l2vpn, MountPointService mountService2, Optional<PolicyManager> qosConfig)
+            throws TransactionCommitFailedException {
 
         new TransactionActivator().activate(node, interfaceConfigurations, l2vpn, mountService2, qosConfig);
     }
 
     @Override
-    protected void createSubInterface(String nodeName,
-            InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
-            throws TransactionCommitFailedException {
-
-        new TransactionActivator().createSubInterface(nodeName, subInterfaceConfigurations, mountService2);
-    }
-
-    @Override
-    protected Optional<PolicyManager> activateQos(String name, ServicePort port) {
-        return new BandwidthProfileHelper(port)
-                .addPolicyMap(name, INGRESS, UNI)
-                .addPolicyMap(name, EGRESS, UNI)
-                .build();
-    }
-
-    @Override
     protected InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port,
             boolean isExclusive) {
-        return new InterfaceActivator().deactivateInterface(port, isExclusive);
+
+        return new InterfaceActivator().deactivate(port, isExclusive);
     }
 
     @Override
@@ -145,7 +133,8 @@ public class L2vpnBridgeDomainActivator extends AbstractL2vpnBridgeDomainActivat
             boolean isExclusive, EndPoint endPoint, List<String> dvls2, List<Uuid> inls2)
             throws TransactionCommitFailedException {
 
-        new TransactionActivator().doDeactivate(port, bridgeDomainId, interfaceConfigurationId, isExclusive, endPoint, mountService, dvls2, inls2);
+        new TransactionActivator().deactivate(port, bridgeDomainId, interfaceConfigurationId,
+                isExclusive, endPoint, mountService, dvls2, inls2);
     }
 
 }

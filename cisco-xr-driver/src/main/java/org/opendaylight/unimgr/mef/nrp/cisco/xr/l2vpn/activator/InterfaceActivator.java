@@ -21,8 +21,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 public class InterfaceActivator {
 
-    protected InterfaceConfigurations activateInterface(ServicePort port, ServicePort neighbor,
-            long mtu, boolean isExclusive) {
+    protected InterfaceConfigurations activate(ServicePort port, ServicePort neighbor, long mtu, boolean isExclusive) {
         String interfraceName = port.getInterfaceName();
         new MtuUtils();
         Mtus mtus = MtuUtils.generateMtus(mtu, new CiscoIosXrString(interfraceName));
@@ -33,8 +32,7 @@ public class InterfaceActivator {
         return new InterfaceHelper().addInterface(port, Optional.of(mtus), setL2Transport).build();
     }
 
-    protected InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port,
-            boolean isExclusive) {
+    protected InstanceIdentifier<InterfaceConfiguration> deactivate(ServicePort port, boolean isExclusive) {
 
         return InstanceIdentifier
                 .builder(
@@ -46,8 +44,7 @@ public class InterfaceActivator {
                 .build();
     }
 
-    protected InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor,
-            long mtu) {
+    protected InterfaceConfigurations buildSubInterface(ServicePort port, ServicePort neighbor, long mtu) {
         String mtuOwnerName = "sub_vlan";
         new MtuUtils();
         Mtus mtus = MtuUtils.generateMtus(mtu, new CiscoIosXrString(mtuOwnerName));
@@ -55,8 +52,7 @@ public class InterfaceActivator {
         return new InterfaceHelper().addSubInterface(port, Optional.of(mtus)).build();
     }
 
-    protected InterfaceConfigurations activateLocalInterface(ServicePort port, ServicePort neighbor,
-            long mtu, boolean isExclusive) {
+    protected InterfaceConfigurations activateLocalInterface(ServicePort port, ServicePort neighbor, long mtu, boolean isExclusive) {
         boolean setL2Transport = (isExclusive) ? true : false;
 
         return new InterfaceHelper().addInterface(port, Optional.empty(), setL2Transport)

@@ -17,6 +17,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.unimgr.mef.nrp.api.EndPoint;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.FixedServiceNaming;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.BandwidthProfileHelper;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.helper.AttachmentCircuitHelper;
@@ -42,8 +43,11 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
  */
 public class L2vpnLocalConnectActivator extends AbstractL2vpnActivator {
 
+    private final FixedServiceNaming namingProvider;
+
     public L2vpnLocalConnectActivator(DataBroker dataBroker, MountPointService mountService) {
         super(dataBroker, mountService);
+        namingProvider = new FixedServiceNaming();
     }
 
     @Override
@@ -66,7 +70,7 @@ public class L2vpnLocalConnectActivator extends AbstractL2vpnActivator {
     public InterfaceConfigurations createSubInterface(ServicePort port, ServicePort neighbor,
             long mtu) {
 
-        return new InterfaceActivator().createSubInterface(port, neighbor, mtu);
+        return new InterfaceActivator().buildSubInterface(port, neighbor, mtu);
     }
 
     @Override
@@ -95,53 +99,37 @@ public class L2vpnLocalConnectActivator extends AbstractL2vpnActivator {
 
     @Override
     protected String getInnerName(String serviceId) {
-        return replaceForbidenCharacters(serviceId);
+        return namingProvider.replaceForbidenCharacters(serviceId);
     }
 
     @Override
     protected String getOuterName(String serviceId) {
-        return replaceForbidenCharacters(serviceId);
-    }
-
-    /**
-     * ASR 9000 can't accept colon in xconnect group name, so it have to be replaced with underscore.
-     * If any other restriction will be found, this is a good place to change serviceId name.
-     *
-     * @param serviceId old service id
-     * @return new service id
-     */
-    private String replaceForbidenCharacters(String serviceId) {
-        return serviceId.replace(":","_");
+        return namingProvider.replaceForbidenCharacters(serviceId);
     }
 
     @Override
-    protected void doActivate(String node, InterfaceConfigurations interfaceConfigurations,
-            L2vpn l2vpn, MountPointService mountService2, Optional<PolicyManager> qosConfig)
-            throws TransactionCommitFailedException {
+    protected void doActivate(String node, InterfaceConfigurations interfaceConfigurations, L2vpn l2vpn, MountPointService mountService2, 
+            Optional<PolicyManager> qosConfig)throws TransactionCommitFailedException {
 
         new TransactionActivator().activate(node, interfaceConfigurations, l2vpn, mountService2, qosConfig);
     }
 
     @Override
-    protected void createSubInterface(String nodeName,
-            InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
+    protected void createSubInterface(String nodeName, InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
             throws TransactionCommitFailedException {
 
-        new TransactionActivator().createSubInterface(nodeName, subInterfaceConfigurations, mountService2);
+        new TransactionActivator().activateSubInterface(nodeName, subInterfaceConfigurations, mountService2);
     }
 
     @Override
-    protected InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port,
-            boolean isExclusive) {
-        return new InterfaceActivator().deactivateInterface(port, isExclusive);
+    protected InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive) {
+        return new InterfaceActivator().deactivate(port, isExclusive);
     }
 
     @Override
-    protected void doDeactivate(ServicePort port, InstanceIdentifier<P2pXconnect> xconnectId,
-            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
-            boolean isExclusive, EndPoint endPoint, MountPointService mountService2,
-            List<String> dvls, List<Uuid> inls) throws TransactionCommitFailedException {
+    protected void doDeactivate(ServicePort port, InstanceIdentifier<P2pXconnect> xconnectId, InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
+            boolean isExclusive, EndPoint endPoint, MountPointService mountService2, List<String> dvls, List<Uuid> inls) throws TransactionCommitFailedException {
 
-        new TransactionActivator().doDeactivate(port, xconnectId, interfaceConfigurationId, isExclusive, endPoint, mountService2, dvls, inls);
+        new TransactionActivator().deactivate(port, xconnectId, interfaceConfigurationId, isExclusive, endPoint, mountService2, dvls, inls);
     }
 }

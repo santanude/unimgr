@@ -43,11 +43,9 @@ import org.slf4j.LoggerFactory;
 /**
  * @author arif.hussain@xoriant.com
  */
-@SuppressWarnings("deprecation")
 public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActivator {
 
-    private static final Logger LOG =
-            LoggerFactory.getLogger(AbstractL2vpnBridgeDomainActivator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractL2vpnBridgeDomainActivator.class);
     private static final long MTU = 1500;
 
     protected DataBroker dataBroker;
@@ -66,9 +64,7 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
     }
 
     @Override
-    public void activate(List<EndPoint> endPoints, String serviceId, boolean isExclusive,
-            ServiceType serviceType)
-            throws ResourceActivatorException, TransactionCommitFailedException {
+    public void activate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, ServiceType serviceType) throws ResourceActivatorException, TransactionCommitFailedException {
         String innerOuterName = getInnerName(serviceId);
         ServicePort port = null;
         ServicePort neighbor = null;
@@ -91,23 +87,18 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
         }
 
         java.util.Optional<PolicyManager> qosConfig = activateQos(innerOuterName, port);
-        InterfaceConfigurations interfaceConfigurations =
-                activateInterface(port, neighbor, MTU, isExclusive);
+        InterfaceConfigurations interfaceConfigurations = activateInterface(port, neighbor, MTU, isExclusive);
         BdPseudowires bdPseudowires = activateBdPseudowire(neighbor);
-
-        BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(innerOuterName, innerOuterName,
-                port, neighbor, bdPseudowires, isExclusive);
+        BridgeDomainGroups bridgeDomainGroups = activateBridgeDomain(innerOuterName, innerOuterName, port, neighbor, bdPseudowires, isExclusive);
         L2vpn l2vpn = activateL2Vpn(bridgeDomainGroups);
 
         // create sub interface for tag based service
         if (!isExclusive) {
-            InterfaceConfigurations subInterfaceConfigurations =
-                    createSubInterface(port, neighbor, MTU);
+            InterfaceConfigurations subInterfaceConfigurations = createSubInterface(port, neighbor, MTU);
             createSubInterface(port.getNode().getValue(), subInterfaceConfigurations, mountService);
         }
 
-        if (serviceType != null
-                && serviceType.getName().equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
+        if (serviceType != null && serviceType.getName().equals(ServiceType.ROOTEDMULTIPOINTCONNECTIVITY.getName())) {
             if (!(portRole != null && portRole.equals(PortRole.LEAF.getName())
                     && neighborRole != null && neighborRole.equals(PortRole.LEAF.getName()))) {
                 doActivate(port.getNode().getValue(), interfaceConfigurations, l2vpn, mountService, qosConfig);
@@ -117,41 +108,15 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
         }
     }
 
-    protected abstract java.util.Optional<PolicyManager> activateQos(String name, ServicePort port);
-
-    protected abstract void doActivate(String node, InterfaceConfigurations interfaceConfigurations,
-            L2vpn l2vpn, MountPointService mountService2,
-            java.util.Optional<PolicyManager> qosConfig) throws TransactionCommitFailedException;
-
-    protected abstract void createSubInterface(String value,
-            InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
-            throws TransactionCommitFailedException;
-
     @Override
-    public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive,
-            ServiceType serviceType)
+    public void deactivate(List<EndPoint> endPoints, String serviceId, boolean isExclusive, ServiceType serviceType)
             throws TransactionCommitFailedException, ResourceActivatorException {
         String innerOuterName = getInnerName(serviceId);
-        ServicePort port = toServicePort(endPoints.stream().findFirst().get(),
-                NetconfConstants.NETCONF_TOPOLODY_NAME);
+        ServicePort port = toServicePort(endPoints.stream().findFirst().get(), NetconfConstants.NETCONF_TOPOLODY_NAME);
 
-        InstanceIdentifier<BridgeDomain> bridgeDomainId =
-                deactivateBridgeDomain(innerOuterName, innerOuterName);
-        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId =
-                deactivateInterface(port, isExclusive);
-        doDeactivate(port, bridgeDomainId, interfaceConfigurationId, isExclusive,
-                endPoints.stream().findFirst().get(), dvls, inls);
-    }
-
-    private InstanceIdentifier<BridgeDomain> deactivateBridgeDomain(String outerName,
-            String innerName) {
-        return InstanceIdentifier.builder(L2vpn.class).child(Database.class)
-                .child(BridgeDomainGroups.class)
-                .child(BridgeDomainGroup.class,
-                        new BridgeDomainGroupKey(new CiscoIosXrString(outerName)))
-                .child(BridgeDomains.class)
-                .child(BridgeDomain.class, new BridgeDomainKey(new CiscoIosXrString(innerName)))
-                .build();
+        InstanceIdentifier<BridgeDomain> bridgeDomainId = deactivateBridgeDomain(innerOuterName, innerOuterName);
+        InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId = deactivateInterface(port, isExclusive);
+        doDeactivate(port, bridgeDomainId, interfaceConfigurationId, isExclusive, endPoints.stream().findFirst().get(), dvls, inls);
     }
 
     /**
@@ -181,31 +146,42 @@ public abstract class AbstractL2vpnBridgeDomainActivator implements ResourceActi
         return false;
     }
 
-    protected abstract BdPseudowires activateBdPseudowire(ServicePort neighbor);
-
-    protected abstract BridgeDomainGroups activateBridgeDomain(String outerName, String innerName,
-            ServicePort port, ServicePort neighbor, BdPseudowires bdPseudowires,
-            boolean isExclusive);
-
-    protected abstract L2vpn activateL2Vpn(BridgeDomainGroups bridgeDomainGroups);
-
-    protected abstract InterfaceConfigurations activateInterface(ServicePort portA,
-            ServicePort portZ, long mtu, boolean isExclusive);
-
-    protected abstract InterfaceConfigurations createSubInterface(ServicePort portA,
-            ServicePort portZ, long mtu);
+    protected abstract java.util.Optional<PolicyManager> activateQos(String name, ServicePort port);
 
     protected abstract String getInnerName(String serviceId);
 
     protected abstract String getOuterName(String serviceId);
 
-    protected abstract InstanceIdentifier<InterfaceConfiguration> deactivateInterface(
-            ServicePort port, boolean isExclusive);
+    protected abstract InterfaceConfigurations activateInterface(ServicePort portA, ServicePort portZ, long mtu, boolean isExclusive);
 
-    protected abstract void doDeactivate(ServicePort port,
-            InstanceIdentifier<BridgeDomain> bridgeDomainId,
-            InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
-            boolean isExclusive, EndPoint endPoint, List<String> dvls2, List<Uuid> inls2)
+    protected abstract void createSubInterface(String value, InterfaceConfigurations subInterfaceConfigurations, MountPointService mountService2)
             throws TransactionCommitFailedException;
+
+    protected abstract InterfaceConfigurations createSubInterface(ServicePort portA, ServicePort portZ, long mtu);
+
+    protected abstract BdPseudowires activateBdPseudowire(ServicePort neighbor);
+
+    protected abstract BridgeDomainGroups activateBridgeDomain(String outerName, String innerName, ServicePort port, ServicePort neighbor, BdPseudowires bdPseudowires,
+            boolean isExclusive);
+
+    protected abstract L2vpn activateL2Vpn(BridgeDomainGroups bridgeDomainGroups);
+
+    protected abstract void doActivate(String node, InterfaceConfigurations interfaceConfigurations, L2vpn l2vpn, MountPointService mountService2,
+            java.util.Optional<PolicyManager> qosConfig) throws TransactionCommitFailedException;
+
+    protected abstract InstanceIdentifier<InterfaceConfiguration> deactivateInterface(ServicePort port, boolean isExclusive);
+
+    private InstanceIdentifier<BridgeDomain> deactivateBridgeDomain(String outerName, String innerName) {
+
+        return InstanceIdentifier.builder(L2vpn.class).child(Database.class)
+                .child(BridgeDomainGroups.class)
+                .child(BridgeDomainGroup.class, new BridgeDomainGroupKey(new CiscoIosXrString(outerName)))
+                .child(BridgeDomains.class)
+                .child(BridgeDomain.class, new BridgeDomainKey(new CiscoIosXrString(innerName)))
+                .build();
+    }
+
+    protected abstract void doDeactivate(ServicePort port, InstanceIdentifier<BridgeDomain> bridgeDomainId, InstanceIdentifier<InterfaceConfiguration> interfaceConfigurationId,
+            boolean isExclusive, EndPoint endPoint, List<String> dvls2, List<Uuid> inls2) throws TransactionCommitFailedException;
 
 }
