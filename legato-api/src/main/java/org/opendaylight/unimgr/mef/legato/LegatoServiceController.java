@@ -303,7 +303,8 @@ public class LegatoServiceController extends UnimgrDataTreeChangeListener<Evc> {
                         if (vlanIdList.size() > 0) {
                             // delete existing EVC and create service
                             deleteConnection(evcDao.getEvcId());
-                            createConnection(evc);
+                            Thread.sleep(3000);
+	                    createConnection(evc);
                         }
                     } else {
                         LOG.info("UUID does not exists for EVC Id : {}", evcDao.getEvcId());
