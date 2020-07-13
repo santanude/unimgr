@@ -8,15 +8,17 @@
 
 package org.opendaylight.unimgr.mef.nrp.cisco.xr;
 
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesService.NodeCapability.NETCONF;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesService.NodeCapability.NETCONF_CISCO_IOX_IFMGR;
+import static org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesService.NodeCapability.NETCONF_CISCO_IOX_L2VPN;
 import static org.opendaylight.unimgr.utils.CapabilitiesService.Capability.Mode.AND;
-import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.NodeCapability.NETCONF;
-import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.NodeCapability.NETCONF_CISCO_IOX_IFMGR;
-import static org.opendaylight.unimgr.utils.CapabilitiesService.NodeContext.NodeCapability.NETCONF_CISCO_IOX_L2VPN;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -27,32 +29,40 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
-import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
-import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
-import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
-import org.opendaylight.controller.md.sal.binding.api.MountPoint;
-import org.opendaylight.controller.md.sal.binding.api.MountPointService;
-import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
-import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
+import org.opendaylight.mdsal.binding.api.DataBroker;
+import org.opendaylight.mdsal.binding.api.DataObjectModification;
+import org.opendaylight.mdsal.binding.api.DataTreeChangeListener;
+import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
+import org.opendaylight.mdsal.binding.api.DataTreeModification;
+import org.opendaylight.mdsal.binding.api.MountPoint;
+import org.opendaylight.mdsal.binding.api.MountPointService;
+import org.opendaylight.mdsal.binding.api.ReadTransaction;
+import org.opendaylight.mdsal.binding.api.ReadWriteTransaction;
+import org.opendaylight.mdsal.common.api.CommitInfo;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.common.api.ReadFailedException;
+import org.opendaylight.unimgr.mef.nrp.api.TopologyManager;
 import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper.InterfaceHelper;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.util.XrCapabilitiesService;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.l2vpn.driver.XrDriverBuilder;
 import org.opendaylight.unimgr.mef.nrp.common.NrpDao;
-import org.opendaylight.unimgr.utils.CapabilitiesService;
-import org.opendaylight.unimgr.utils.DriverConstants;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
+import org.opendaylight.unimgr.mef.nrp.common.TapiUtils;
+/*import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
 import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationKey;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.Eth;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.Uuid;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.context.attrs.ServiceInterfacePoint;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.context.attrs.ServiceInterfacePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.common.rev170712.service._interface.point.LayerProtocolBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.node.OwnedNodeEdgePoint;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.node.OwnedNodeEdgePointBuilder;
-import org.opendaylight.yang.gen.v1.urn.mef.yang.tapi.topology.rev170712.node.OwnedNodeEdgePointKey;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationKey;*/
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907.InterfaceConfigurations;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations.InterfaceConfiguration;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations.InterfaceConfigurationKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.LayerProtocolName;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortDirection;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.PortRole;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.Uuid;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.common.rev180307.tapi.context.ServiceInterfacePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePoint;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointBuilder;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.OwnedNodeEdgePointKey;
+import org.opendaylight.yang.gen.v1.urn.onf.otcc.yang.tapi.topology.rev180307.node.edge.point.MappedServiceInterfacePoint;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.network.topology.topology.topology.types.TopologyNetconf;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
@@ -66,12 +76,13 @@ import org.opendaylight.yangtools.yang.binding.KeyedInstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
+
 
 /**
  * @author bartosz.michalik@amartus.com
@@ -79,16 +90,16 @@ import com.google.common.util.concurrent.Futures;
 public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     private static final Logger LOG = LoggerFactory.getLogger(TopologyDataHandler.class);
     public static final InstanceIdentifier<Topology> NETCONF_TOPO_IID =
-            InstanceIdentifier
-                    .create(NetworkTopology.class)
-                    .child(Topology.class,
-                            new TopologyKey(new TopologyId(TopologyNetconf.QNAME.getLocalName())));
+            InstanceIdentifier.create(NetworkTopology.class).child(Topology.class,
+                    new TopologyKey(new TopologyId(TopologyNetconf.QNAME.getLocalName())));
 
+    private final int MAX_RETRIALS = 5;
 
-    LoadingCache<NodeKey, KeyedInstanceIdentifier<Node, NodeKey>> mountIds = CacheBuilder.newBuilder()
-            .maximumSize(20)
-            .build(
-                    new CacheLoader<NodeKey, KeyedInstanceIdentifier<Node, NodeKey>>() {
+    private final TopologyManager topologyManager;
+
+    LoadingCache<NodeKey, KeyedInstanceIdentifier<Node, NodeKey>> mountIds =
+            CacheBuilder.newBuilder().maximumSize(20)
+                    .build(new CacheLoader<NodeKey, KeyedInstanceIdentifier<Node, NodeKey>>() {
                         public KeyedInstanceIdentifier<Node, NodeKey> load(final NodeKey key) {
                             return NETCONF_TOPO_IID.child(Node.class, key);
                         }
@@ -100,10 +111,12 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
 
     private ListenerRegistration<TopologyDataHandler> registration;
-    private CapabilitiesService capabilitiesService;
+    private XrCapabilitiesService capabilitiesService;
 
 
-    public TopologyDataHandler(DataBroker dataBroker, MountPointService mountService) {
+    public TopologyDataHandler(TopologyManager topologyManager, DataBroker dataBroker,
+            MountPointService mountService) {
+        this.topologyManager = topologyManager;
         Objects.requireNonNull(dataBroker);
         Objects.requireNonNull(mountService);
         this.dataBroker = dataBroker;
@@ -111,37 +124,43 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
     }
 
     public void init() {
-        LOG.debug("initializing topology handler for {}", DriverConstants.XR_NODE);
+        LOG.debug("initializing topology handler for {}", XrDriverBuilder.XR_NODE);
+        initializeWithRetrial(MAX_RETRIALS);
+    }
+
+    private void initializeWithRetrial(int retrialCouter) {
         ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
 
         NrpDao dao = new NrpDao(tx);
-        dao.createSystemNode(DriverConstants.XR_NODE, null);
+        dao.createNode(topologyManager.getSystemTopologyId(), XrDriverBuilder.XR_NODE,
+                LayerProtocolName.ETH, null);
 
-        Futures.addCallback(tx.submit(), new FutureCallback<Void>() {
+        Futures.addCallback(tx.commit(), new FutureCallback<CommitInfo>() {
             @Override
-            public void onSuccess(@Nullable Void result) {
-                LOG.info("Node {} created", DriverConstants.XR_NODE);
-                capabilitiesService = new CapabilitiesService(dataBroker);
+            public void onSuccess(@Nullable CommitInfo result) {
+                LOG.info("Node {} created", XrDriverBuilder.XR_NODE);
+                capabilitiesService = new XrCapabilitiesService(dataBroker);
                 registerNetconfTreeListener();
-
             }
 
             @Override
             public void onFailure(Throwable t) {
-                LOG.error("No node created due to the error", t);
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                } catch (InterruptedException _e) {
-
+                if (retrialCouter != 0) {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(500);
+                    } catch (InterruptedException _e) {
+                    }
+                    if (retrialCouter != MAX_RETRIALS) {
+                        LOG.debug("Retrying initialization of {} for {} time",
+                                XrDriverBuilder.XR_NODE, MAX_RETRIALS - retrialCouter + 1);
+                    }
+                    initializeWithRetrial(retrialCouter - 1);
+                } else {
+                    LOG.error("No node created due to the error", t);
                 }
-                LOG.info("retrying initialization of Topology handler for {}", DriverConstants.XR_NODE);
-                init();
+
             }
-        });
-
-
-
-
+        }, MoreExecutors.directExecutor());
     }
 
     public void close() {
@@ -156,34 +175,38 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
         InstanceIdentifier<Node> nodeId = NETCONF_TOPO_IID.child(Node.class);
 
-        registration = dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<>(LogicalDatastoreType.OPERATIONAL, nodeId), this);
+        registration = dataBroker.registerDataTreeChangeListener(
+                DataTreeIdentifier.create(LogicalDatastoreType.OPERATIONAL, nodeId), this);
         LOG.info("netconf tree listener registered");
     }
 
 
-
-    Function<DataObjectModification<Node>, Node> addedNode = mod -> (mod.getModificationType() == DataObjectModification.ModificationType.WRITE || mod.getModificationType() == DataObjectModification.ModificationType.SUBTREE_MODIFIED) ?
-            mod.getDataAfter() : null;
+    Function<DataObjectModification<Node>, Node> addedNode =
+            mod -> (mod.getModificationType() == DataObjectModification.ModificationType.WRITE
+            || mod.getModificationType() == DataObjectModification.ModificationType.SUBTREE_MODIFIED)
+            ? mod.getDataAfter() : null;
 
     @Override
     public void onDataTreeChanged(@Nonnull Collection<DataTreeModification<Node>> changes) {
 
         List<Node> addedNodes = changes.stream().map(DataTreeModification::getRootNode)
-                .map(addedNode::apply)
-                .filter(n -> {
-                    if (n == null) return false;
-                    return capabilitiesService.node(n).isSupporting(AND, NETCONF, NETCONF_CISCO_IOX_IFMGR, NETCONF_CISCO_IOX_L2VPN);
+                .map(addedNode::apply).filter(n -> {
+                    if (n == null)
+                        return false;
+                    return capabilitiesService.node(n).isSupporting(AND, NETCONF,
+                            NETCONF_CISCO_IOX_IFMGR, NETCONF_CISCO_IOX_L2VPN);
                 }).collect(Collectors.toList());
         try {
             onAddedNodes(addedNodes);
-        } catch(Exception e) {
-            //TODO improve error handling
+        } catch (Exception e) {
+            // TODO improve error handling
             LOG.error("error while processing new Cisco nodes", e);
         }
     }
 
     private void onAddedNodes(@Nonnull Collection<Node> added) throws ReadFailedException {
-        if (added.isEmpty()) return;
+        if (added.isEmpty())
+            return;
         LOG.debug("found {} added XR nodes", added.size());
 
         final ReadWriteTransaction topoTx = dataBroker.newReadWriteTransaction();
@@ -192,23 +215,21 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
 
             ServiceInterfacePoint sip = new ServiceInterfacePointBuilder()
                     .setUuid(new Uuid("sip:" + nep.getUuid().getValue()))
-//                    .setState(St)
-// TODO donaldh     .setDirection(TerminationDirection.Bidirectional)
-                    .setLayerProtocol(Collections.singletonList(new LayerProtocolBuilder()
-                            .setLocalId("eth")
-                            .setLayerProtocolName(Eth.class)
-                            .build()))
-                    .build();
+                    // .setState(St)
+                    .setLayerProtocolName(Collections.singletonList(LayerProtocolName.ETH)).build();
             dao.addSip(sip);
-            nep = new OwnedNodeEdgePointBuilder(nep).setMappedServiceInterfacePoint(Collections.singletonList(sip.getUuid())).build();
-            LOG.trace("Adding nep {} to {} node", nep.getUuid(), DriverConstants.XR_NODE);
-            dao.updateNep(DriverConstants.XR_NODE, nep);
+            MappedServiceInterfacePoint sipRef =
+                    TapiUtils.toSipRef(sip.getUuid(), MappedServiceInterfacePoint.class);
+            nep = new OwnedNodeEdgePointBuilder(nep)
+                    .setMappedServiceInterfacePoint(Collections.singletonList(sipRef)).build();
+            LOG.trace("Adding nep {} to {} node", nep.getUuid(), XrDriverBuilder.XR_NODE);
+            dao.updateNep(XrDriverBuilder.XR_NODE, nep);
         });
 
-        Futures.addCallback(topoTx.submit(), new FutureCallback<Void>() {
+        Futures.addCallback(topoTx.commit(), new FutureCallback<CommitInfo>() {
 
             @Override
-            public void onSuccess(@Nullable Void result) {
+            public void onSuccess(@Nullable CommitInfo result) {
                 LOG.debug("TAPI node upadate successful");
             }
 
@@ -216,45 +237,46 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
             public void onFailure(Throwable t) {
                 LOG.warn("TAPI node upadate failed due to an error", t);
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
-    //simplyfied version of selecting
-    private Pattern gbPort = Pattern.compile(".*(GigabitEthernet|TenGigE)[^.]+$");
+    // simplyfied version of selecting
+    private Pattern gbPort = Pattern.compile(".*(GigabitEthernet|TenGigE)[^-]+$");
 
     final Predicate<InterfaceConfiguration> isNep = ic -> {
-        final String name = ic.getKey().getInterfaceName().getValue();
+        final String name = ic.key().getInterfaceName().getValue();
         return gbPort.matcher(name).matches();
     };
 
     private List<OwnedNodeEdgePoint> toTp(Collection<Node> nodes) {
         OwnedNodeEdgePointBuilder tpBuilder = new OwnedNodeEdgePointBuilder();
         return nodes.stream().flatMap(cn -> {
-            final NodeKey key = cn.getKey();
+            final NodeKey key = cn.key();
             try {
                 KeyedInstanceIdentifier<Node, NodeKey> id = mountIds.get(key);
                 Optional<MountPoint> mountPoint = mountService.getMountPoint(id);
                 if (mountPoint.isPresent()) {
                     DataBroker deviceBroker = mountPoint.get().getService(DataBroker.class).get();
-                    LOG.debug(deviceBroker.toString());
                     List<OwnedNodeEdgePoint> tps;
-                    try(ReadOnlyTransaction tx = deviceBroker.newReadOnlyTransaction()) {
+                    try(ReadTransaction tx = deviceBroker.newReadOnlyTransaction()) {
                         tps = ports(tx)
-                                .filter(i -> {
-                                    boolean shutdown = i != null && i.isShutdown() != null && i.isShutdown();
-                                    return !shutdown;
-                                })
-                                .filter(isNep::test)
-                                .map(i -> {
-                                    InterfaceConfigurationKey ikey = i.getKey();
-                                    LOG.debug("found {} interface", ikey);
+                          .filter(i -> {
+                            boolean shutdown =
+                                    i != null && i.getShutdown() != null;
+                            return !shutdown;
+                        }).filter(isNep::test).map(i -> {
+                            InterfaceConfigurationKey ikey = i.key();
+                            LOG.debug("found {} interface", ikey);
 
-                                    Uuid tpId = new Uuid(cn.getNodeId().getValue() + ":" + ikey.getInterfaceName().getValue());
-                                    return tpBuilder
-                                            .setUuid(tpId)
-                                            .setKey(new OwnedNodeEdgePointKey(tpId))
-                                            .build();
-                                }).collect(Collectors.toList());
+                            Uuid tpId = new Uuid(cn.getNodeId().getValue() + ":"
+                                    + ikey.getInterfaceName().getValue());
+                            return tpBuilder
+                                    .setUuid(tpId)
+                                    .withKey(new OwnedNodeEdgePointKey(tpId))
+                                    .setLinkPortDirection(PortDirection.BIDIRECTIONAL)
+                                    .setLinkPortRole(PortRole.SYMMETRIC)
+                                    .setLayerProtocolName(LayerProtocolName.ETH).build();
+                        }).collect(Collectors.toList());
 
                     }
 
@@ -271,8 +293,8 @@ public class TopologyDataHandler implements DataTreeChangeListener<Node> {
         }).collect(Collectors.toList());
     }
 
-    private Stream<InterfaceConfiguration> ports(ReadOnlyTransaction tx) throws ReadFailedException {
-        Optional<InterfaceConfigurations> interfaces = tx.read(LogicalDatastoreType.OPERATIONAL, InterfaceHelper.getInterfaceConfigurationsId()).checkedGet();
+    private Stream<InterfaceConfiguration> ports(ReadTransaction tx) throws InterruptedException, ExecutionException {
+        Optional<InterfaceConfigurations> interfaces = tx.read(LogicalDatastoreType.OPERATIONAL, InterfaceHelper.getInterfaceConfigurationsId()).get();
         if (interfaces.isPresent()) {
             return interfaces.get().getInterfaceConfiguration().stream();
         }

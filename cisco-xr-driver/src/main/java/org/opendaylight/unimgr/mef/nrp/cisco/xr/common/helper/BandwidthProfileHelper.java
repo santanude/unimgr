@@ -7,45 +7,30 @@
  */
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper;
 
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
-import org.opendaylight.unimgr.utils.MdsalUtils;
-import org.opendaylight.unimgr.utils.NullAwareDatastoreGetter;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManager;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.PolicyManagerBuilder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.RateUnits;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.ThresholdUnits;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.policy.manager.PolicyMapsBuilder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.policy.manager.policy.maps.PolicyMap;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.policy.manager.policy.maps.PolicyMapBuilder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.policy.map.rule.PolicyMapRule;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.policy.map.rule.PolicyMapRuleBuilder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.policy.map.rule.policy.map.rule.Police;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.policy.map.rule.policy.map.rule.PoliceBuilder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.asr9k.policymgr.cfg.rev150518.policy.map.rule.policy.map.rule.police.*;
-import org.opendaylight.yang.gen.v1.urn.mef.nrp.bandwidth.profile.rev160630.GNRPBwpFlow;
-import org.opendaylight.yang.gen.v1.urn.mef.nrp.specs.rev160630.AdapterSpec1;
-import org.opendaylight.yang.gen.v1.urn.mef.nrp.specs.rev160630.TerminationSpec1;
-import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.TerminationPoint1;
-import org.opendaylight.yang.gen.v1.urn.onf.core.network.module.rev160630.g_layerprotocol.LpSpec;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.TopologyKey;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeKey;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPoint;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointKey;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.PolicyManager;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.PolicyManagerBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.RateUnits;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.ThresholdUnits;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.policy.manager.PolicyMapsBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.policy.manager.policy.maps.PolicyMap;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.policy.manager.policy.maps.PolicyMapBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.policy.map.rule.PolicyMapRule;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.policy.map.rule.PolicyMapRuleBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.policy.map.rule.policy.map.rule.Police;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.policy.map.rule.policy.map.rule.PoliceBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.infra.policymgr.cfg.rev161215.policy.map.rule.policy.map.rule.police.*;
+import org.opendaylight.yang.gen.v1.urn.mef.yang.mef.common.rev180321.BwpFlow;
+import org.opendaylight.yangtools.yang.common.Empty;
+import org.opendaylight.yangtools.yang.common.Uint32;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType.CONFIGURATION;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class BandwidthProfileHelper {
@@ -55,130 +40,91 @@ public class BandwidthProfileHelper {
     private static String SEPARATOR  = "_";
 
     private static String CLASS_DEFAULT = "class-default";
+    private final ServicePort port;
 
     private static class PolicyMapNameGenerator {
 
-        public static String generate(String fcName, BandwidthProfileComposition.BwpDirection direction, BandwidthProfileComposition.BwpApplicability applicability) {
+        static String generate(String fcName, BandwidthProfileComposition.BwpDirection direction, BandwidthProfileComposition.BwpApplicability applicability) {
             //TODO naming convention
-            return new StringBuilder()
-                    .append(fcName)
-                    .append(SEPARATOR)
-                    .append(direction.name().toLowerCase())
-                    .append(SEPARATOR)
-                    .append(applicability.name().toLowerCase())
-                    .toString();
+            return fcName +
+                    SEPARATOR +
+                    direction.name().toLowerCase() +
+                    SEPARATOR +
+                    applicability.name().toLowerCase();
         }
     }
-
-    private static List<BandwidthProfileComposition> retrieveBandwidthProfiles(DataBroker dataBroker, ServicePort port) {
-        List<BandwidthProfileComposition> bwCompositionList = new ArrayList<>();
-        List<NullAwareDatastoreGetter<LpSpec>> lpSpecNadgs = new NullAwareDatastoreGetter<>(readTerminationPoint(dataBroker, CONFIGURATION, port))
-                .collect(x -> x::getAugmentation, TerminationPoint1.class)
-                .collect(x -> x::getLtpAttrs)
-                .collectMany(x -> x::getLpList)
-                .stream()
-                .map(nadg -> nadg.collect(x -> x::getLpSpec))
-                .collect(Collectors.toList());
-
-        for (NullAwareDatastoreGetter<LpSpec> lpSpecNadg : lpSpecNadgs) {
-            NullAwareDatastoreGetter<AdapterSpec1> adapterSpecNadg = lpSpecNadg
-                    .collect(x -> x::getAdapterSpec)
-                    .collect(x -> x::getAugmentation, AdapterSpec1.class);
-
-            NullAwareDatastoreGetter<TerminationSpec1> terminationSpecNadg = lpSpecNadg
-                    .collect(x -> x::getTerminationSpec)
-                    .collect(x -> x::getAugmentation, TerminationSpec1.class);
-
-            bwCompositionList.add(
-                BandwidthProfileComposition.builder()
-                        .defaultIngressBwProfile(adapterSpecNadg.collect(x -> x::getNrpConnAdaptSpecAttrs).collect(x -> x::getIngressBwpFlow).get())
-                        .defaultEgressBwProfile(adapterSpecNadg.collect(x -> x::getNrpConnAdaptSpecAttrs).collect(x -> x::getEgressBwpFlow).get())
-                        .ingressBwProfilePerEvc(adapterSpecNadg.collect(x -> x::getNrpEvcEndpointConnAdaptSpecAttrs).collect(x -> x::getIngressBwpFlow).get())
-                        .egressBwProfilePerEvc(adapterSpecNadg.collect(x -> x::getNrpEvcEndpointConnAdaptSpecAttrs).collect(x -> x::getEgressBwpFlow).get())
-                        .ingressBwProfilePerUni(terminationSpecNadg.collect(x -> x::getNrpUniTerminationAttrs).collect(x -> x::getIngressBwpUni).get())
-                        .egressBwProfilePerUni(terminationSpecNadg.collect(x -> x::getNrpUniTerminationAttrs).collect(x -> x::getEgressBwpUni).get())
-                        .build()
-            );
-        }
-
-        return bwCompositionList;
-    }
-
-    private List<BandwidthProfileComposition> bandwidthProfiles;
 
     private List<PolicyMap> policyMaps;
 
-    public BandwidthProfileHelper(DataBroker dataBroker, ServicePort port) {
-        bandwidthProfiles = BandwidthProfileHelper.retrieveBandwidthProfiles(dataBroker, port);
+    public BandwidthProfileHelper(ServicePort port) {
         policyMaps = new ArrayList<>();
+        this.port =  port;
     }
 
-    public List<BandwidthProfileComposition> getBandwidthProfiles() {
-        return bandwidthProfiles;
-    }
-
-    public boolean isQosEnabled() {
-        for (BandwidthProfileComposition bandwidthProfileComposition : bandwidthProfiles) {
-            if (bandwidthProfileComposition.hasAnyProfileDefined()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private Police addPolice(GNRPBwpFlow bandwidthProfile) {
-        Long cir = bandwidthProfile.getCir().getValue();
-        Long cbs = bandwidthProfile.getCbs().getValue();
-        Long pir = bandwidthProfile.getEir().getValue() + cir;
-        Long pbs = bandwidthProfile.getEbs().getValue() + cbs;
+    private Police addPolice(BwpFlow bwp) {
+        assert bwp != null;
+        Long cir = bwp.getCir().getValue();
+        Long cbs = bwp.getCbs().getValue();
+        Long pir = bwp.getEir().getValue() + cir;
+        Long pbs = bwp.getCbs().getValue() + cbs;
 
         return new PoliceBuilder()
                 // CIR configuration
-                .setRate(new RateBuilder().setUnits(new RateUnits("bps")).setValue(cir).build())
+                .setRate(new RateBuilder().setUnits(
+                        new RateUnits("bps")).setValue(Uint32.valueOf(cir)).build())
 
                 // CBS configuration
-                .setBurst(new BurstBuilder().setUnits(new ThresholdUnits("bytes")).setValue(cbs).build())
+                .setBurst(new BurstBuilder().setUnits(
+                        new ThresholdUnits("bytes")).setValue(Uint32.valueOf(cbs)).build())
 
                 // PIR configuration
-                .setPeakRate(new PeakRateBuilder().setUnits(new RateUnits("bps")).setValue(pir).build())
+                .setPeakRate(new PeakRateBuilder().setUnits(
+                        new RateUnits("bps")).setValue(Uint32.valueOf(pir)).build())
 
                 // PBS configuration
-                .setPeakBurst(new PeakBurstBuilder().setUnits(new ThresholdUnits("bytes")).setValue(pbs).build())
+                .setPeakBurst(new PeakBurstBuilder().setUnits(
+                        new ThresholdUnits("bytes")).setValue(Uint32.valueOf(pbs)).build())
 
                 // GREEN-marked frames action configuration
-                .setConformAction(new ConformActionBuilder().setTransmit(true).build())
+                .setConformAction(new ConformActionBuilder().setTransmit(Empty.getInstance()).build())
 
                 // YELLOW-marked frames action configuration
-                .setViolateAction(new ViolateActionBuilder().setTransmit(true).build())
+                .setViolateAction(new ViolateActionBuilder().setTransmit(Empty.getInstance()).build())
 
                 // RED-marked frames action configuration
-                .setExceedAction(new ExceedActionBuilder().setDrop(true).build())
+                .setExceedAction(new ExceedActionBuilder().setDrop(Empty.getInstance()).build())
 
                 .build();
     }
 
     public BandwidthProfileHelper addPolicyMap(String fcName, BandwidthProfileComposition.BwpDirection direction, BandwidthProfileComposition.BwpApplicability applicability) {
-        if (bandwidthProfiles.size() > 0) {
-            Optional<GNRPBwpFlow> bwProfileOptional = bandwidthProfiles.stream().findFirst().get().get(direction, applicability);
+        if (BandwidthProfileComposition.BwpApplicability.UNI == applicability) {
 
-            if (bwProfileOptional.isPresent()) {
-                List<PolicyMapRule> policyMapRules = new ArrayList<>();
-                policyMapRules.add(
-                        new PolicyMapRuleBuilder()
-                                .setClassName(CLASS_DEFAULT)
-                                .setPolice(addPolice(bwProfileOptional.get()))
-                                .build()
-                );
+            BwpFlow bwp = null;
 
-                policyMaps.add(new PolicyMapBuilder()
-                        .setName(PolicyMapNameGenerator.generate(fcName, direction, applicability))
-                        .setPolicyMapRule(policyMapRules)
-                        .build()
-                );
-
-                return this;
+            if (direction == BandwidthProfileComposition.BwpDirection.INGRESS) {
+                bwp = port.getIngressBwpFlow();
             }
+
+            if (direction == BandwidthProfileComposition.BwpDirection.EGRESS) {
+                bwp = port.getEgressBwpFlow();
+            }
+
+            if (bwp == null) return this;
+
+            PolicyMapRule rule = new PolicyMapRuleBuilder()
+                    .setClassName(CLASS_DEFAULT)
+                    .setPolice(addPolice(bwp))
+                    .build();
+
+            policyMaps.add(new PolicyMapBuilder()
+                    .setName(PolicyMapNameGenerator.generate(fcName, direction, applicability))
+                    .setPolicyMapRule(Collections.singletonList(rule))
+                    .build()
+            );
+
+            return this;
+
         }
 
         LOG.warn("Cannot configure policy map - there are no Bandwidth Profiles defined.");
@@ -194,15 +140,5 @@ public class BandwidthProfileHelper {
                 .setPolicyMaps(new PolicyMapsBuilder().setPolicyMap(policyMaps).build())
                 .build()
         );
-    }
-
-    public static com.google.common.base.Optional<TerminationPoint> readTerminationPoint(DataBroker dataBroker, LogicalDatastoreType store, ServicePort port) {
-        InstanceIdentifier tpIid = InstanceIdentifier.builder(NetworkTopology.class)
-                .child(Topology.class, new TopologyKey(port.getTopology()))
-                .child(Node.class, new NodeKey(port.getNode()))
-                .child(TerminationPoint.class, new TerminationPointKey(port.getTp()))
-                .build();
-
-        return MdsalUtils.readOptional(dataBroker, store, tpIid);
     }
 }

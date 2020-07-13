@@ -7,23 +7,51 @@
  */
 package org.opendaylight.unimgr.mef.nrp.cisco.xr.common.helper;
 
-import org.opendaylight.unimgr.mef.nrp.common.ServicePort;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurationsBuilder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationBuilder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.Mtus;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.InterfaceConfiguration3;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.InterfaceConfiguration3Builder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109._interface.configurations._interface.configuration.L2Transport;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109._interface.configurations._interface.configuration.L2TransportBuilder;
-import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.InterfaceName;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.TopologyDataHandler;
+import org.opendaylight.unimgr.mef.nrp.cisco.xr.common.ServicePort;
+/*import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceActive;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurations;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceConfigurationsBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730.InterfaceModeEnum;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfiguration;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations.InterfaceConfigurationBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev150730._interface.configurations._interface.configuration.Mtus;*/
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907.InterfaceActive;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907.InterfaceConfigurations;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907.InterfaceConfigurationsBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907.InterfaceModeEnum;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations.InterfaceConfiguration;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations.InterfaceConfigurationBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations._interface.configuration.Mtus;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.ifmgr.cfg.rev170907._interface.configurations.InterfaceConfigurationKey;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109.InterfaceConfiguration2;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109.InterfaceConfiguration2Builder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109._interface.configurations._interface.configuration.EthernetServiceBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109._interface.configurations._interface.configuration.ethernet.service.Encapsulation;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.cfg.rev151109._interface.configurations._interface.configuration.ethernet.service.EncapsulationBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.datatypes.rev151109.Match;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2.eth.infra.datatypes.rev151109.VlanTagOrAny;
+/*import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.InterfaceConfiguration3;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109.InterfaceConfiguration3Builder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109._interface.configurations._interface.configuration.L2Transport;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev151109._interface.configurations._interface.configuration.L2TransportBuilder;
+*/
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626.InterfaceConfiguration3;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626.InterfaceConfiguration3Builder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626.InterfaceConfiguration4;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626.InterfaceConfiguration4Builder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626._interface.configurations._interface.configuration.L2Transport;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.ios.xr.l2vpn.cfg.rev170626._interface.configurations._interface.configuration.L2TransportBuilder;
+import org.opendaylight.yang.gen.v1.http.cisco.com.ns.yang.cisco.xr.types.rev150629.InterfaceName;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.common.Empty;
+import org.opendaylight.yangtools.yang.common.Uint32;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper, designated to support interface configuration
@@ -32,7 +60,7 @@ import java.util.Optional;
  */
 public class InterfaceHelper {
     private List<InterfaceConfiguration> configurations;
-
+    private static final Logger LOG = LoggerFactory.getLogger(TopologyDataHandler.class);
     public static InterfaceName getInterfaceName(ServicePort port) {
         String interfaceName = port.getTp().getValue();
 
@@ -43,10 +71,29 @@ public class InterfaceHelper {
         return new InterfaceName(interfaceName);
     }
 
-    public static InstanceIdentifier<InterfaceConfigurations> getInterfaceConfigurationsId() {
-        return InstanceIdentifier.builder(InterfaceConfigurations.class).build();
+    public static InterfaceName getSubInterfaceName(ServicePort port) {
+        String interfaceName = port.getTp().getValue();
+
+        if (interfaceName.contains(":")) {
+            interfaceName = interfaceName.split(":")[1];
+        }
+        // adding vlan id with interface name
+        interfaceName = interfaceName + "." + port.getVlanId();
+        return new InterfaceName(interfaceName);
     }
 
+
+	/*
+	 * public static InstanceIdentifier<InterfaceConfigurationKey>
+	 * getInterfaceConfigurationsId() {
+	 * LOG.warn("TAPI node upadate failed due to an error",
+	 * InstanceIdentifier.builder(InterfaceConfigurations.class).build()); return
+	 * InstanceIdentifier.builder(InterfaceConfigurations.class).build(); }
+	 */
+    public static InstanceIdentifier<InterfaceConfigurations> getInterfaceConfigurationsId() {
+    	LOG.warn("TAPI node upadate failed due to an error", InstanceIdentifier.builder(InterfaceConfigurations.class).build());
+        return InstanceIdentifier.builder(InterfaceConfigurations.class).build();
+    }
     public InterfaceHelper() {
         configurations = new LinkedList<>();
     }
@@ -55,13 +102,16 @@ public class InterfaceHelper {
         return addInterface(getInterfaceName(port), mtus, setL2Transport);
     }
 
+    public InterfaceHelper addSubInterface(ServicePort port, Optional<Mtus> mtus) {
+         return addSubInterface(getSubInterfaceName(port), mtus, port);
+     }
+
     public InterfaceHelper addInterface(InterfaceName name, Optional<Mtus> mtus, boolean setL2Transport) {
         InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();
 
         configurationBuilder
             .setInterfaceName(name)
-            .setActive(new InterfaceActive("act"))
-            .setShutdown(Boolean.FALSE);
+            .setActive(new InterfaceActive("act"));
 
         if (mtus.isPresent()) {
             configurationBuilder.setMtus(mtus.get());
@@ -75,6 +125,42 @@ public class InterfaceHelper {
         return this;
     }
 
+    public InterfaceHelper addSubInterface(InterfaceName name, Optional<Mtus> mtus, ServicePort port) {
+        InterfaceConfigurationBuilder configurationBuilder = new InterfaceConfigurationBuilder();
+
+        configurationBuilder
+            .setInterfaceName(name)
+            .setActive(new InterfaceActive("act"))
+            //.setShutdown(Boolean.FALSE)
+            .setDescription("Create sub interface through ODL")
+            .setInterfaceModeNonPhysical(InterfaceModeEnum.L2Transport);
+            // set ethernet service
+            setEthernetService(configurationBuilder, port);
+
+            if (mtus.isPresent()) {
+                configurationBuilder.setMtus(mtus.get());
+            }
+        configurations.add(configurationBuilder.build());
+
+        return this;
+    }
+
+    private void setEthernetService(InterfaceConfigurationBuilder configurationBuilder, ServicePort port) {
+        Encapsulation encapsulation = new EncapsulationBuilder()
+           .setOuterRange1Low(new VlanTagOrAny(Uint32.valueOf(port.getVlanId())))
+           .setOuterTagType(Match.MatchDot1q)
+           .build();
+
+        InterfaceConfiguration2 augmentation = new InterfaceConfiguration2Builder()
+                .setEthernetService(new EthernetServiceBuilder()
+                    .setEncapsulation(encapsulation)
+                    .build()
+                )
+                .build();
+
+          configurationBuilder.addAugmentation(InterfaceConfiguration2.class, augmentation);
+    }
+
     public InterfaceConfigurations build() {
         return new InterfaceConfigurationsBuilder()
             .setInterfaceConfiguration(configurations)
@@ -83,13 +169,15 @@ public class InterfaceHelper {
 
     private void setL2Configuration(InterfaceConfigurationBuilder configurationBuilder) {
         L2Transport l2transport = new L2TransportBuilder()
-            .setEnabled(true)
-            .build();
+                    .setEnabled(Empty.getInstance())
+                    .build();
 
-        InterfaceConfiguration3 augmentation = new InterfaceConfiguration3Builder()
-            .setL2Transport(l2transport)
-            .build();
-
-        configurationBuilder.addAugmentation(InterfaceConfiguration3.class, augmentation);
+		
+		 InterfaceConfiguration4 augmentation = new InterfaceConfiguration4Builder()
+		 .setL2Transport(l2transport) .build();
+		 
+       // InterfaceConfiguration3 augmentation = new InterfaceConfiguration3Builder(l2transport).build()
+        configurationBuilder.addAugmentation(InterfaceConfiguration4.class, augmentation);
     }
+
 }
